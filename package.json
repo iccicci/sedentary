@@ -1,0 +1,28 @@
+{
+  "name": "sedentary",
+  "version": "0.0.0",
+  "description": "The ORM which never needs to migrate",
+  "scripts": {
+    "all": "npm run npmignore && npm run eslint && npm run coverage",
+    "coverage": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --recursive test",
+    "eslint": "./node_modules/.bin/eslint *.js test/*js",
+    "npmignore": "echo '.codeclimate.yml\\n.eslintrc\\n.gitignore\\n.travis.yml\\ntest' > .npmignore ; cat .gitignore >> .npmignore",
+    "test": "./node_modules/.bin/_mocha test"
+  },
+  "bugs": "https://github.com/iccicci/sedentary/issues",
+  "repository": "https://github.com/iccicci/sedentary",
+  "keywords": [ "migration", "database", "DB", "ORM" ],
+  "engines": { "node": ">=0.10" },
+  "author": "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "double-done": "0.1.1"
+  },
+  "devDependencies": {
+    "eslint": "3.15.0",
+    "istanbul": "0.4.5",
+    "mocha-istanbul": "0.3.0",
+    "mocha": "3.2.0"
+  }
+}
