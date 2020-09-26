@@ -4,21 +4,18 @@ engines:
     enabled: true
     config:
       languages:
-      - ruby
-      - javascript
-      - python
-      - php
+        - javascript
+        - typescript
   eslint:
     enabled: true
-    channel: eslint-3
+    channel: eslint-6
   fixme:
     enabled: true
 ratings:
   paths:
-  - "**.inc"
-  - "**.js"
-  - "**.jsx"
-  - "**.module"
-  - "**.php"
-  - "**.py"
-  - "**.rb"
+    - "*.ts"
+    - "src/*.ts"
+    - "test/*.ts"
+    - "sedentary-pg/*.ts"
+    - "sedentary-pg/src/*.ts"
+    - "sedentary-pg/test/*.ts"

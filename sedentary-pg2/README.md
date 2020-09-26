@@ -25,12 +25,12 @@
 [donate-badge]: https://badgen.net/badge/donate/bitcoin?icon=bitcoin
 [donate-url]: https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB
 [github-url]: https://github.com/iccicci/sedentary
-[npm-downloads-badge]: https://badgen.net/npm/dw/sedentary?icon=npm
-[npm-badge]: https://badgen.net/npm/v/sedentary?color=green&icon=npm
-[npm-url]: https://www.npmjs.com/package/sedentary
+[npm-downloads-badge]: https://badgen.net/npm/dw/sedentary-pg?icon=npm
+[npm-badge]: https://badgen.net/npm/v/sedentary-pg?color=green&icon=npm
+[npm-url]: https://www.npmjs.com/package/sedentary-pg
 [stars-badge]: https://badgen.net/github/stars/iccicci/sedentary?icon=github
 [travis-badge]: https://badgen.net/travis/iccicci/sedentary?icon=travis
 [travis-url]: https://travis-ci.org/iccicci/sedentary?branch=master
-[types-badge]: https://badgen.net/npm/types/sedentary?color=green&icon=typescript
+[types-badge]: https://badgen.net/npm/types/sedentary-pg?color=green&icon=typescript
 
 # under development

@@ -22,7 +22,7 @@ describe("sedentary", () => {
   });
 
   describe("async connect", () => {
-    before(async () => {
+    before(async() => {
       const db = new Sedentary("test.db");
 
       await db.connect();
@@ -43,13 +43,13 @@ describe("sedentary", () => {
       });
     });
 
-    it("error", () => eq(error.message, "EISDIR: illegal operation on a directory, read"));
+    it("err is undefined", () => eq(error.message, "EISDIR: illegal operation on a directory, read"));
   });
 
   describe("async connect error", () => {
     let error: Error;
 
-    before(async () => {
+    before(async() => {
       const db = new Sedentary("test");
 
       try {
@@ -59,7 +59,7 @@ describe("sedentary", () => {
       }
     });
 
-    it("error", () => eq(error.message, "EISDIR: illegal operation on a directory, read"));
+    it("err is undefined", () => eq(error.message, "EISDIR: illegal operation on a directory, read"));
   });
 
   describe("end", () => {
@@ -85,7 +85,7 @@ describe("sedentary", () => {
   });
 
   describe("async end", () => {
-    before(async () => {
+    before(async() => {
       const db = new Sedentary("test.db");
 
       await db.connect();

@@ -1,5 +1,3 @@
-import { promisify } from "util";
-
 import { DB } from "./src/db";
 import { Transaction } from "./src/transaction";
 
@@ -41,15 +39,35 @@ export class Sedentary {
   }
 
   connect(done?: (err?: Error) => void): Promise<void> {
-    if(done) return this.db.connect(done);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const connect = async(resolve: (value?: void | PromiseLike<void>) => void, reject: (reason?: any) => void) => {
+      try {
+        await this.db.connect();
+        resolve();
+      } catch(e) {
+        reject(e);
+      }
+    };
 
-    return promisify(this.db.connect)();
+    if(done) return connect(() => done(), done);
+
+    return new Promise(connect);
   }
 
   end(done?: (err?: Error) => void): Promise<void> {
-    if(done) return this.db.end(done);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const end = async(resolve: (value?: void | PromiseLike<void>) => void, reject: (reason?: any) => void) => {
+      try {
+        await this.db.end();
+        resolve();
+      } catch(e) {
+        reject(e);
+      }
+    };
 
-    return promisify(this.db.end)();
+    if(done) return end(() => done(), done);
+
+    return new Promise(end);
   }
 
   model<FT extends Type, F extends { [key: string]: FT }>(

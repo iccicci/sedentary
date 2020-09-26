@@ -1,19 +1,17 @@
 {
-  "name": "sedentary",
+  "name": "sedentary-pg",
   "version": "0.0.0",
-  "description": "The ORM which never needs to migrate",
+  "description": "The ORM which never needs to migrate - PostgreSQL",
   "scripts": {
     "clean": "node -r ts-node/register utils.ts clean",
     "coverage": "npm run clean && nyc -r lcov -r text -r text-summary -r html mocha -r ts-node/register test/*js test/*ts",
-    "ignore": "node -r ts-node/register utils.ts gitignore",
-    "gitignore": "node -r ts-node/register utils.ts gitignore",
-    "npmignore": "node -r ts-node/register utils.ts npmignore",
+    "ignore": "node -r ts-node/register utils.ts ignore",
     "prepare": "npm run ignore && tsc --declaration",
     "test": "npm run clean && mocha -r ts-node/register test/*js test/*ts"
   },
-  "bugs": "https://github.com/iccicci/sedentary/issues",
-  "repository": "https://github.com/iccicci/sedentary",
-  "homepage": "https://github.com/iccicci/sedentary#readme",
+  "bugs": "https://github.com/iccicci/sedentary-pg/issues",
+  "repository": "https://github.com/iccicci/sedentary-pg",
+  "homepage": "https://github.com/iccicci/sedentary-pg#readme",
   "keywords": [
     "migration",
     "database",
