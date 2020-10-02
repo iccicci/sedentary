@@ -7,30 +7,25 @@ const { readFile } = promises;
 export class DB {
   private body: any;
   private file: string;
+  private tables: any;
 
-  constructor(filename: string | null) {
+  constructor(filename: string) {
     this.file = filename;
   }
 
-  async connect(done: (err?: Error) => void): Promise<void> {
-    try {
-      this.body = {};
+  async connect(): Promise<void> {
+    this.body = { tables: {} };
 
-      if(this.file !== "test.db") {
-        try {
-          this.body = (await readFile(this.file)).toJSON();
-        } catch(e) {
-          if(e.code !== "ENOENT") throw e;
-        }
+    if(this.file !== "test.db") {
+      try {
+        this.body = (await readFile(this.file)).toJSON();
+      } catch(e) {
+        if(e.code !== "ENOENT") throw e;
       }
-    } catch(err) {
-      return done(err);
     }
 
-    done();
+    this.tables = this.body.tables;
   }
 
-  async end(done: (err?: Error) => void): Promise<void> {
-    done();
-  }
+  async end(): Promise<void> {}
 }

@@ -1,131 +1,260 @@
-import { promisify } from "util";
-
 import { DB } from "./src/db";
-import { Transaction } from "./src/transaction";
 
-export type This = { [key: string]: unknown };
+type This = { [key: string]: unknown };
 
-class Type {
-  native: number | string;
-}
+type native = number | string | Date;
 
-class TypeNumber extends Type {
-  native: number;
-}
+export class Record {
+  id?: number;
 
-class TypeString extends Type {
-  native: string;
-}
+  init(): void {}
 
-type Native<T extends Type> = T extends TypeNumber ? number : T extends TypeString ? string : never;
-
-export function fldNumber(): TypeNumber {
-  return new TypeNumber();
-}
-
-export function fldString(): TypeString {
-  return new TypeString();
-}
-
-export class Instance {
-  save(): Promise<boolean> {
-    return new Promise(resolve => resolve());
+  async save(): Promise<boolean> {
+    return false;
   }
+}
+
+class Field<N extends native, R extends unknown> {
+  native?: N;
+  record?: R;
+}
+
+class Meta<N extends native, R extends Record> extends Field<N, R> {
+  init: () => void;
+
+  constructor(init: () => void) {
+    super();
+    this.init = init;
+  }
+}
+
+type TypeDefinition<N extends native, R extends unknown> = ((args: unknown) => Field<N, R>) | Field<N, R>;
+interface FieldOptions<N extends native, R extends unknown> {
+  defaultValue?: N;
+  fieldName?: string;
+  notNull?: boolean;
+  type: TypeDefinition<N, R>;
+  unique?: boolean;
+}
+
+interface FieldOptionsInternal<N extends native, R extends unknown> {
+  defaultValue?: N;
+  fieldName?: string;
+  notNull?: boolean;
+  type: Field<N, R>;
+  unique?: boolean;
+}
+
+type FieldDefinition<N extends native, R extends unknown> = TypeDefinition<N, R> | FieldOptions<N, R>;
+type FieldsDefinition = { [key: string]: FieldDefinition<native, unknown> };
+
+type ForeignKeyFileds<T, k> = T extends FieldDefinition<native, infer R> ? (R extends Record ? k : never) : never;
+type ForeignKey<T> = T extends FieldDefinition<native, infer R> ? () => Promise<R> : never;
+type Keys<F extends FieldsDefinition> = { [f in keyof F]?: ForeignKeyFileds<F[f], f> }[keyof F];
+
+type Native__<T> = T extends Field<infer N, unknown> ? N : never;
+type Native_<T> = T extends (args: unknown) => Field<infer N, infer R> ? Native__<Field<N, R>> : Native__<T>;
+type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Field<N, R>> : Native_<T>;
+
+type gino = Native<Field<number, unknown>>;
+
+type Parent<T> = T extends Meta<native, infer R> ? R : never;
+
+class Table {
+  parent: Meta<native, Record>;
+  primaryKey: string;
+  sync: boolean;
+  tableName: string;
+
+  constructor(options: { parent: Meta<native, Record>; primaryKey: string; sync: boolean; tableName: string }) {
+    for(const k in options) this[k] = options[k];
+  }
+}
+
+export interface SchemaOptions {
+  log?: (message: string) => void;
 }
 
 export class Sedentary {
   protected db: DB;
+  protected log: (message: string) => void;
 
-  constructor(filename: string | null) {
+  private models: { [key: string]: boolean };
+  private tables: { [key: string]: Table } = {};
+
+  constructor(filename: string, options?: SchemaOptions) {
     this.db = new DB(filename);
+
+    if(typeof filename !== "string") throw new Error("Sedentary.constructor: Wrong 'filename' parameter");
+    if(! options) options = {};
+    if(! (options instanceof Object)) throw new Error("Sedentary.constructor: Wrong 'options' parameter");
+
+    // eslint-disable-next-line no-console
+    this.log = options.log || console.log;
   }
 
-  connect(done?: (err?: Error) => void): Promise<void> {
-    if(done) return this.db.connect(done);
-
-    return promisify(this.db.connect)();
+  FKEY<N extends native, R extends Record>(record: Field<N, R>): Field<N, R> {
+    return new Field<N, R>();
   }
 
-  end(done?: (err?: Error) => void): Promise<void> {
-    if(done) return this.db.end(done);
-
-    return promisify(this.db.end)();
+  async connect(): Promise<void> {
+    try {
+      this.log("Connecting...");
+      await this.db.connect();
+      this.log("Connected, syncing...");
+      await this.sync();
+      this.log("Synced");
+    } catch(e) {
+      this.log("Connecting: " + e.message);
+      throw e;
+    }
   }
 
-  model<FT extends Type, F extends { [key: string]: FT }>(
+  async end(): Promise<void> {
+    this.log("Closing connection...");
+    await this.db.end();
+    this.log("Connection closed");
+  }
+
+  fldNumber<R extends unknown>(options?: { foreignKey: R }): Field<number, R> {
+    return new Field<number, R>();
+  }
+
+  fldString<R extends unknown>(options?: { foreignKey: R }): Field<string, R> {
+    return new Field<string, R>();
+  }
+
+  model<
+    F extends FieldsDefinition,
+    J extends keyof F,
+    K extends J,
+    N extends K extends keyof F ? Native<F[K]> : number,
+    P extends Meta<native, Record>,
+    T extends Parent<P> & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } }
+  >(
     name: string,
-    fields: F
+    fields: F,
+    options?: {
+      init?: (this: T) => void;
+      parent?: P;
+      primaryKey?: K;
+      sync?: boolean;
+      tableName?: string;
+    }
   ): {
-    create: () => Instance & { [fld in keyof F]: Native<typeof fields[fld]> };
-    instance: Instance & { [fld in keyof F]: Native<typeof fields[fld]> };
-    select: (boh: boolean) => Promise<(Instance & { [fld in keyof F]: Native<typeof fields[fld]> })[]>;
+    create: () => T;
+    fields: { [f in keyof F]?: Meta<N, T> };
+    instance?: T;
+    meta: Meta<N, T>;
+    load: (boh: boolean) => Promise<T[]>;
   } {
-    const instance = (function(this: This): void {
-      this.a = "sisi";
-      this.b = 2;
-      console.log("almeno");
-    } as unknown) as typeof Instance & { [fld in keyof F]: Native<typeof fields[fld]> };
-    Object.defineProperty(instance, "name", { value: name });
+    if(! options) options = {};
+    if(! (options instanceof Object)) throw new Error("Sedentary.model: Wrong 'options' parameter");
 
-    const save = function(this: This): Promise<boolean> {
+    const { parent, primaryKey, sync, tableName } = { sync: true, tableName: name + "s", ...options };
+
+    this.tables[name] = new Table({ parent, primaryKey: primaryKey as string, sync, tableName });
+    const init = parent
+      ? options.init
+        ? function() {
+          parent.init.call(this);
+          options.init.call(this);
+        }
+        : parent.init
+      : options.init;
+
+    const flds: { [f in keyof F]?: Meta<N, T> } = {};
+
+    for(const key in fields) flds[key] = null;
+
+    const record = (function(this: T): void {
+      const t = this as This;
+      t.a = "sisi";
+      t.b = 2;
+      this.id = 1;
+      if(init) init();
+    } as unknown) as typeof Record;
+    Object.defineProperty(record, "name", { value: name });
+
+    const save = function(this: T): Promise<boolean> {
       return new Promise((resolve, reject) => {
         const save = (): void => reject(new Error("eh no"));
         Object.defineProperty(save, "name", { value: name + ".save" });
 
-        console.log(this.a, this.num);
         setTimeout(save, 10);
       });
     };
     Object.defineProperty(save, "name", { value: name + ".save" });
 
-    instance.prototype = new Instance();
-    instance.prototype.constructor = instance;
-    instance.prototype.save = save;
+    record.prototype = new Record();
+    record.prototype.constructor = record;
+    record.prototype.save = save;
 
-    const create: () => Instance & { [fld in keyof F]: Native<typeof fields[fld]> } = () => new instance() as Instance & { [fld in keyof F]: Native<typeof fields[fld]> };
+    ["init"].forEach(method => (options[method] ? (record.prototype[method] = options[method]) : null));
+
+    const create: () => T = () => new record() as T;
     Object.defineProperty(create, "name", { value: name + "s.create" });
 
-    const select: (boh: boolean) => Promise<(Instance & { [fld in keyof F]: Native<typeof fields[fld]> })[]> = (boh: boolean) =>
+    const load: (boh: boolean) => Promise<T[]> = (boh: boolean) =>
       new Promise((resolve, reject) =>
         setTimeout(() => {
-          if(boh) return resolve([new instance() as Instance & { [fld in keyof F]: Native<typeof fields[fld]> }]);
+          if(boh) return resolve([new record() as T]);
           reject(new Error("boh"));
         }, 10)
       );
-    Object.defineProperty(select, "name", { value: name + "s.select" });
+    Object.defineProperty(load, "name", { value: name + "s.load" });
 
-    const model = { create, instance: create(), select };
-
-    return model;
+    return { create, fields: flds, meta: new Meta<N, T>(init), load };
   }
 
-  protected select(bho: boolean): void {}
+  private async sync(): Promise<void> {}
 }
+
+export const Package = Sedentary;
 
 const db = new Sedentary("gino");
 
-const fields = {
-  num: fldNumber(),
-  str: fldString()
-};
+const Users = db.model("User", { foo: db.fldNumber(), bar: db.fldString() }, {});
 
-const Items = db.model("Item", fields);
+const fields = {
+  num: db.FKEY(Users.meta),
+  str: db.fldString()
+};
+const Items = db.model("Item", fields, {
+  init: function() {
+    this.num = 0;
+    this.str = "0";
+  }
+});
 type Item = typeof Items.instance;
 
+const Supers = db.model(
+  "Item",
+  {
+    a: db.fldNumber(),
+    n: db.FKEY(Items.meta),
+    s: db.FKEY(Users.fields.bar)
+  },
+  {
+    init: async function() {
+      this.n = 23;
+      //const a = await this.load.n();
+    },
+    parent:     Items.meta,
+    primaryKey: "s"
+  }
+);
+Supers.meta;
+
 async function prova(): Promise<boolean> {
+  const item: Item = Supers.create();
+
   try {
-    console.log(await Items.select(true));
-
-    const item: Item = Items.create();
-
-    item.num = 0;
-    item.str = "0";
-
-    console.log(Items.select, item.save);
     await item.save();
   } catch(e) {
-    console.log("però", e);
+    console.log(Items.load, item.save, await Items.load(true), item, e.message);
   }
+
   return true;
 }
 

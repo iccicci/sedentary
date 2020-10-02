@@ -14,6 +14,8 @@ const rules = {
   semi:                                         ["error", "always"],
   "space-before-function-paren":                ["error", { anonymous: "never", asyncArrow: "always", named: "never" }],
   "space-unary-ops":                            ["error", { nonwords: false, words: true, overrides: { "!": true } }],
+  "@typescript-eslint/no-empty-function":       "off",
+  "@typescript-eslint/no-empty-interface":      "off",
   "@typescript-eslint/type-annotation-spacing": ["error", { after: true, before: false, overrides: { arrow: { before: true } } }]
 };
 
@@ -31,5 +33,6 @@ module.exports = {
     ecmaVersion: 9,
     sourceType:  "module"
   },
+  root: true,
   rules
 };

@@ -3,6 +3,7 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "eslint.alwaysShowStatus": true,
+  "eslint.debug": true,
   "eslint.validate": ["javascript", "typescript"],
   "explorer.confirmDelete": false,
   "files.autoSave": "off",

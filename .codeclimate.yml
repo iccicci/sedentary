@@ -16,6 +16,3 @@ ratings:
     - "*.ts"
     - "src/*.ts"
     - "test/*.ts"
-    - "sedentary-pg/*.ts"
-    - "sedentary-pg/src/*.ts"
-    - "sedentary-pg/test/*.ts"

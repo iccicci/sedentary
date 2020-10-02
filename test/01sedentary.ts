@@ -1,57 +1,30 @@
-"use strict";
+import { deepStrictEqual as de, strictEqual as eq, ok } from "assert";
 
-import { Sedentary } from "..";
-import { strictEqual as eq, ok } from "assert";
+import { Package, Sedentary } from "./helper";
+import { connection, wrongConnection, wrongConnectionError } from "./local";
 
-describe("sedentary", () => {
-  describe("new Sedentary()", () => it("constructor", () => ok(new Sedentary("test") instanceof Sedentary)));
-
-  describe("connect", () => {
-    let error: Error;
-
-    before(done => {
-      const db = new Sedentary("test.db");
-
-      db.connect(err => {
-        error = err;
-        done();
-      });
-    });
-
-    it("err is undefined", () => eq(error, undefined));
+describe("class Sedentary", () => {
+  describe("new Sedentary()", () => {
+    it("constructor", () => ok(new Package(connection) instanceof Package));
   });
 
-  describe("async connect", () => {
-    before(async () => {
-      const db = new Sedentary("test.db");
+  describe("connect", () => {
+    const db = new Sedentary(connection);
 
+    before(async () => {
       await db.connect();
+      await db.end();
     });
 
     it("ok", () => ok(true));
+    it("log", () => de(db.logs, ["Connecting...", "Connected, syncing...", "Synced", "Closing connection...", "Connection closed"]));
   });
 
   describe("connect error", () => {
-    let error: Error;
-
-    before(done => {
-      const db = new Sedentary("test");
-
-      db.connect(err => {
-        error = err;
-        done();
-      });
-    });
-
-    it("error", () => eq(error.message, "EISDIR: illegal operation on a directory, read"));
-  });
-
-  describe("async connect error", () => {
+    const db = new Sedentary(wrongConnection);
     let error: Error;
 
     before(async () => {
-      const db = new Sedentary("test");
-
       try {
         await db.connect();
       } catch(e) {
@@ -59,39 +32,7 @@ describe("sedentary", () => {
       }
     });
 
-    it("error", () => eq(error.message, "EISDIR: illegal operation on a directory, read"));
-  });
-
-  describe("end", () => {
-    let error: Error;
-
-    before(done => {
-      const db = new Sedentary("test.db");
-
-      db.connect(err => {
-        if(err) {
-          error = err;
-          return done();
-        }
-
-        db.end(err => {
-          error = err;
-          done();
-        });
-      });
-    });
-
-    it("err is undefined", () => eq(error, undefined));
-  });
-
-  describe("async end", () => {
-    before(async () => {
-      const db = new Sedentary("test.db");
-
-      await db.connect();
-      await db.end();
-    });
-
-    it("ok", () => ok(true));
+    it("error", () => eq(error.message, wrongConnectionError));
+    it("log", () => de(db.logs, ["Connecting...", "Connecting: " + wrongConnectionError]));
   });
 });
