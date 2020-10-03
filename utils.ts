@@ -3,11 +3,11 @@ import { promises } from "fs";
 
 const { readFile, writeFile } = promises;
 
-const { npm_package_name } = process.env;
+const { VERSION, npm_package_name } = process.env;
 
 const common: string[] = ["*.db", "*.tgz", "coverage", "node_modules", "sedentary-mysql", "sedentary-pg", "sedentary-sqlite", ""];
 const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "index.d.ts", "index.js", "src/*.d.ts", "src/*.js"];
-const npm: string[] = [".*", "Makefile", "index.ts", "src/*.ts", "test", "tsconfig.json", "utils.ts"];
+const npm: string[] = [".*", "Makefile", "index.ts", "src/db.ts", "src/transaction.ts", "test", "tsconfig.json", "utils.ts"];
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
@@ -48,7 +48,8 @@ const packagejson = {
     packagejson: "node -r ts-node/register utils.ts packagejson",
     test:        "mocha -r ts-node/register test/*js test/*ts",
     travis:      "node -r ts-node/register utils.ts travis",
-    tsc:         "tsc --declaration"
+    tsc:         "tsc --declaration",
+    version:     "node -r ts-node/register utils.ts version"
   },
   types: "index.d.ts"
 };
@@ -113,5 +114,13 @@ function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unkno
     } catch(e) {}
 
     writeFile("package.json", JSON.stringify(sort({ ...packagejson, bugs, dependencies, description, homepage, name, repository, version }), null, 2), "utf-8");
+  }
+
+  if(process.argv[2] === "version") {
+    const pkg = JSON.parse(await readFile("package.json", "utf-8"));
+
+    pkg.version = VERSION;
+
+    writeFile("package.json", JSON.stringify(pkg, null, 2), "utf-8");
   }
 })();

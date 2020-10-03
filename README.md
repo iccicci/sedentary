@@ -327,7 +327,9 @@ Some `make` target have been added to support development of the packages togeth
 - `make outdated` - runs `npm outdated` on all the packages
 - `make pull` - performs `git pull` in all the git repositories
 - `make push` - performs `git push` in all the git repositories
+- `make status` - performs `git status` in all the git repositories
 - `make test` &#x20F0; - performs `npm test` on all the packages
+- `make version VERSION=""` - changes the version in all the git repositories
 
 **Note \*:** Check the _DB engine dedicated extensions_ `README` files for details.
 

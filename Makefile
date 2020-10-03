@@ -111,7 +111,7 @@ endif
 node: setup
 	@if [ -z "${MESSAGE}" ] ; then echo "Missing MESSAGE!" ; exit 1 ; fi
 	git add .
-	git commit -m "${MESSAGE}"
+	-git commit -m "${MESSAGE}"
 
 outdated: setup
 	-npm outdated
@@ -123,8 +123,15 @@ package.json: utils.ts
 	npm run packagejson
 
 package-lock.json: package.json
-	npm install --prune
-	npm link $(shell if [ ${PACKAGE} != sedentary ] ; then if [ ${PARENT} == yes ] ; then echo sedentary ; fi ; fi)
+ifneq (${PACKAGE}, sedentary)
+ifeq (${PARENT}, yes)
+	npm link sedentary
+endif
+endif
+	npm install --preserve-symlinks --prune --no-shrinkwrap
+ifeq (${PACKAGE}, sedentary)
+	npm link
+endif
 	@touch package-lock.json
 
 pull: setup
@@ -134,7 +141,7 @@ ifeq (${PACKAGE}, sedentary)
 endif
 
 push: setup
-	git push
+	git push --force
 ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i push ; done
 endif
@@ -154,4 +161,19 @@ test: setup rm
 	npm test
 ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i test ; done
+endif
+
+version: setup
+	@if [ -z "${VERSION}" ] ; then echo "Missing VERSION!" ; exit 1 ; fi
+	npm run version
+	npm install --prune
+	make commit MESSAGE=V${VERSION}
+	make push
+	git tag V${VERSION}
+	git push --tags
+	npm run tsc
+	-npm publish
+ifeq (${PACKAGE}, sedentary)
+	sleep 30
+	for i in ${EXTENSIONS} ; do make -C $$i version ; done
 endif
