@@ -35,7 +35,7 @@
 
 # under development
 
-## Description
+# Description
 
 An ORM which automatically syncs the DB schema on models change, no migrations between versions are required.
 
@@ -46,9 +46,9 @@ changes to the database during the development stage, often results in a complex
 through the migrations; this process is complicated more and more especially when working in team with concurrent
 changes to the models (or the database schema). This package tries to solve these problems all in once.
 
-## Usage
+# Usage
 
-### Javascript
+## Javascript
 
 ```javascript
 import { Sedentary } from "sedentary";
@@ -76,7 +76,7 @@ const Items = db.model("Item", {
 })();
 ```
 
-### Typescript
+## Typescript
 
 ```typescript
 import { Sedentary } from "sedentary";
@@ -105,7 +105,7 @@ type Item = typeof Items.meta;
 })();
 ```
 
-## Table of Contents
+# Table of Contents
 
 - [Installation](#installation)
 - [Disclaimer](#disclaimer)
@@ -132,7 +132,7 @@ type Item = typeof Items.meta;
 - [ChangeLog](#changelog)
 - [Donating](#donating)
 
-## Installation
+# Installation
 
 With [npm](https://www.npmjs.com/package/sedentary):
 
@@ -140,7 +140,7 @@ With [npm](https://www.npmjs.com/package/sedentary):
 $ npm install --save sedentary
 ```
 
-## Disclaimer
+# Disclaimer
 
 **Do not use this package itself in production! This package uses a simple self made JSON-DB engine just for testing
 purposes.**
@@ -151,9 +151,9 @@ For a real environment a _DB engine dedicated extension_ must be used:
 - PostgreSQL: [sedentary-pg](https://github.com/iccicci/sedentary-pg#readme)
 - SQLite: planned
 
-## Quick Start Example
+# Quick Start Example
 
-### First script example
+## First script example
 
 Running following script:
 
@@ -161,7 +161,7 @@ Running following script:
 
 ```
 
-### First output example
+## First output example
 
 we will obtain following output:
 
@@ -169,7 +169,7 @@ we will obtain following output:
 
 ```
 
-### Second example script:
+## Second example script:
 
 Changeing the script as follows and running it:
 
@@ -183,7 +183,7 @@ the diff is:
 
 ```
 
-### Second output example
+## Second output example
 
 we will obtain following output:
 
@@ -191,46 +191,46 @@ we will obtain following output:
 
 ```
 
-## API
+# API
 
-### Class: Field
+## Class: Field
 
 It represent a field.
 
 Returned by [`sedentary.fldNumber`](#sedentaryfldnumber), [`sedentary.fldString`](#sedentaryfldstring) (and so on...)
 methods, should be used only for SCHEMA definition.
 
-### Class: FieldOptions
+## Class: FieldOptions
 
 It defines the options of a filed.
 
-### Class: Fields
+## Class: Fields
 
 It defines the fields of a model.
 
 Each key of the object represents the field name, the value represents the data type and eventualy the options.
 
-### Class: ModelOptions
+## Class: ModelOptions
 
-### Class: Model
+## Class: Model
 
-### Class: Sedentary
+## Class: Sedentary
 
 The base ORM class
 
-#### async sedentary.connect()
+### async sedentary.connect()
 
 Connects to the DB and syncs the schema.
 
 **Note:** Must be called only once.
 
-#### async sedentary.end()
+### async sedentary.end()
 
 Closes the connection with the DB.
 
 **Note:** Must be called only once, after [`sedentary.connect`](#async-sedentaryconnect).
 
-#### sedentary.model(name, fields[, options])
+### sedentary.model(name, fields[, options])
 
 - `name`: [`string`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type) &nbsp; The name
   of the model.
@@ -263,7 +263,7 @@ function accessUser(user: User): void {
 }
 ```
 
-#### new Sedentary(filename[, log])
+### new Sedentary(filename[, log])
 
 - `filename`: [`string`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type) &nbsp;
   The name of the JSON-DB file.
@@ -272,7 +272,7 @@ function accessUser(user: User): void {
   [`console.log`](https://developer.mozilla.org/en-US/docs/Web/API/Console/log).
 - returns &nbsp; The [`Sedentary`](#class-sedentary) object to interact with the DB.
 
-## Compatibility
+# Compatibility
 
 Requires:
 
@@ -288,7 +288,7 @@ To work with the package under Windows, be sure to configure `bash.exe` as your 
 > npm config set script-shell bash.exe
 ```
 
-## Development
+# Development
 
 Since this package is the core of the ORM, probably any change on it will requires appropriate changes on the _DB
 engine dedicated extension_ as well.
@@ -331,19 +331,19 @@ Some `make` target have been added to support development of the packages togeth
 
 **Note \*:** Check the _DB engine dedicated extensions_ `README` files for details.
 
-## Licence
+# Licence
 
 [MIT Licence](https://github.com/iccicci/sedentary/blob/master/LICENSE)
 
-## Bugs
+# Bugs
 
 Do not hesitate to report any bug or inconsistency [@github](https://github.com/iccicci/sedentary/issues).
 
-## ChangeLog
+# ChangeLog
 
 [ChangeLog](https://github.com/iccicci/sedentary/blob/master/CHANGELOG.md)
 
-## Donating
+# Donating
 
 If you find useful this package, please consider the opportunity to donate some satoshis to this bitcoin address:
 **1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB**

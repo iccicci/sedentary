@@ -56,8 +56,6 @@ type Native__<T> = T extends Field<infer N, unknown> ? N : never;
 type Native_<T> = T extends (args: unknown) => Field<infer N, infer R> ? Native__<Field<N, R>> : Native__<T>;
 type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Field<N, R>> : Native_<T>;
 
-type gino = Native<Field<number, unknown>>;
-
 type Parent<T> = T extends Meta<native, infer R> ? R : never;
 
 class Table {
@@ -85,9 +83,9 @@ export class Sedentary {
   constructor(filename: string, options?: SchemaOptions) {
     this.db = new DB(filename);
 
-    if(typeof filename !== "string") throw new Error("Sedentary.constructor: Wrong 'filename' parameter");
+    if(typeof filename !== "string") throw new Error("Sedentary.constructor: Wrong 'filename' type: expected 'string'");
     if(! options) options = {};
-    if(! (options instanceof Object)) throw new Error("Sedentary.constructor: Wrong 'options' parameter");
+    if(! (options instanceof Object)) throw new Error("Sedentary.constructor: Wrong 'options' type: expected 'Object'");
 
     // eslint-disable-next-line no-console
     this.log = options.log || console.log;
@@ -126,8 +124,7 @@ export class Sedentary {
 
   model<
     F extends FieldsDefinition,
-    J extends keyof F,
-    K extends J,
+    K extends string,
     N extends K extends keyof F ? Native<F[K]> : number,
     P extends Meta<native, Record>,
     T extends Parent<P> & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } }
@@ -143,13 +140,16 @@ export class Sedentary {
     }
   ): {
     create: () => T;
-    fields: { [f in keyof F]?: Meta<N, T> };
+    fields: { [f in keyof F]?: Meta<Native<F[f]>, T> };
     instance?: T;
     meta: Meta<N, T>;
     load: (boh: boolean) => Promise<T[]>;
   } {
+    if(typeof name !== "string") throw new Error("Sedentary.model: Wrong 'name' type: expected 'string'");
+    if(! fields) fields = {} as F;
+    if(! (fields instanceof Object)) throw new Error("Sedentary.model: Wrong 'fields' type: expected 'Object'");
     if(! options) options = {};
-    if(! (options instanceof Object)) throw new Error("Sedentary.model: Wrong 'options' parameter");
+    if(! (options instanceof Object)) throw new Error("Sedentary.model: Wrong 'options' type: expected 'Object'");
 
     const { parent, primaryKey, sync, tableName } = { sync: true, tableName: name + "s", ...options };
 
@@ -163,7 +163,7 @@ export class Sedentary {
         : parent.init
       : options.init;
 
-    const flds: { [f in keyof F]?: Meta<N, T> } = {};
+    const flds: { [f in keyof F]?: Meta<Native<F[f]>, T> } = {};
 
     for(const key in fields) flds[key] = null;
 
@@ -172,7 +172,7 @@ export class Sedentary {
       t.a = "sisi";
       t.b = 2;
       this.id = 1;
-      if(init) init();
+      if(init) init.call(this);
     } as unknown) as typeof Record;
     Object.defineProperty(record, "name", { value: name });
 
@@ -214,7 +214,7 @@ export const Package = Sedentary;
 
 const db = new Sedentary("gino");
 
-const Users = db.model("User", { foo: db.fldNumber(), bar: db.fldString() }, {});
+const Users = db.model("User", { foo: db.fldNumber(), bar: db.fldString(), baz: {} as Field<Date, unknown> }, {});
 
 const fields = {
   num: db.FKEY(Users.meta),
@@ -244,7 +244,6 @@ const Supers = db.model(
     primaryKey: "s"
   }
 );
-Supers.meta;
 
 async function prova(): Promise<boolean> {
   const item: Item = Supers.create();

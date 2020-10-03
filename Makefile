@@ -40,16 +40,13 @@ test/%.ts: ../test/%.ts
 .gitattributes: ../.gitattributes
 	cp ../.gitattributes .
 
-.travis.yml: ../.travis.yml Makefile
-	cat ../.travis.yml | sed 's/1aa1f737e7bf7d2859a2c7d9a0d9634a0d9aa89e3a19476d576faa7d02a1d46f/${REPO_TOKEN}/' > .travis.yml
-
 LICENSE: ../LICENSE
 	cp ../LICENSE .
 
 Makefile: ../Makefile
 	cp ../Makefile .
 
-setup: .codeclimate.yml .eslintrc.js .gitattributes LICENSE tsconfig.json utils.ts ${TESTS} ${VSCODE} .travis.yml
+setup: .codeclimate.yml .eslintrc.js .gitattributes LICENSE tsconfig.json utils.ts ${TESTS} ${VSCODE}
 
 clean: Makefile
 
@@ -80,6 +77,9 @@ endif
 
 .npmignore: utils.ts
 	npm run npmignore
+
+.travis.yml: utils.ts
+	npm run travis
 
 clean: rm
 ifeq (${PACKAGE}, sedentary)
@@ -139,10 +139,16 @@ ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i push ; done
 endif
 
+status: setup
+	git status
+ifeq (${PACKAGE}, sedentary)
+	for i in ${EXTENSIONS} ; do make -C $$i status ; done
+endif
+
 rm: setup
 	rm -f index.d.ts index.js src/*.d.ts src/*.js
 
-setup: .gitignore .npmignore package-lock.json
+setup: package-lock.json .gitignore .npmignore .travis.yml
 
 test: setup rm
 	npm test
