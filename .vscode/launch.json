@@ -9,7 +9,8 @@
       "args": ["-r", "ts-node/register", "--timeout", "999999", "--colors", "${workspaceFolder}/test/*.ts"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "protocol": "inspector"
+      "protocol": "inspector",
+      "skipFiles": ["node_modules/mocha/**", "<node_internals>/**"]
     }
   ]
 }

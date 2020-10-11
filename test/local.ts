@@ -12,3 +12,5 @@ export async function clean(): Promise<void> {
     await unlink("test.db");
   } catch(e) {}
 }
+
+export const expected = { sync_create_table: ["Adding table: test1s", "Setting auto increment: test1s"] };

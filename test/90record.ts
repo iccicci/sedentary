@@ -1,6 +1,6 @@
 import { ok } from "assert";
 
-import { Record } from "..";
+import { Record } from "../lib/db";
 
 describe("class Record", () => {
   let done: boolean;

@@ -1,10 +1,9 @@
 import { deepStrictEqual as de, strictEqual as eq } from "assert";
 
 import { Package } from "..";
-import { connection } from "./local";
+import { clean, connection } from "./local";
 
 export { Package } from "..";
-export { clean } from "./local";
 
 export class Sedentary extends Package {
   logs: string[] = [];
@@ -17,32 +16,41 @@ export class Sedentary extends Package {
 
 const logs = ["Connecting...", "Connected, syncing...", "Synced", "Closing connection...", "Connection closed"];
 
-export function createHelper() {
-  return function(test: (db: Sedentary) => Promise<void>): [() => Promise<void>, (line: string) => void, () => void] {
-    let db: Sedentary;
-    let j = 0;
+export function helper(expected: string[], test: (db: Sedentary) => Promise<void>): void {
+  let db: Sedentary;
+  let j = 0;
 
-    function log(): string {
-      const current = db.logs.shift();
+  function log(): string {
+    const current = db.logs.shift();
 
-      if(! current) return "";
-      if(logs[j] === current) return ++j ? log() : null;
+    if(! current) return "";
+    if(logs[j] === current) return ++j ? log() : null;
 
-      return current;
+    return current;
+  }
+
+  before(async function() {
+    await clean();
+    await test((db = new Sedentary(connection)));
+    await db.end();
+  });
+
+  for(const i in expected) it(expected[i], () => eq(log(), expected[i]));
+  it("End", () => de(db.logs, ["Synced", "Closing connection...", "Connection closed"]));
+}
+
+export function errorHelper(test: (db: Sedentary) => void): (message: string) => void {
+  let err: Error;
+
+  before(async function() {
+    try {
+      test(new Sedentary(connection));
+    } catch(e) {
+      err = e;
     }
+  });
 
-    return [
-      async function() {
-        await test((db = new Sedentary(connection)));
-        await db.end();
-      },
-      function(line: string) {
-        it(line, () => eq(log(), line));
-      },
-      function() {
-        //it("logs", () => de(db.logs, ["Connection closed"]));
-        it("logs", () => de(db.logs, []));
-      }
-    ];
+  return function(message: string) {
+    it("error", () => eq(err.message, message));
   };
 }

@@ -54,7 +54,7 @@ const packagejson = {
   types: "index.d.ts"
 };
 
-const conditions = { sedentary: "", "sedentary-pg": "&& $PG_VERSION == 13" };
+const conditions = { sedentary: "", "sedentary-pg": "&& $PG_VERSION == 13 " };
 const travis = {
   common: {
     after_script: [

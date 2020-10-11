@@ -1,21 +1,11 @@
-import { clean, createHelper } from "./helper";
+import { helper } from "./helper";
+import { expected } from "./local";
 
 describe("sync", () => {
-  const helper = createHelper();
-
-  beforeEach(async () => {
-    await clean();
-  });
-
   describe("CREATE TABLE", function() {
-    const [test, log, logs] = helper(async db => {
+    helper(expected.sync_create_table, async db => {
       db.model("test1", {});
       await db.connect();
     });
-
-    before(test);
-
-    log("");
-    logs();
   });
 });

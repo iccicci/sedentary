@@ -56,7 +56,7 @@ import { Sedentary } from "sedentary";
 const db = new Sedentary("file.db");
 
 const Items = db.model("Item", {
-  num: db.INTEGER,
+  num: db.INT,
   str: db.VARCHAR(30)
 });
 
@@ -84,7 +84,7 @@ import { Sedentary } from "sedentary";
 const db = new Sedentary("file.db");
 
 const Items = db.model("Item", {
-  num: db.INTEGER,
+  num: db.INT,
   str: db.VARCHAR(30)
 });
 type Item = typeof Items.meta;
@@ -329,7 +329,7 @@ Some `make` target have been added to support development of the packages togeth
 - `make push` - performs `git push` in all the git repositories
 - `make status` - performs `git status` in all the git repositories
 - `make test` &#x20F0; - performs `npm test` on all the packages
-- `make version VERSION=""` - changes the version in all the git repositories
+- `make version VERSION=""` - changes the versions, commits, tags and publishes everithing
 
 **Note \*:** Check the _DB engine dedicated extensions_ `README` files for details.
 

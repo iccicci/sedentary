@@ -1,47 +1,14 @@
-import { DB } from "./src/db";
+import { DB, Meta, Record, Table, Type, native } from "./lib/db";
+import { MiniDB } from "./lib/minidb";
 
 type This = { [key: string]: unknown };
 
-type native = number | string | Date;
-
-export class Record {
-  id?: number;
-
-  init(): void {}
-
-  async save(): Promise<boolean> {
-    return false;
-  }
-}
-
-class Field<N extends native, R extends unknown> {
-  native?: N;
-  record?: R;
-}
-
-class Meta<N extends native, R extends Record> extends Field<N, R> {
-  init: () => void;
-
-  constructor(init: () => void) {
-    super();
-    this.init = init;
-  }
-}
-
-type TypeDefinition<N extends native, R extends unknown> = ((args: unknown) => Field<N, R>) | Field<N, R>;
+type TypeDefinition<N extends native, R extends unknown> = ((args: unknown) => Type<N, R>) | Type<N, R>;
 interface FieldOptions<N extends native, R extends unknown> {
   defaultValue?: N;
   fieldName?: string;
   notNull?: boolean;
   type: TypeDefinition<N, R>;
-  unique?: boolean;
-}
-
-interface FieldOptionsInternal<N extends native, R extends unknown> {
-  defaultValue?: N;
-  fieldName?: string;
-  notNull?: boolean;
-  type: Field<N, R>;
   unique?: boolean;
 }
 
@@ -52,20 +19,26 @@ type ForeignKeyFileds<T, k> = T extends FieldDefinition<native, infer R> ? (R ex
 type ForeignKey<T> = T extends FieldDefinition<native, infer R> ? () => Promise<R> : never;
 type Keys<F extends FieldsDefinition> = { [f in keyof F]?: ForeignKeyFileds<F[f], f> }[keyof F];
 
-type Native__<T> = T extends Field<infer N, unknown> ? N : never;
-type Native_<T> = T extends (args: unknown) => Field<infer N, infer R> ? Native__<Field<N, R>> : Native__<T>;
-type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Field<N, R>> : Native_<T>;
+type Native__<T> = T extends Type<infer N, unknown> ? N : never;
+type Native_<T> = T extends (args: unknown) => Type<infer N, infer R> ? Native__<Type<N, R>> : Native__<T>;
+type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Type<N, R>> : Native_<T>;
 
 type Parent<T> = T extends Meta<native, infer R> ? R : never;
 
-class Table {
-  parent: Meta<native, Record>;
-  primaryKey: string;
-  sync: boolean;
-  tableName: string;
+interface Constraint {
+  name: string;
+  type: "u";
+  field: string;
+}
 
-  constructor(options: { parent: Meta<native, Record>; primaryKey: string; sync: boolean; tableName: string }) {
-    for(const k in options) this[k] = options[k];
+class Field<N extends native, R extends unknown> extends Type<N, R> {
+  defaultValue?: string;
+  fieldName?: string;
+  notNull?: boolean;
+  unique?: boolean;
+
+  constructor(from: Partial<Field<N, R>>) {
+    super(from);
   }
 }
 
@@ -77,22 +50,40 @@ export class Sedentary {
   protected db: DB;
   protected log: (message: string) => void;
 
+  private constraints: Constraint[] = [];
+  private sync = true;
   private models: { [key: string]: boolean };
   private tables: { [key: string]: Table } = {};
 
   constructor(filename: string, options?: SchemaOptions) {
-    this.db = new DB(filename);
-
     if(typeof filename !== "string") throw new Error("Sedentary.constructor: Wrong 'filename' type: expected 'string'");
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error("Sedentary.constructor: Wrong 'options' type: expected 'Object'");
 
+    for(const k in options) {
+      if(["log", "sync"].indexOf(k) === -1) throw new Error(`Sedentary.constructor: Unknown '${k}' option`);
+
+      this[k] = options[k];
+    }
+
     // eslint-disable-next-line no-console
-    this.log = options.log || console.log;
+    this.log ||= console.log;
+
+    this.db = new MiniDB(filename, this.log);
   }
 
-  FKEY<N extends native, R extends Record>(record: Field<N, R>): Field<N, R> {
-    return new Field<N, R>();
+  INT(size?: number): Type<number, unknown> {
+    const message = "Sedentary.INT: Wrong 'size': expected 2, 4 or 8";
+
+    size = size ? this.checkSize(size, message) : 8;
+
+    if(size !== 2 && size !== 4 && size !== 8) throw new Error(message);
+
+    return new Type({ size, type: "INT" });
+  }
+
+  FKEY<N extends native, R extends Record>(record: Type<N, R>): Type<N, R> {
+    return new Type({ size: 0, type: "" });
   }
 
   async connect(): Promise<void> {
@@ -100,7 +91,7 @@ export class Sedentary {
       this.log("Connecting...");
       await this.db.connect();
       this.log("Connected, syncing...");
-      await this.sync();
+      await this.db.sync();
       this.log("Synced");
     } catch(e) {
       this.log("Connecting: " + e.message);
@@ -114,12 +105,8 @@ export class Sedentary {
     this.log("Connection closed");
   }
 
-  fldNumber<R extends unknown>(options?: { foreignKey: R }): Field<number, R> {
-    return new Field<number, R>();
-  }
-
-  fldString<R extends unknown>(options?: { foreignKey: R }): Field<string, R> {
-    return new Field<string, R>();
+  fldString<R extends unknown>(options?: { foreignKey: R }): Type<string, R> {
+    return new Type<string, R>({ size: 0, type: "" });
   }
 
   model<
@@ -145,15 +132,67 @@ export class Sedentary {
     meta: Meta<N, T>;
     load: (boh: boolean) => Promise<T[]>;
   } {
+    if(this.db.tables[name]) throw new Error(`Sedentary.model: model '${name}' already defined`);
     if(typeof name !== "string") throw new Error("Sedentary.model: Wrong 'name' type: expected 'string'");
     if(! fields) fields = {} as F;
     if(! (fields instanceof Object)) throw new Error("Sedentary.model: Wrong 'fields' type: expected 'Object'");
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error("Sedentary.model: Wrong 'options' type: expected 'Object'");
 
-    const { parent, primaryKey, sync, tableName } = { sync: true, tableName: name + "s", ...options };
+    for(const k in options) if(["init", "parent", "primaryKey", "sync", "tableName", "type"].indexOf(k) === -1) throw new Error(`Sedentary.model: Unknown '${k}' option`);
 
-    this.tables[name] = new Table({ parent, primaryKey: primaryKey as string, sync, tableName });
+    const { parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name + "s", ...options };
+    const pkName = primaryKey || "id";
+    let farray = [new Field<number, unknown>({ fieldName: "id", notNull: true, size: 8, type: "INT", unique: true })];
+
+    if(primaryKey && Object.keys(fields).indexOf(primaryKey) === -1) throw new Error(`Sedentary.model: 'primaryKey' field '${primaryKey}' does not exists`);
+    if(parent && primaryKey) throw new Error("Sedentary.model: Both 'parent' and 'primaryKey' options provided");
+    if(parent || primaryKey) farray = [];
+
+    if(! parent) this.constraints.push({ name: `${tableName}_${pkName}_unique`, type: "u", field: pkName });
+
+    for(const fname in fields) {
+      const field = fields[fname];
+      // eslint-disable-next-line prefer-const
+      let { defaultValue, fieldName, notNull, size, type, unique } = ((): Field<native, unknown> => {
+        // eslint-disable-next-line prefer-const
+        let { fieldName, type } = { fieldName: fname as string, type: null as unknown };
+
+        const call = (message: string) => {
+          const func: () => Type<native, unknown> = field as never;
+
+          if(func !== this.INT && func !== this.FKEY) throw new Error(message);
+
+          return new Field({ fieldName: fname, ...func() });
+        };
+
+        if(field instanceof Type) return new Field({ fieldName: fname, ...field });
+        if(field instanceof Function) return call(`Sedentary.model: Wrong '${fname}' field value`);
+        if(! (field instanceof Object)) throw new Error(`Sedentary.model: Wrong '${fname}' field type`);
+
+        ({ fieldName, type } = field as FieldOptions<native, unknown>);
+        if(! fieldName) fieldName = fname;
+        if(typeof fieldName !== "string") throw new Error(`Sedentary.model: Wrong 'fieldName' attribute of '${fname}' field type`);
+
+        if(! type) throw new Error(`Sedentary.model: Missing 'type' attribute of '${fname}' field`);
+
+        if(type instanceof Type) return new Field({ ...((field as unknown) as Type<native, unknown>), ...type });
+        if(type instanceof Function) return call(`Sedentary.model: Wrong 'type' attribute of '${fname}' field value`);
+
+        throw new Error(`Sedentary.model: Wrong 'type' attribute of '${fname}' field type`);
+      })();
+
+      if(primaryKey === (fname as never)) {
+        notNull = true;
+        unique = true;
+      }
+
+      if(defaultValue) notNull = true;
+
+      farray.push(new Field({ defaultValue, fieldName, notNull, size, type, unique }));
+    }
+
+    this.db.tables[name] = new Table({ parent, primaryKey, sync, tableName });
     const init = parent
       ? options.init
         ? function() {
@@ -204,17 +243,24 @@ export class Sedentary {
       );
     Object.defineProperty(load, "name", { value: name + "s.load" });
 
-    return { create, fields: flds, meta: new Meta<N, T>(init), load };
+    return { create, fields: flds, meta: new Meta<N, T>(primaryKey, init), load };
   }
 
-  private async sync(): Promise<void> {}
+  checkSize(size: number, message: string): number {
+    const str = size.toString();
+    const parsed = parseInt(str, 10);
+
+    if(str !== parsed.toString()) throw new Error(message);
+
+    return parsed;
+  }
 }
 
 export const Package = Sedentary;
 
 const db = new Sedentary("gino");
 
-const Users = db.model("User", { foo: db.fldNumber(), bar: db.fldString(), baz: {} as Field<Date, unknown> }, {});
+const Users = db.model("User", { foo: db.INT(), bar: db.fldString() }, {});
 
 const fields = {
   num: db.FKEY(Users.meta),
@@ -229,9 +275,9 @@ const Items = db.model("Item", fields, {
 type Item = typeof Items.instance;
 
 const Supers = db.model(
-  "Item",
+  "Super",
   {
-    a: db.fldNumber(),
+    a: db.INT,
     n: db.FKEY(Items.meta),
     s: db.FKEY(Users.fields.bar)
   },
@@ -240,12 +286,11 @@ const Supers = db.model(
       this.n = 23;
       //const a = await this.load.n();
     },
-    parent:     Items.meta,
-    primaryKey: "s"
+    parent: Items.meta
   }
 );
 
-async function prova(): Promise<boolean> {
+(async function(): Promise<boolean> {
   const item: Item = Supers.create();
 
   try {
@@ -255,6 +300,4 @@ async function prova(): Promise<boolean> {
   }
 
   return true;
-}
-
-prova();
+})();
