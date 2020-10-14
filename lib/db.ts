@@ -23,13 +23,16 @@ export class Type<N extends native, R extends unknown> {
 
 export class Meta<N extends native, R extends Record> extends Type<N, R> {
   init: () => void;
+  methods: { [key: string]: () => unknown };
   primaryKey: string;
   tableName: string;
 
-  constructor(primaryKey: string, init: () => void) {
+  constructor(tableName: string, primaryKey: string, init: () => void, methods: { [key: string]: () => unknown }) {
     super({ size: 0, type: "" });
     this.primaryKey = primaryKey;
+    this.tableName = tableName;
     this.init = init;
+    this.methods = methods;
   }
 }
 
@@ -42,6 +45,7 @@ function autoImplement<T>() {
 }
 
 interface ITable {
+  oid?: number;
   parent: Meta<native, Record>;
   primaryKey: string;
   sync: boolean;
@@ -66,6 +70,7 @@ export class Table extends autoImplement<ITable>() {
 
 export abstract class DB {
   tables: { [key: string]: Table } = {};
+  tablesArr: Table[] = [];
 
   protected log: (message: string) => void;
 
@@ -76,8 +81,13 @@ export abstract class DB {
     this.log = log;
   }
 
+  addTable(table: Table): void {
+    this.tables[table.tableName] = table;
+    this.tablesArr.push(table);
+  }
+
   async sync(): Promise<void> {
-    for(const table in this.tables) await this.syncTable(this.tables[table]);
+    for(const i in this.tablesArr) await this.syncTable(this.tablesArr[i]);
   }
 
   abstract async syncTable(table: Table): Promise<void>;

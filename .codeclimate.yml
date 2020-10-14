@@ -1,4 +1,10 @@
----
+checks:
+  method-complexity:
+    config:
+      threshold: 50
+  method-lines:
+    config:
+      threshold: 100
 engines:
   duplication:
     enabled: true

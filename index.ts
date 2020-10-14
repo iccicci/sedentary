@@ -3,7 +3,7 @@ import { MiniDB } from "./lib/minidb";
 
 type This = { [key: string]: unknown };
 
-type TypeDefinition<N extends native, R extends unknown> = ((args: unknown) => Type<N, R>) | Type<N, R>;
+type TypeDefinition<N extends native, R extends unknown> = ((...args: unknown[]) => Type<N, R>) | Type<N, R>;
 interface FieldOptions<N extends native, R extends unknown> {
   defaultValue?: N;
   fieldName?: string;
@@ -20,7 +20,7 @@ type ForeignKey<T> = T extends FieldDefinition<native, infer R> ? () => Promise<
 type Keys<F extends FieldsDefinition> = { [f in keyof F]?: ForeignKeyFileds<F[f], f> }[keyof F];
 
 type Native__<T> = T extends Type<infer N, unknown> ? N : never;
-type Native_<T> = T extends (args: unknown) => Type<infer N, infer R> ? Native__<Type<N, R>> : Native__<T>;
+type Native_<T> = T extends (...args: unknown[]) => Type<infer N, infer R> ? Native__<Type<N, R>> : Native__<T>;
 type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Type<N, R>> : Native_<T>;
 
 type Parent<T> = T extends Meta<native, infer R> ? R : never;
@@ -112,26 +112,26 @@ export class Sedentary {
   model<
     F extends FieldsDefinition,
     K extends string,
+    // eslint-disable-next-line space-before-function-paren
+    M extends { [key: string]: (this: T) => unknown },
     N extends K extends keyof F ? Native<F[K]> : number,
     P extends Meta<native, Record>,
-    T extends Parent<P> & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } }
+    T extends Parent<P> & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
   >(
     name: string,
     fields: F,
     options?: {
       init?: (this: T) => void;
+      methods?: M;
       parent?: P;
       primaryKey?: K;
       sync?: boolean;
       tableName?: string;
     }
-  ): {
-    create: () => T;
-    fields: { [f in keyof F]?: Meta<Native<F[f]>, T> };
-    instance?: T;
-    meta: Meta<N, T>;
-    load: (boh: boolean) => Promise<T[]>;
-  } {
+  ): (new () => T) &
+    { [f in keyof F]?: Meta<Native<F[f]>, T> } & {
+      load: (boh: boolean) => Promise<T[]>;
+    } & Meta<N, T> {
     if(this.db.tables[name]) throw new Error(`Sedentary.model: model '${name}' already defined`);
     if(typeof name !== "string") throw new Error("Sedentary.model: Wrong 'name' type: expected 'string'");
     if(! fields) fields = {} as F;
@@ -139,7 +139,7 @@ export class Sedentary {
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error("Sedentary.model: Wrong 'options' type: expected 'Object'");
 
-    for(const k in options) if(["init", "parent", "primaryKey", "sync", "tableName", "type"].indexOf(k) === -1) throw new Error(`Sedentary.model: Unknown '${k}' option`);
+    for(const k in options) if(["init", "methods", "parent", "primaryKey", "sync", "tableName", "type"].indexOf(k) === -1) throw new Error(`Sedentary.model: Unknown '${k}' option`);
 
     const { parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name + "s", ...options };
     const pkName = primaryKey || "id";
@@ -192,7 +192,8 @@ export class Sedentary {
       farray.push(new Field({ defaultValue, fieldName, notNull, size, type, unique }));
     }
 
-    this.db.tables[name] = new Table({ parent, primaryKey, sync, tableName });
+    this.db.addTable(new Table({ parent, primaryKey, sync, tableName }));
+
     const init = parent
       ? options.init
         ? function() {
@@ -243,7 +244,41 @@ export class Sedentary {
       );
     Object.defineProperty(load, "name", { value: name + "s.load" });
 
-    return { create, fields: flds, meta: new Meta<N, T>(primaryKey, init), load };
+    class Class {
+      constructor() {
+        if(init) init.call(this);
+      }
+
+      save(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+          const save = (): void => reject(new Error("eh no"));
+          Object.defineProperty(save, "name", { value: name + ".save" });
+
+          setTimeout(save, 10);
+        });
+      }
+    }
+
+    const load2: (boh: boolean) => Promise<T[]> = (boh: boolean) =>
+      new Promise((resolve, reject) =>
+        setTimeout(() => {
+          if(boh) return resolve([new Class() as T]);
+          reject(new Error("boh"));
+        }, 10)
+      );
+    Object.defineProperty(load2, "name", { value: name + "s.load" });
+
+    Object.defineProperty(Class, "name", { value: name });
+    Object.defineProperty(Class, "fields", { value: flds });
+    Object.defineProperty(Class, "load", { value: load2 });
+    Object.defineProperty(Class, "meta", { value: new Meta<N, T>(tableName, primaryKey, init, options.methods) });
+    Object.defineProperty(Class.prototype.save, "name", { value: name + ".save" });
+    Object.assign(Class, new Meta<N, T>(tableName, primaryKey, init, options.methods));
+    Object.assign(Class, flds);
+    Object.assign(Class.prototype, options.methods);
+    if(options.parent) Object.assign(Class.prototype, options.parent.methods);
+
+    return Class as never;
   }
 
   checkSize(size: number, message: string): number {
@@ -263,40 +298,77 @@ const db = new Sedentary("gino");
 const Users = db.model("User", { foo: db.INT(), bar: db.fldString() }, {});
 
 const fields = {
-  num: db.FKEY(Users.meta),
+  num: db.FKEY(Users),
   str: db.fldString()
 };
-const Items = db.model("Item", fields, {
+
+class Item extends db.model("Item", fields, {
   init: function() {
     this.num = 0;
     this.str = "0";
+  },
+  methods: {
+    prova: (): string => "ok"
   }
-});
-type Item = typeof Items.instance;
+}) {}
 
-const Supers = db.model(
+class Super extends db.model(
   "Super",
   {
     a: db.INT,
-    n: db.FKEY(Items.meta),
-    s: db.FKEY(Users.fields.bar)
+    n: db.FKEY(Item),
+    s: db.FKEY(Users.bar)
   },
   {
     init: async function() {
       this.n = 23;
       //const a = await this.load.n();
     },
-    parent: Items.meta
+    parent: Item
   }
-);
+) {}
+
+class Next extends db.model(
+  "Next",
+  { a: db.INT },
+  {
+    init: function() {
+      this.a = 23;
+    }
+  }
+) {}
+
+class Current extends db.model(
+  "Current",
+  { b: db.FKEY(Next) },
+  {
+    init: function() {
+      this.b = 24;
+    }
+  }
+) {}
+
+class Last extends db.model(
+  "Last",
+  { b: db.FKEY(Current.b) },
+  {
+    init: function() {
+      this.b = 24;
+    },
+    parent: Next
+  }
+) {}
 
 (async function(): Promise<boolean> {
-  const item: Item = Supers.create();
+  const item = new Super();
+  console.log(Item.prototype, Item.prototype.prova);
+  console.log(Super.prototype, Super.prototype.prova);
 
   try {
     await item.save();
   } catch(e) {
-    console.log(Items.load, item.save, await Items.load(true), item, e.message);
+    console.log(Item.load, item.save, await Item.load(true), item, e.message);
+    console.log(new Next(), Next.load, await Next.load(true), new Last(), new Item().prova());
   }
 
   return true;

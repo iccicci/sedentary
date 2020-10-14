@@ -3,7 +3,7 @@
 import { DB, Table } from "./db";
 import { promises } from "fs";
 
-const { readFile } = promises;
+const { readFile, writeFile } = promises;
 
 export class MiniDB extends DB {
   private body: any;
@@ -19,13 +19,17 @@ export class MiniDB extends DB {
     this.body = { next: {}, tables: {} };
 
     try {
-      this.body = (await readFile(this.file)).toJSON();
+      this.body = JSON.parse((await readFile(this.file)).toString());
     } catch(e) {
       if(e.code !== "ENOENT") throw e;
     }
   }
 
   async end(): Promise<void> {}
+
+  async save(): Promise<void> {
+    await writeFile(this.file, JSON.stringify(this.body));
+  }
 
   async syncTable(table: Table): Promise<void> {
     if(! this.body.tables[table.tableName]) {
@@ -37,5 +41,7 @@ export class MiniDB extends DB {
         this.body.next[table.tableName] = 1;
       }
     }
+
+    await this.save();
   }
 }
