@@ -54,7 +54,7 @@ commit: Makefile
 
 outdated: Makefile
 
-package.json: ../package.json Makefile setup
+package.json: Makefile setup
 
 pull: Makefile
 
