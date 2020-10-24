@@ -1,4 +1,10 @@
 checks:
+  function-complexity:
+    config:
+      threshold: 50
+  method-lines:
+    config:
+      threshold: 100
   method-complexity:
     config:
       threshold: 50

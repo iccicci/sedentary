@@ -123,14 +123,13 @@ package.json: utils.ts
 	npm run packagejson
 
 package-lock.json: package.json
-ifneq (${PACKAGE}, sedentary)
+	npm install --prune
+ifeq (${PACKAGE}, sedentary)
+	npm link
+else
 ifeq (${PARENT}, yes)
 	npm link sedentary
 endif
-endif
-	npm install --preserve-symlinks --prune --no-shrinkwrap
-ifeq (${PACKAGE}, sedentary)
-	npm link
 endif
 	@touch package-lock.json
 
@@ -153,7 +152,7 @@ ifeq (${PACKAGE}, sedentary)
 endif
 
 rm: setup
-	rm -f index.d.ts index.js src/*.d.ts src/*.js
+	rm -f index.d.ts index.js lib/*.d.ts lib/*.js
 
 setup: package-lock.json .gitignore .npmignore .travis.yml
 
@@ -174,6 +173,6 @@ version: setup
 	npm run tsc
 	npm publish
 ifeq (${PACKAGE}, sedentary)
-	sleep 30
+	sleep 120
 	for i in ${EXTENSIONS} ; do make -C $$i version ; done
 endif

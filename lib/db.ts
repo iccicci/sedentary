@@ -21,18 +21,38 @@ export class Type<N extends native, R extends unknown> {
   }
 }
 
+interface IMeta {
+  init: () => void;
+  methods: { [key: string]: () => unknown };
+  primaryKey: string;
+  tableName: string;
+}
+
 export class Meta<N extends native, R extends Record> extends Type<N, R> {
   init: () => void;
   methods: { [key: string]: () => unknown };
   primaryKey: string;
   tableName: string;
 
-  constructor(tableName: string, primaryKey: string, init: () => void, methods: { [key: string]: () => unknown }) {
+  constructor(options: IMeta) {
     super({ size: 0, type: "" });
-    this.primaryKey = primaryKey;
-    this.tableName = tableName;
-    this.init = init;
-    this.methods = methods;
+
+    for(const key in options) this[key] = options[key];
+  }
+
+  isModel(): boolean {
+    return true;
+  }
+}
+
+export class Field<N extends native, R extends unknown> extends Type<N, R> {
+  defaultValue?: string;
+  fieldName?: string;
+  notNull?: boolean;
+  unique?: boolean;
+
+  constructor(from: Partial<Field<N, R>>) {
+    super(from);
   }
 }
 
@@ -45,6 +65,7 @@ function autoImplement<T>() {
 }
 
 interface ITable {
+  fields: Field<native, unknown>[];
   oid?: number;
   parent: Meta<native, Record>;
   primaryKey: string;
@@ -87,8 +108,19 @@ export abstract class DB {
   }
 
   async sync(): Promise<void> {
-    for(const i in this.tablesArr) await this.syncTable(this.tablesArr[i]);
+    for(const i in this.tablesArr) {
+      const table = this.tablesArr[i];
+
+      await this.syncTable(table);
+      await this.dropConstraints(table);
+      await this.dropIndexes(table);
+
+      for(const l in table.fields) await this.syncField(table, table.fields[l]);
+    }
   }
 
+  abstract async dropConstraints(table: Table): Promise<void>;
+  abstract async dropIndexes(table: Table): Promise<void>;
+  abstract async syncField(table: Table, field: Field<native, unknown>): Promise<void>;
   abstract async syncTable(table: Table): Promise<void>;
 }

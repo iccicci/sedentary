@@ -6,24 +6,25 @@ const { readFile, writeFile } = promises;
 const { VERSION, npm_package_name } = process.env;
 
 const common: string[] = ["*.db", "*.tgz", "coverage", "node_modules", "sedentary-mysql", "sedentary-pg", "sedentary-sqlite", ""];
-const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "index.d.ts", "index.js", "src/*.d.ts", "src/*.js"];
-const npm: string[] = [".*", "Makefile", "index.ts", "src/db.ts", "src/transaction.ts", "test", "tsconfig.json", "utils.ts"];
+const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "index.d.ts", "index.js", "lib/*.d.ts", "lib/*.js"];
+const npm: string[] = [".*", "Makefile", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "test", "tsconfig.json", "utils.ts"];
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
-const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "7.14.5", pg: "8.3.3" }, "sedentary-sqlite": {} };
+const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "7.14.5", pg: "8.4.1" }, "sedentary-sqlite": {} };
 
 const packagejson = {
   author:          "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
   dependencies:    {},
   devDependencies: {
     "@types/mocha":                     "8.0.3",
-    "@types/node":                      "14.11.2",
+    "@types/node":                      "14.14.2",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "4.3.0",
-    "@typescript-eslint/parser":        "4.3.0",
-    eslint:                             "7.10.0",
-    mocha:                              "8.1.3",
+    "@typescript-eslint/eslint-plugin": "4.5.0",
+    "@typescript-eslint/parser":        "4.5.0",
+    eslint:                             "7.12.0",
+    mocha:                              "8.2.0",
+    prettier:                           "2.1.2",
     nyc:                                "15.1.0",
     "ts-node":                          "9.0.0",
     typescript:                         "4.0.3",

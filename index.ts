@@ -1,4 +1,4 @@
-import { DB, Meta, Record, Table, Type, native } from "./lib/db";
+import { DB, Field, Meta, Record, Table, Type, native } from "./lib/db";
 import { MiniDB } from "./lib/minidb";
 
 type This = { [key: string]: unknown };
@@ -31,17 +31,6 @@ interface Constraint {
   field: string;
 }
 
-class Field<N extends native, R extends unknown> extends Type<N, R> {
-  defaultValue?: string;
-  fieldName?: string;
-  notNull?: boolean;
-  unique?: boolean;
-
-  constructor(from: Partial<Field<N, R>>) {
-    super(from);
-  }
-}
-
 export interface SchemaOptions {
   log?: (message: string) => void;
 }
@@ -52,8 +41,7 @@ export class Sedentary {
 
   private constraints: Constraint[] = [];
   private sync = true;
-  private models: { [key: string]: boolean };
-  private tables: { [key: string]: Table } = {};
+  private models: { [key: string]: boolean } = {};
 
   constructor(filename: string, options?: SchemaOptions) {
     if(typeof filename !== "string") throw new Error("Sedentary.constructor: Wrong 'filename' type: expected 'string'");
@@ -132,7 +120,7 @@ export class Sedentary {
     { [f in keyof F]?: Meta<Native<F[f]>, T> } & {
       load: (boh: boolean) => Promise<T[]>;
     } & Meta<N, T> {
-    if(this.db.tables[name]) throw new Error(`Sedentary.model: model '${name}' already defined`);
+    if(this.models[name]) throw new Error(`Sedentary.model: Model '${name}' already defined`);
     if(typeof name !== "string") throw new Error("Sedentary.model: Wrong 'name' type: expected 'string'");
     if(! fields) fields = {} as F;
     if(! (fields instanceof Object)) throw new Error("Sedentary.model: Wrong 'fields' type: expected 'Object'");
@@ -142,16 +130,33 @@ export class Sedentary {
     for(const k in options) if(["init", "methods", "parent", "primaryKey", "sync", "tableName", "type"].indexOf(k) === -1) throw new Error(`Sedentary.model: Unknown '${k}' option`);
 
     const { parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name + "s", ...options };
+    let { methods } = options;
     const pkName = primaryKey || "id";
-    let farray = [new Field<number, unknown>({ fieldName: "id", notNull: true, size: 8, type: "INT", unique: true })];
+    let farray: Field<native, unknown>[] = [new Field<number, unknown>({ fieldName: "id", notNull: true, size: 8, type: "INT", unique: true })];
 
+    if(methods && ! (methods instanceof Object)) throw new Error("Sedentary.model: Wrong 'methods' option type: expected 'Object'");
+
+    if(parent) {
+      if(primaryKey) throw new Error("Sedentary.model: Both 'parent' and 'primaryKey' options provided");
+
+      methods = (methods ? { ...(parent.methods || {}), ...methods } : parent.methods) as never;
+
+      try {
+        if(! parent.isModel()) throw new Error();
+      } catch(e) {
+        throw new Error("Sedentary.model: Wrong 'parent' option type: expected 'Model'");
+      }
+    }
+
+    if(primaryKey && typeof primaryKey !== "string") throw new Error("Sedentary.model: Wrong 'primaryKey' option type: expected 'string'");
     if(primaryKey && Object.keys(fields).indexOf(primaryKey) === -1) throw new Error(`Sedentary.model: 'primaryKey' field '${primaryKey}' does not exists`);
-    if(parent && primaryKey) throw new Error("Sedentary.model: Both 'parent' and 'primaryKey' options provided");
-    if(parent || primaryKey) farray = [];
 
+    if(parent || primaryKey) farray = [];
     if(! parent) this.constraints.push({ name: `${tableName}_${pkName}_unique`, type: "u", field: pkName });
 
     for(const fname in fields) {
+      if(["fields", "load", "meta", "name", "prototype", "save", "size", "type"].indexOf(fname) !== -1) throw new Error(`Sedentary.model: '${fname}' field: reserved name`);
+
       const field = fields[fname];
       // eslint-disable-next-line prefer-const
       let { defaultValue, fieldName, notNull, size, type, unique } = ((): Field<native, unknown> => {
@@ -167,19 +172,18 @@ export class Sedentary {
         };
 
         if(field instanceof Type) return new Field({ fieldName: fname, ...field });
-        if(field instanceof Function) return call(`Sedentary.model: Wrong '${fname}' field value`);
-        if(! (field instanceof Object)) throw new Error(`Sedentary.model: Wrong '${fname}' field type`);
+        if(field instanceof Function) return call(`Sedentary.model: Wrong '${fname}' field value: expected 'Field'`);
+        if(! (field instanceof Object)) throw new Error(`Sedentary.model: Wrong '${fname}' field type: expected 'Field'`);
 
         ({ fieldName, type } = field as FieldOptions<native, unknown>);
         if(! fieldName) fieldName = fname;
-        if(typeof fieldName !== "string") throw new Error(`Sedentary.model: Wrong 'fieldName' attribute of '${fname}' field type`);
 
-        if(! type) throw new Error(`Sedentary.model: Missing 'type' attribute of '${fname}' field`);
-
+        if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${fname}' field: Wrong 'fieldName' attribute type: expected 'string'`);
+        if(! type) throw new Error(`Sedentary.model: '${fname}' field: Missing 'type' attribute`);
         if(type instanceof Type) return new Field({ ...((field as unknown) as Type<native, unknown>), ...type });
-        if(type instanceof Function) return call(`Sedentary.model: Wrong 'type' attribute of '${fname}' field value`);
+        if(type instanceof Function) return call(`Sedentary.model: '${fname}' field: Wrong 'type' attribute value: expected 'Type'`);
 
-        throw new Error(`Sedentary.model: Wrong 'type' attribute of '${fname}' field type`);
+        throw new Error(`Sedentary.model: '${fname}' field: Wrong 'type' attribute type: expected 'Type'`);
       })();
 
       if(primaryKey === (fname as never)) {
@@ -192,7 +196,8 @@ export class Sedentary {
       farray.push(new Field({ defaultValue, fieldName, notNull, size, type, unique }));
     }
 
-    this.db.addTable(new Table({ parent, primaryKey, sync, tableName }));
+    this.db.addTable(new Table({ fields: farray, parent, primaryKey, sync, tableName }));
+    this.models[name] = true;
 
     const init = parent
       ? options.init
@@ -268,15 +273,16 @@ export class Sedentary {
       );
     Object.defineProperty(load2, "name", { value: name + "s.load" });
 
+    const meta = { tableName, primaryKey, init, methods };
+
     Object.defineProperty(Class, "name", { value: name });
     Object.defineProperty(Class, "fields", { value: flds });
     Object.defineProperty(Class, "load", { value: load2 });
-    Object.defineProperty(Class, "meta", { value: new Meta<N, T>(tableName, primaryKey, init, options.methods) });
+    Object.defineProperty(Class, "meta", { value: new Meta<N, T>(meta) });
     Object.defineProperty(Class.prototype.save, "name", { value: name + ".save" });
-    Object.assign(Class, new Meta<N, T>(tableName, primaryKey, init, options.methods));
-    Object.assign(Class, flds);
-    Object.assign(Class.prototype, options.methods);
-    if(options.parent) Object.assign(Class.prototype, options.parent.methods);
+    Object.assign(Class, new Meta<N, T>(meta));
+    Object.assign(Class, { ...flds, isModel: () => true });
+    Object.assign(Class.prototype, methods);
 
     return Class as never;
   }
@@ -361,8 +367,6 @@ class Last extends db.model(
 
 (async function(): Promise<boolean> {
   const item = new Super();
-  console.log(Item.prototype, Item.prototype.prova);
-  console.log(Super.prototype, Super.prototype.prova);
 
   try {
     await item.save();

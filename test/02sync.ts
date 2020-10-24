@@ -3,7 +3,7 @@
 import { helper } from "./helper";
 import { expected } from "./local";
 
-describe.only("sync", () => {
+describe("sync", () => {
   describe("CREATE TABLE", function() {
     helper(expected.sync_create_table, async db => {
       db.model("test1", {});
@@ -29,6 +29,14 @@ describe.only("sync", () => {
         const test1 = db.model("test1", {});
         db.model("test3", {}, { parent: test1 });
         await db.connect();
+      });
+
+      describe("CREATE TABLE same parent", function() {
+        helper(expected.sync_create_table_parent_same, true, async db => {
+          const test1 = db.model("test1", {});
+          db.model("test3", {}, { parent: test1 });
+          await db.connect();
+        });
       });
 
       describe("CREATE TABLE change parent", function() {
