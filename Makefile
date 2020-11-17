@@ -164,6 +164,7 @@ endif
 
 version: setup
 	@if [ -z "${VERSION}" ] ; then echo "Missing VERSION!" ; exit 1 ; fi
+	npm run packagejson
 	npm run version
 	npm install --prune
 	make commit MESSAGE=${VERSION}

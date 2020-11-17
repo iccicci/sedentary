@@ -114,12 +114,14 @@ export abstract class DB {
       await this.syncTable(table);
       await this.dropConstraints(table);
       await this.dropIndexes(table);
+      await this.dropFields(table);
 
       for(const l in table.fields) await this.syncField(table, table.fields[l]);
     }
   }
 
   abstract async dropConstraints(table: Table): Promise<void>;
+  abstract async dropFields(table: Table): Promise<void>;
   abstract async dropIndexes(table: Table): Promise<void>;
   abstract async syncField(table: Table, field: Field<native, unknown>): Promise<void>;
   abstract async syncTable(table: Table): Promise<void>;
