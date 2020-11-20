@@ -64,7 +64,14 @@ function autoImplement<T>() {
   } as new (defaults?: T) => T;
 }
 
+export interface Constraint {
+  field: string;
+  name: string;
+  type: "f" | "u";
+}
+
 interface ITable {
+  constraints: Constraint[];
   fields: Field<native, unknown>[];
   oid?: number;
   parent: Meta<native, Record>;
@@ -95,8 +102,8 @@ export abstract class DB {
 
   protected log: (message: string) => void;
 
-  abstract async connect(): Promise<void>;
-  abstract async end(): Promise<void>;
+  abstract connect(): Promise<void>;
+  abstract end(): Promise<void>;
 
   constructor(log: (message: string) => void) {
     this.log = log;
@@ -115,14 +122,15 @@ export abstract class DB {
       await this.dropConstraints(table);
       await this.dropIndexes(table);
       await this.dropFields(table);
-
-      for(const l in table.fields) await this.syncField(table, table.fields[l]);
+      await this.syncFields(table);
+      await this.syncConstraints(table);
     }
   }
 
-  abstract async dropConstraints(table: Table): Promise<void>;
-  abstract async dropFields(table: Table): Promise<void>;
-  abstract async dropIndexes(table: Table): Promise<void>;
-  abstract async syncField(table: Table, field: Field<native, unknown>): Promise<void>;
-  abstract async syncTable(table: Table): Promise<void>;
+  abstract dropConstraints(table: Table): Promise<void>;
+  abstract dropFields(table: Table): Promise<void>;
+  abstract dropIndexes(table: Table): Promise<void>;
+  abstract syncConstraints(table: Table): Promise<void>;
+  abstract syncFields(table: Table): Promise<void>;
+  abstract syncTable(table: Table): Promise<void>;
 }

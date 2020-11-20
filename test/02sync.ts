@@ -19,7 +19,7 @@ describe("sync", () => {
 
     describe("CREATE TABLE with primaryKey", function() {
       helper(expected.sync_create_table_pk, true, async db => {
-        db.model("test2", { a: db.INT, b: db.INT }, { primaryKey: "a" });
+        db.model("test2", { a: db.INT, b: { unique: true, type: db.INT } }, { primaryKey: "a" });
         await db.connect();
       });
     });
@@ -41,7 +41,7 @@ describe("sync", () => {
 
       describe("CREATE TABLE change parent", function() {
         helper(expected.sync_create_table_parent_change, true, async db => {
-          const test2 = db.model("test2", { a: db.INT, b: db.INT }, { primaryKey: "a" });
+          const test2 = db.model("test2", { a: db.INT, b: { unique: true, type: db.INT } }, { primaryKey: "a" });
           db.model("test3", {}, { parent: test2 });
           await db.connect();
         });

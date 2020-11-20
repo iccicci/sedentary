@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { DB, Field, Table, native } from "./db";
+import { DB, Table } from "./db";
 import { promises } from "fs";
 
 const { readFile, writeFile } = promises;
@@ -25,7 +25,18 @@ export class MiniDB extends DB {
     }
   }
 
-  async dropConstraints(table: Table): Promise<void> {}
+  async dropConstraints(table: Table): Promise<void> {
+    const { constraints } = this.body.tables[table.tableName];
+
+    for(const constraint in constraints.u) {
+      if(! table.constraints.filter(({ field, type }) => field === constraint && type === "u").length) {
+        this.log(`'${table.tableName}': Removing unique constraint on field: '${constraint}'`);
+        delete constraints.u[constraint];
+      }
+    }
+
+    await this.save();
+  }
 
   async dropFields(table: Table): Promise<void> {
     const { fields } = this.body.tables[table.tableName];
@@ -48,13 +59,31 @@ export class MiniDB extends DB {
     await writeFile(this.file, JSON.stringify(this.body));
   }
 
-  async syncField(table: Table, field: Field<native, unknown>): Promise<void> {
-    const { fields } = this.body.tables[table.tableName];
-    const { size, type } = field;
+  async syncConstraints(table: Table): Promise<void> {
+    const { constraints } = this.body.tables[table.tableName];
 
-    if(! fields[field.fieldName]) {
-      this.log(`'${table.tableName}': Adding field: '${field.fieldName}' '${type}' '${size}'`);
-      fields[field.fieldName] = { size, type };
+    for(const i in table.constraints) {
+      const constraint = table.constraints[i];
+
+      if(! constraints[constraint.type][constraint.field]) {
+        this.log(`'${table.tableName}': Adding unique constraint on field: '${constraint.field}'`);
+        constraints[constraint.type][constraint.field] = true;
+      }
+    }
+
+    await this.save();
+  }
+
+  async syncFields(table: Table): Promise<void> {
+    for(const i in table.fields) {
+      const field = table.fields[i];
+      const { fields } = this.body.tables[table.tableName];
+      const { size, type } = field;
+
+      if(! fields[field.fieldName]) {
+        this.log(`'${table.tableName}': Adding field: '${field.fieldName}' '${type}' '${size}'`);
+        fields[field.fieldName] = { size, type };
+      }
     }
 
     await this.save();
@@ -74,7 +103,7 @@ export class MiniDB extends DB {
 
     if(! this.body.tables[table.tableName]) {
       this.log(`Adding table: '${table.tableName}'`);
-      this.body.tables[table.tableName] = { fields: {} };
+      this.body.tables[table.tableName] = { constraints: { f: {}, u: {} }, fields: {} };
 
       if(table.parent) {
         this.log(`Setting parent: '${table.parent.tableName}' - to table: '${table.tableName}'`);
