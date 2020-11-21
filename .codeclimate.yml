@@ -1,11 +1,20 @@
 version: "2"
 checks:
+  file-lines:
+    config:
+      threshold: 500
   method-complexity:
     config:
-      threshold: 50
+      threshold: 100
   method-lines:
     config:
-      threshold: 100
+      threshold: 200
+  similar-code:
+    config:
+      threshold: 60
+  identical-code:
+    config:
+      threshold: 60
 plugins:
   eslint:
     enabled: true

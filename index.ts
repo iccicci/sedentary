@@ -1,8 +1,6 @@
 import { Constraint, DB, Field, Meta, Record, Table, Type, native } from "./lib/db";
 import { MiniDB } from "./lib/minidb";
 
-type This = { [key: string]: unknown };
-
 type TypeDefinition<N extends native, R extends unknown> = ((...args: unknown[]) => Type<N, R>) | Type<N, R>;
 interface FieldOptions<N extends native, R extends unknown> {
   defaultValue?: N;
@@ -92,11 +90,62 @@ export class Sedentary {
 
   model<
     F extends FieldsDefinition,
+    // eslint-disable-next-line space-before-function-paren
+    M extends { [key: string]: (this: T) => unknown },
+    T extends Record & { id?: number } & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
+  >(
+    name: string,
+    fields: F,
+    options?: {
+      init?: (this: T) => void;
+      methods?: M;
+      sync?: boolean;
+      tableName?: string;
+    }
+  ): // prettier-ignore
+  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<number, T>);
+  model<
+    F extends FieldsDefinition,
+    // eslint-disable-next-line space-before-function-paren
+    M extends { [key: string]: (this: T) => unknown },
+    T extends Record & { id?: string } & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
+  >(
+    name: string,
+    fields: F,
+    options?: {
+      init?: (this: T) => void;
+      int8id: true;
+      methods?: M;
+      sync?: boolean;
+      tableName?: string;
+    }
+  ): // prettier-ignore
+  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<string, T>);
+  model<
+    F extends FieldsDefinition,
     K extends string,
     // eslint-disable-next-line space-before-function-paren
     M extends { [key: string]: (this: T) => unknown },
-    N extends K extends keyof F ? Native<F[K]> : number,
-    P extends Meta<native, Record>,
+    N extends K extends keyof F ? Native<F[K]> : never,
+    T extends Record & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
+  >(
+    name: string,
+    fields: F,
+    options?: {
+      init?: (this: T) => void;
+      methods?: M;
+      primaryKey: K;
+      sync?: boolean;
+      tableName?: string;
+    }
+  ): // prettier-ignore
+  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>);
+  model<
+    F extends FieldsDefinition,
+    // eslint-disable-next-line space-before-function-paren
+    M extends { [key: string]: (this: T) => unknown },
+    P extends (new () => Record) & Meta<native, Record>,
+    N extends P extends Meta<infer N, Record> ? N : never,
     T extends Parent<P> & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
   >(
     name: string,
@@ -104,13 +153,34 @@ export class Sedentary {
     options?: {
       init?: (this: T) => void;
       methods?: M;
+      parent: P;
+      sync?: boolean;
+      tableName?: string;
+    }
+  ): // prettier-ignore
+  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>);
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  model<
+    F extends FieldsDefinition,
+    K extends string,
+    // eslint-disable-next-line space-before-function-paren
+    M extends { [key: string]: (this: T) => unknown },
+    N extends native,
+    P extends (new () => Record) & Meta<native, Record>,
+    T extends Record
+  >(
+    name: string,
+    fields: F,
+    options?: {
+      init?: (this: T) => void;
+      int8id?: boolean;
+      methods?: M;
       parent?: P;
       primaryKey?: K;
       sync?: boolean;
       tableName?: string;
     }
-  ): // prettier-ignore
-  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>) {
+  ) {
     if(this.models[name]) throw new Error(`Sedentary.model: Model '${name}' already defined`);
     if(typeof name !== "string") throw new Error("Sedentary.model: Wrong 'name' type: expected 'string'");
     if(! fields) fields = {} as F;
@@ -118,7 +188,7 @@ export class Sedentary {
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error("Sedentary.model: Wrong 'options' type: expected 'Object'");
 
-    for(const k in options) if(["init", "methods", "parent", "primaryKey", "sync", "tableName", "type"].indexOf(k) === -1) throw new Error(`Sedentary.model: Unknown '${k}' option`);
+    for(const k in options) if(["init", "int8id", "methods", "parent", "primaryKey", "sync", "tableName", "type"].indexOf(k) === -1) throw new Error(`Sedentary.model: Unknown '${k}' option`);
 
     const constraints: Constraint[] = [];
     const { parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name + "s", ...options };
@@ -165,7 +235,7 @@ export class Sedentary {
         if(field instanceof Function) return call(false, field as never, `Sedentary.model: Wrong '${fname}' field value: expected 'Field'`);
         if(! (field instanceof Object)) throw new Error(`Sedentary.model: Wrong '${fname}' field type: expected 'Field'`);
 
-        ({ fieldName, unique, type } = field as FieldOptions<native, unknown>);
+        ({ fieldName, unique, type } = (field as unknown) as FieldOptions<native, unknown>);
         if(! fieldName) fieldName = fname;
 
         if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${fname}' field: Wrong 'fieldName' attribute type: expected 'string'`);
@@ -211,10 +281,10 @@ export class Sedentary {
     for(const key in fields) flds[key] = null;
 
     const record = (function(this: T): void {
-      const t = this as This;
-      t.a = "sisi";
-      t.b = 2;
-      this.id = 1;
+      //const t = this as This;
+      //t.a = "sisi";
+      //t.b = 2;
+      //this.id = 1;
       if(init) init.call(this);
     } as unknown) as typeof Record;
     Object.defineProperty(record, "name", { value: name });
@@ -282,7 +352,7 @@ export class Sedentary {
     Object.assign(Class, { ...flds, isModel: () => true });
     Object.assign(Class.prototype, methods);
 
-    return Class as never;
+    return Class;
   }
 
   checkSize(size: number, message: string): number {
@@ -307,10 +377,12 @@ const fields = {
 };
 
 class Item extends db.model("Item", fields, {
-  init: function() {
-    this.num = 0;
-    this.str = "0";
+  init: function(this: unknown) {
+    const t = this as Item;
+    t.num = 0;
+    t.str = "0";
   },
+  int8id:  true,
   methods: {
     prova: (): string => "ok"
   }
@@ -324,11 +396,15 @@ class Super extends db.model(
     s: db.FKEY(Users.bar)
   },
   {
-    init: async function() {
-      this.n = 23;
-      //const a = await this.load.n();
-    },
-    parent: Item
+    parent: Item,
+    init:   async function(this: unknown) {
+      const t = this as Super;
+      t.n = "23";
+      t.id = "0";
+      t.num = 0;
+      const a = t.load.n ? await t.load.n() : { prova: (): null => null };
+      a.prova();
+    }
   }
 ) {}
 
@@ -338,6 +414,7 @@ class Next extends db.model(
   {
     init: function() {
       this.a = 23;
+      this.id = 23;
     }
   }
 ) {}
@@ -370,7 +447,7 @@ class Last extends db.model(
     await item.save();
   } catch(e) {
     console.log(Item.load, item.save, await Item.load(true), item, e.message);
-    console.log(new Next(), Next.load, await Next.load(true), new Last(), new Item().prova());
+    console.log(new Next(), Next.load, await Next.load(true), new Last(), item.prova());
   }
 
   return true;

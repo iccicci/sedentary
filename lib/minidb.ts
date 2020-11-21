@@ -89,6 +89,9 @@ export class MiniDB extends DB {
     await this.save();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async syncSequence(table: Table): Promise<void> {}
+
   async syncTable(table: Table): Promise<void> {
     if(this.body.tables[table.tableName]) {
       (() => {

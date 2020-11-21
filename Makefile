@@ -174,6 +174,6 @@ version: setup
 	npm run tsc
 	npm publish
 ifeq (${PACKAGE}, sedentary)
-	sleep 120
+	sleep 300
 	for i in ${EXTENSIONS} ; do make -C $$i version ; done
 endif

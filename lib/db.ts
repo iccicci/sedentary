@@ -1,8 +1,6 @@
 export type native = number | string | Date;
 
 export class Record {
-  id?: number;
-
   init(): void {}
 
   async save(): Promise<boolean> {
@@ -82,6 +80,7 @@ interface ITable {
 
 export class Table extends autoImplement<ITable>() {
   autoIncrement: boolean;
+  autoIncrementOwn: boolean;
 
   constructor(defaults: ITable) {
     super(defaults);
@@ -123,6 +122,7 @@ export abstract class DB {
       await this.dropIndexes(table);
       await this.dropFields(table);
       await this.syncFields(table);
+      await this.syncSequence(table);
       await this.syncConstraints(table);
     }
   }
@@ -132,5 +132,6 @@ export abstract class DB {
   abstract dropIndexes(table: Table): Promise<void>;
   abstract syncConstraints(table: Table): Promise<void>;
   abstract syncFields(table: Table): Promise<void>;
+  abstract syncSequence(table: Table): Promise<void>;
   abstract syncTable(table: Table): Promise<void>;
 }

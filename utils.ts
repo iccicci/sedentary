@@ -22,7 +22,7 @@ const packagejson = {
     "@types/yamljs":                    "0.2.31",
     "@typescript-eslint/eslint-plugin": "4.8.1",
     "@typescript-eslint/parser":        "4.8.1",
-    eslint:                             "7.13.0",
+    eslint:                             "7.14.0",
     mocha:                              "8.2.1",
     prettier:                           "2.2.0",
     nyc:                                "15.1.0",
@@ -55,26 +55,32 @@ const packagejson = {
   types: "index.d.ts"
 };
 
+const before_script_common = [
+  "curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter",
+  "chmod +x ./cc-test-reporter",
+  "./cc-test-reporter before-build"
+];
 const conditions = { sedentary: "", "sedentary-pg": "&& $PG_VERSION == 13 " };
 const travis = {
   common: {
-    after_script: [
-      `if [[ \`node --version\` =~ ^v14 ${conditions[npm_package_name]}]] ; then npm run coverage ; npm install codeclimate-test-reporter ; codeclimate-test-reporter < coverage/lcov.info ; fi`
-    ],
-    language: "node_js",
-    node_js:  ["14", "12", "10"],
-    sudo:     "required"
+    after_script:  [`if [[ \`node --version\` =~ ^v14 ${conditions[npm_package_name]}]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi`],
+    before_script: before_script_common,
+    language:      "node_js",
+    node_js:       ['"14"', '"12"', '"10"'],
+    script:        "npm run coverage",
+    sudo:          "required"
   },
-  sedentary:      { env: { global: "CODECLIMATE_REPO_TOKEN=1aa1f737e7bf7d2859a2c7d9a0d9634a0d9aa89e3a19476d576faa7d02a1d46f" } },
+  sedentary:      { env: { global: ["CC_TEST_REPORTER_ID=1aa1f737e7bf7d2859a2c7d9a0d9634a0d9aa89e3a19476d576faa7d02a1d46f"] } },
   "sedentary-pg": {
     before_install: ["sudo service postgresql stop", "sudo service postgresql restart $PG_VERSION"],
     before_script:  [
+      ...before_script_common,
       'psql -c "CREATE DATABASE sedentary;" -U postgres',
       "psql -c \"ALTER DATABASE sedentary SET timezone TO 'GMT';\" -U postgres",
       'export SPG=\'{"user":"postgres","password":"postgres"}\''
     ],
     env: {
-      global: ["CODECLIMATE_REPO_TOKEN=c7519657dfea145349c1b7a98f7134f033c25f598b40ad5b077744eb4beb7c66"],
+      global: ["CC_TEST_REPORTER_ID=c7519657dfea145349c1b7a98f7134f033c25f598b40ad5b077744eb4beb7c66"],
       matrix: ["PG_VERSION=13", "PG_VERSION=12", "PG_VERSION=11", "PG_VERSION=10"]
     }
   }
