@@ -17,14 +17,28 @@ type ForeignKeyFileds<T, k> = T extends FieldDefinition<native, infer R> ? (R ex
 type ForeignKey<T> = T extends FieldDefinition<native, infer R> ? () => Promise<R> : never;
 type Keys<F extends FieldsDefinition> = { [f in keyof F]?: ForeignKeyFileds<F[f], f> }[keyof F];
 
+type Methods<T> = { [key: string]: (this: T) => unknown };
+
 type Native__<T> = T extends Type<infer N, unknown> ? N : never;
 type Native_<T> = T extends (...args: unknown[]) => Type<infer N, infer R> ? Native__<Type<N, R>> : Native__<T>;
 type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Type<N, R>> : Native_<T>;
 
 type Parent<T> = T extends Meta<native, infer R> ? R : never;
 
+type Options<M, T> = {
+  init?: (this: T) => void;
+  methods?: M;
+  sync?: boolean;
+  tableName?: string;
+};
+
+type Model<F extends FieldsDefinition, M> = { [f in keyof F]?: Native<F[f]> } & { [f in Keys<F> & string as `${f}Load`]?: ForeignKey<F[f]> } & M;
+
+type Ancestor<F, N extends native, T extends Record> = (new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>;
+
 export interface SchemaOptions {
   log?: (message: string) => void;
+  sync?: boolean;
 }
 
 export class Sedentary {
@@ -88,99 +102,27 @@ export class Sedentary {
     return new Type<string, R>({ size: 0, type: "" });
   }
 
-  model<
-    F extends FieldsDefinition,
-    // eslint-disable-next-line space-before-function-paren
-    M extends { [key: string]: (this: T) => unknown },
-    T extends Record & { id?: number } & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
-  >(
+  model<F extends FieldsDefinition, M extends Methods<T>, T extends Record & { id?: string } & Model<F, M>>(
     name: string,
     fields: F,
-    options?: {
-      init?: (this: T) => void;
-      methods?: M;
-      sync?: boolean;
-      tableName?: string;
-    }
-  ): // prettier-ignore
-  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<number, T>);
-  model<
-    F extends FieldsDefinition,
-    // eslint-disable-next-line space-before-function-paren
-    M extends { [key: string]: (this: T) => unknown },
-    T extends Record & { id?: string } & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
-  >(
+    options?: Options<M, T> & { int8id: true }
+  ): Ancestor<F, string, T>;
+  model<F extends FieldsDefinition, K extends keyof F, M extends Methods<T>, N extends K extends keyof F ? Native<F[K]> : never, T extends Record & Model<F, M>>(
     name: string,
     fields: F,
-    options?: {
-      init?: (this: T) => void;
-      int8id: true;
-      methods?: M;
-      sync?: boolean;
-      tableName?: string;
-    }
-  ): // prettier-ignore
-  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<string, T>);
-  model<
-    F extends FieldsDefinition,
-    K extends string,
-    // eslint-disable-next-line space-before-function-paren
-    M extends { [key: string]: (this: T) => unknown },
-    N extends K extends keyof F ? Native<F[K]> : never,
-    T extends Record & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
-  >(
+    options?: Options<M, T> & { primaryKey: K }
+  ): Ancestor<F, N, T>;
+  model<F extends FieldsDefinition, M extends Methods<T>, P extends Meta<native, Record>, N extends P extends Meta<infer N, Record> ? N : never, T extends Parent<P> & Model<F, M>>(
     name: string,
     fields: F,
-    options?: {
-      init?: (this: T) => void;
-      methods?: M;
-      primaryKey: K;
-      sync?: boolean;
-      tableName?: string;
-    }
-  ): // prettier-ignore
-  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>);
-  model<
-    F extends FieldsDefinition,
-    // eslint-disable-next-line space-before-function-paren
-    M extends { [key: string]: (this: T) => unknown },
-    P extends (new () => Record) & Meta<native, Record>,
-    N extends P extends Meta<infer N, Record> ? N : never,
-    T extends Parent<P> & { [f in keyof F]?: Native<F[f]> } & { load: { [f in Keys<F>]?: ForeignKey<F[f]> } } & M
-  >(
+    options?: Options<M, T> & { parent: P }
+  ): Ancestor<F, N, T>;
+  model<F extends FieldsDefinition, M extends Methods<T>, T extends Record & { id?: number } & Model<F, M>>(name: string, fields: F, options?: Options<M, T>): Ancestor<F, number, T>;
+  model<F extends FieldsDefinition, K extends string, M extends Methods<T>, N extends native, P extends Meta<native, Record>, T extends Record & Model<F, M>>(
     name: string,
     fields: F,
-    options?: {
-      init?: (this: T) => void;
-      methods?: M;
-      parent: P;
-      sync?: boolean;
-      tableName?: string;
-    }
-  ): // prettier-ignore
-  ((new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>);
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  model<
-    F extends FieldsDefinition,
-    K extends string,
-    // eslint-disable-next-line space-before-function-paren
-    M extends { [key: string]: (this: T) => unknown },
-    N extends native,
-    P extends (new () => Record) & Meta<native, Record>,
-    T extends Record
-  >(
-    name: string,
-    fields: F,
-    options?: {
-      init?: (this: T) => void;
-      int8id?: boolean;
-      methods?: M;
-      parent?: P;
-      primaryKey?: K;
-      sync?: boolean;
-      tableName?: string;
-    }
-  ) {
+    options?: Options<M, T> & { int8id?: boolean; parent?: P; primaryKey?: K }
+  ): Ancestor<F, N, T> {
     if(this.models[name]) throw new Error(`Sedentary.model: Model '${name}' already defined`);
     if(typeof name !== "string") throw new Error("Sedentary.model: Wrong 'name' type: expected 'string'");
     if(! fields) fields = {} as F;
@@ -217,7 +159,7 @@ export class Sedentary {
     if(! parent) constraints.push({ name: `${tableName}_${pkName}_unique`, type: "u", field: pkName });
 
     for(const fname in fields) {
-      if(["fields", "load", "meta", "name", "prototype", "save", "size", "type"].indexOf(fname) !== -1) throw new Error(`Sedentary.model: '${fname}' field: reserved name`);
+      if(["load", "meta", "name", "prototype", "save", "size", "type"].indexOf(fname) !== -1) throw new Error(`Sedentary.model: '${fname}' field: reserved name`);
 
       const field = fields[fname];
       // eslint-disable-next-line prefer-const
@@ -280,43 +222,6 @@ export class Sedentary {
 
     for(const key in fields) flds[key] = null;
 
-    const record = (function(this: T): void {
-      //const t = this as This;
-      //t.a = "sisi";
-      //t.b = 2;
-      //this.id = 1;
-      if(init) init.call(this);
-    } as unknown) as typeof Record;
-    Object.defineProperty(record, "name", { value: name });
-
-    const save = function(this: T): Promise<boolean> {
-      return new Promise((resolve, reject) => {
-        const save = (): void => reject(new Error("eh no"));
-        Object.defineProperty(save, "name", { value: name + ".save" });
-
-        setTimeout(save, 10);
-      });
-    };
-    Object.defineProperty(save, "name", { value: name + ".save" });
-
-    record.prototype = new Record();
-    record.prototype.constructor = record;
-    record.prototype.save = save;
-
-    ["init"].forEach(method => (options[method] ? (record.prototype[method] = options[method]) : null));
-
-    const create: () => T = () => new record() as T;
-    Object.defineProperty(create, "name", { value: name + "s.create" });
-
-    const load: (boh: boolean) => Promise<T[]> = (boh: boolean) =>
-      new Promise((resolve, reject) =>
-        setTimeout(() => {
-          if(boh) return resolve([new record() as T]);
-          reject(new Error("boh"));
-        }, 10)
-      );
-    Object.defineProperty(load, "name", { value: name + "s.load" });
-
     class Class {
       constructor() {
         if(init) init.call(this);
@@ -344,7 +249,6 @@ export class Sedentary {
     const meta = { tableName, primaryKey, init, methods };
 
     Object.defineProperty(Class, "name", { value: name });
-    Object.defineProperty(Class, "fields", { value: flds });
     Object.defineProperty(Class, "load", { value: load2 });
     Object.defineProperty(Class, "meta", { value: new Meta<N, T>(meta) });
     Object.defineProperty(Class.prototype.save, "name", { value: name + ".save" });
@@ -352,7 +256,7 @@ export class Sedentary {
     Object.assign(Class, { ...flds, isModel: () => true });
     Object.assign(Class.prototype, methods);
 
-    return Class;
+    return Class as Ancestor<F, N, T>;
   }
 
   checkSize(size: number, message: string): number {
@@ -377,10 +281,9 @@ const fields = {
 };
 
 class Item extends db.model("Item", fields, {
-  init: function(this: unknown) {
-    const t = this as Item;
-    t.num = 0;
-    t.str = "0";
+  init: function(): void {
+    this.num = 0;
+    this.str = "0";
   },
   int8id:  true,
   methods: {
@@ -397,12 +300,11 @@ class Super extends db.model(
   },
   {
     parent: Item,
-    init:   async function(this: unknown) {
-      const t = this as Super;
-      t.n = "23";
-      t.id = "0";
-      t.num = 0;
-      const a = t.load.n ? await t.load.n() : { prova: (): null => null };
+    init:   async function() {
+      this.n = "23";
+      this.id = "0";
+      this.num = 0;
+      const a = this.nLoad ? await this.nLoad() : { prova: (): null => null };
       a.prova();
     }
   }
@@ -410,12 +312,12 @@ class Super extends db.model(
 
 class Next extends db.model(
   "Next",
-  { a: db.INT },
+  { a: db.INT, b: db.INT },
   {
     init: function() {
       this.a = 23;
-      this.id = 23;
-    }
+    },
+    primaryKey: "a"
   }
 ) {}
 

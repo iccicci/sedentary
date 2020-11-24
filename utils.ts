@@ -6,7 +6,7 @@ const { readFile, writeFile } = promises;
 const { VERSION, npm_package_name } = process.env;
 
 const common: string[] = ["*.db", "*.tgz", "coverage", "node_modules", "sedentary-mysql", "sedentary-pg", "sedentary-sqlite", ""];
-const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "index.d.ts", "index.js", "lib/*.d.ts", "lib/*.js"];
+const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "index.d.ts", "index.js", "lib/*.d.ts", "lib/*.js"];
 const npm: string[] = [".*", "Makefile", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "test", "tsconfig.json", "utils.ts"];
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
@@ -20,8 +20,8 @@ const packagejson = {
     "@types/mocha":                     "8.0.4",
     "@types/node":                      "14.14.9",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "4.8.1",
-    "@typescript-eslint/parser":        "4.8.1",
+    "@typescript-eslint/eslint-plugin": "4.8.2",
+    "@typescript-eslint/parser":        "4.8.2",
     eslint:                             "7.14.0",
     mocha:                              "8.2.1",
     prettier:                           "2.2.0",

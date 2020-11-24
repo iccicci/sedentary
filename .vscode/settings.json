@@ -10,6 +10,7 @@
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
   "window.zoomLevel": 0,
   "[javascript]": { "editor.formatOnSave": false },
   "[typescript]": { "editor.formatOnSave": false }

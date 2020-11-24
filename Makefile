@@ -10,6 +10,9 @@ endif
 
 ifeq (${PACKAGE}, sedentary)
 
+doc:
+	cd docs ; sphinx-build . build
+
 else
 
 ifeq (${PACKAGE}, sedentary-pg)

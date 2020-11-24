@@ -3,6 +3,9 @@ checks:
   file-lines:
     config:
       threshold: 500
+  identical-code:
+    config:
+      threshold: 100
   method-complexity:
     config:
       threshold: 100
@@ -11,10 +14,7 @@ checks:
       threshold: 200
   similar-code:
     config:
-      threshold: 60
-  identical-code:
-    config:
-      threshold: 60
+      threshold: 100
 plugins:
   eslint:
     enabled: true

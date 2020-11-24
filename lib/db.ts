@@ -34,8 +34,7 @@ export class Meta<N extends native, R extends Record> extends Type<N, R> {
 
   constructor(options: IMeta) {
     super({ size: 0, type: "" });
-
-    for(const key in options) this[key] = options[key];
+    Object.assign(this, options);
   }
 
   isModel(): boolean {
