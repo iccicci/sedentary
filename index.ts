@@ -1,7 +1,7 @@
 import { Constraint, DB, Field, Meta, Record, Table, Type, native } from "./lib/db";
 import { MiniDB } from "./lib/minidb";
 
-type TypeDefinition<N extends native, R extends unknown> = ((...args: unknown[]) => Type<N, R>) | Type<N, R>;
+type TypeDefinition<N extends native, R extends unknown> = (() => Type<N, R>) | Type<N, R>;
 interface FieldOptions<N extends native, R extends unknown> {
   defaultValue?: N;
   fieldName?: string;
@@ -20,7 +20,7 @@ type Keys<F extends FieldsDefinition> = { [f in keyof F]?: ForeignKeyFileds<F[f]
 type Methods<T> = { [key: string]: (this: T) => unknown };
 
 type Native__<T> = T extends Type<infer N, unknown> ? N : never;
-type Native_<T> = T extends (...args: unknown[]) => Type<infer N, infer R> ? Native__<Type<N, R>> : Native__<T>;
+type Native_<T> = T extends () => Type<infer N, infer R> ? Native__<Type<N, R>> : Native__<T>;
 type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Type<N, R>> : Native_<T>;
 
 type Parent<T> = T extends Meta<native, infer R> ? R : never;
@@ -66,13 +66,17 @@ export class Sedentary {
   }
 
   INT(size?: number): Type<number, unknown> {
-    const message = "Sedentary.INT: Wrong 'size': expected 2, 4 or 8";
+    const message = "Sedentary.INT: Wrong 'size': expected 2 or 4";
 
-    size = size ? this.checkSize(size, message) : 8;
+    size = size ? this.checkSize(size, message) : 4;
 
-    if(size !== 2 && size !== 4 && size !== 8) throw new Error(message);
+    if(size !== 2 && size !== 4) throw new Error(message);
 
     return new Type({ size, type: "INT" });
+  }
+
+  INT8(): Type<string, unknown> {
+    return new Type({ size: 8, type: "INT8" });
   }
 
   FKEY<N extends native, R extends Record>(record: Type<N, R>): Type<N, R> {
@@ -133,10 +137,12 @@ export class Sedentary {
     for(const k in options) if(["init", "int8id", "methods", "parent", "primaryKey", "sync", "tableName", "type"].indexOf(k) === -1) throw new Error(`Sedentary.model: Unknown '${k}' option`);
 
     const constraints: Constraint[] = [];
-    const { parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name + "s", ...options };
+    const { int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name + "s", ...options };
     let { methods } = options;
     const pkName = primaryKey || "id";
-    let farray: Field<native, unknown>[] = [new Field<number, unknown>({ fieldName: "id", notNull: true, size: 8, type: "INT", unique: true })];
+    let farray: Field<native, unknown>[] = int8id
+      ? [new Field<string, unknown>({ fieldName: "id", notNull: true, size: 8, type: "INT8", unique: true })]
+      : [new Field<number, unknown>({ fieldName: "id", notNull: true, size: 4, type: "INT", unique: true })];
 
     if(methods && ! (methods instanceof Object)) throw new Error("Sedentary.model: Wrong 'methods' option type: expected 'Object'");
 
@@ -167,14 +173,14 @@ export class Sedentary {
         // eslint-disable-next-line prefer-const
         let { fieldName, unique, type } = { fieldName: fname as string, unique: false, type: null as unknown };
 
-        const call = (unique: boolean, func: () => Type<native, unknown>, message: string) => {
-          if(func !== this.INT && func !== this.FKEY) throw new Error(message);
+        const call = (fieldName: string, unique: boolean, func: () => Type<native, unknown>, message: string) => {
+          if(func !== this.FKEY && func !== this.INT && func !== this.INT8) throw new Error(message);
 
-          return new Field({ fieldName: fname, unique, ...func() });
+          return new Field({ fieldName, unique, ...func() });
         };
 
         if(field instanceof Type) return new Field({ fieldName: fname, ...field });
-        if(field instanceof Function) return call(false, field as never, `Sedentary.model: Wrong '${fname}' field value: expected 'Field'`);
+        if(field instanceof Function) return call(fname, false, field as never, `Sedentary.model: Wrong '${fname}' field value: expected 'Field'`);
         if(! (field instanceof Object)) throw new Error(`Sedentary.model: Wrong '${fname}' field type: expected 'Field'`);
 
         ({ fieldName, unique, type } = (field as unknown) as FieldOptions<native, unknown>);
@@ -182,8 +188,8 @@ export class Sedentary {
 
         if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${fname}' field: Wrong 'fieldName' attribute type: expected 'string'`);
         if(! type) throw new Error(`Sedentary.model: '${fname}' field: Missing 'type' attribute`);
-        if(type instanceof Type) return new Field({ ...((field as unknown) as Type<native, unknown>), ...type });
-        if(type instanceof Function) return call(unique, type as never, `Sedentary.model: '${fname}' field: Wrong 'type' attribute value: expected 'Type'`);
+        if(type instanceof Type) return new Field({ ...((field as unknown) as Type<native, unknown>), fieldName, ...type });
+        if(type instanceof Function) return call(fieldName, unique, type as never, `Sedentary.model: '${fname}' field: Wrong 'type' attribute value: expected 'Type'`);
 
         throw new Error(`Sedentary.model: '${fname}' field: Wrong 'type' attribute type: expected 'Type'`);
       })();

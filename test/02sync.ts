@@ -70,4 +70,38 @@ describe("sync", () => {
       });
     });
   });
+
+  describe("CREATE TABLE int8id", function() {
+    helper(expected.sync_create_table_int8id, async db => {
+      db.model("test1", { a: db.INT, b: db.INT8 }, { int8id: true });
+      await db.connect();
+    });
+  });
+
+  describe("field options", function() {
+    helper(expected.sync_field_options, async db => {
+      db.model("test1", {
+        a: { type: db.INT, unique: true },
+        b: { notNull: true, type: db.INT },
+        c: { defaultValue: "23", type: db.INT() },
+        d: { defaultValue: 23, notNull: true, type: db.INT8 },
+        e: { fieldName: "f", type: db.INT },
+        g: { fieldName: "h", type: db.INT() }
+      });
+      await db.connect();
+    });
+
+    describe("change field attributes", function() {
+      helper(expected.sync_field_options_change, true, async db => {
+        db.model("test1", {
+          a: { defaultValue: 23, type: db.INT },
+          b: { type: db.INT, unique: true },
+          c: { notNull: true, type: db.INT() },
+          d: { type: db.INT8 },
+          f: { notNull: true, type: db.INT }
+        });
+        await db.connect();
+      });
+    });
+  });
 });

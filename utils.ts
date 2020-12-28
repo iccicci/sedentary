@@ -7,7 +7,7 @@ const { VERSION, npm_package_name } = process.env;
 
 const common: string[] = ["*.db", "*.tgz", "coverage", "node_modules", "sedentary-mysql", "sedentary-pg", "sedentary-sqlite", ""];
 const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "index.d.ts", "index.js", "lib/*.d.ts", "lib/*.js"];
-const npm: string[] = [".*", "Makefile", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "test", "tsconfig.json", "utils.ts"];
+const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "test", "tsconfig.json", "utils.ts"];
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
@@ -17,17 +17,17 @@ const packagejson = {
   author:          "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
   dependencies:    {},
   devDependencies: {
-    "@types/mocha":                     "8.0.4",
-    "@types/node":                      "14.14.9",
+    "@types/mocha":                     "8.2.0",
+    "@types/node":                      "14.14.16",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "4.8.2",
-    "@typescript-eslint/parser":        "4.8.2",
-    eslint:                             "7.14.0",
+    "@typescript-eslint/eslint-plugin": "4.11.0",
+    "@typescript-eslint/parser":        "4.11.0",
+    eslint:                             "7.16.0",
     mocha:                              "8.2.1",
-    prettier:                           "2.2.0",
+    prettier:                           "2.2.1",
     nyc:                                "15.1.0",
-    "ts-node":                          "9.0.0",
-    typescript:                         "4.1.2",
+    "ts-node":                          "9.1.1",
+    typescript:                         "4.1.3",
     yamljs:                             "0.3.0"
   },
   engines:  { node: ">=10.0" },
