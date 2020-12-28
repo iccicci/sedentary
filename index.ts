@@ -165,31 +165,31 @@ export class Sedentary {
     if(! parent) constraints.push({ name: `${tableName}_${pkName}_unique`, type: "u", field: pkName });
 
     for(const fname in fields) {
-      if(["load", "meta", "name", "prototype", "save", "size", "type"].indexOf(fname) !== -1) throw new Error(`Sedentary.model: '${fname}' field: reserved name`);
+      if(["constructor", "load", "meta", "name", "prototype", "save", "size", "type"].indexOf(fname) !== -1) throw new Error(`Sedentary.model: '${fname}' field: reserved name`);
 
       const field = fields[fname];
       // eslint-disable-next-line prefer-const
       let { defaultValue, fieldName, notNull, size, type, unique } = ((): Field<native, unknown> => {
         // eslint-disable-next-line prefer-const
-        let { fieldName, unique, type } = { fieldName: fname as string, unique: false, type: null as unknown };
+        let { defaultValue, fieldName, unique, type } = { defaultValue: null as native, fieldName: fname as string, unique: false, type: null as unknown };
 
-        const call = (fieldName: string, unique: boolean, func: () => Type<native, unknown>, message: string) => {
+        const call = (defaultValue: native, fieldName: string, unique: boolean, func: () => Type<native, unknown>, message: string) => {
           if(func !== this.FKEY && func !== this.INT && func !== this.INT8) throw new Error(message);
 
-          return new Field({ fieldName, unique, ...func() });
+          return new Field({ defaultValue, fieldName, unique, ...func() });
         };
 
         if(field instanceof Type) return new Field({ fieldName: fname, ...field });
-        if(field instanceof Function) return call(fname, false, field as never, `Sedentary.model: Wrong '${fname}' field value: expected 'Field'`);
+        if(field instanceof Function) return call(null, fname, false, field as never, `Sedentary.model: Wrong '${fname}' field value: expected 'Field'`);
         if(! (field instanceof Object)) throw new Error(`Sedentary.model: Wrong '${fname}' field type: expected 'Field'`);
 
-        ({ fieldName, unique, type } = (field as unknown) as FieldOptions<native, unknown>);
+        ({ defaultValue, fieldName, unique, type } = (field as unknown) as FieldOptions<native, unknown>);
         if(! fieldName) fieldName = fname;
 
         if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${fname}' field: Wrong 'fieldName' attribute type: expected 'string'`);
         if(! type) throw new Error(`Sedentary.model: '${fname}' field: Missing 'type' attribute`);
         if(type instanceof Type) return new Field({ ...((field as unknown) as Type<native, unknown>), fieldName, ...type });
-        if(type instanceof Function) return call(fieldName, unique, type as never, `Sedentary.model: '${fname}' field: Wrong 'type' attribute value: expected 'Type'`);
+        if(type instanceof Function) return call(defaultValue, fieldName, unique, type as never, `Sedentary.model: '${fname}' field: Wrong 'type' attribute value: expected 'Type'`);
 
         throw new Error(`Sedentary.model: '${fname}' field: Wrong 'type' attribute type: expected 'Type'`);
       })();

@@ -2,14 +2,14 @@ import { promises } from "fs";
 
 const { unlink } = promises;
 
-export const connection = "test.db";
+export const connection = "test.json";
 
 export const wrongConnection = "test";
 export const wrongConnectionError = "EISDIR: illegal operation on a directory, read";
 
 export async function clean(): Promise<void> {
   try {
-    await unlink("test.db");
+    await unlink("test.json");
   } catch(e) {}
 }
 
@@ -50,11 +50,18 @@ export const expected = {
     "'test1s': Adding field: 'a' 'INT' '4'",
     "'test1s': Adding field: 'b' 'INT' '4'",
     "'test1s': Adding field: 'c' 'INT' '4'",
+    "'test1s': Setting default value '23' for field: 'c'",
     "'test1s': Adding field: 'd' 'INT8' '8'",
+    "'test1s': Setting default value '23' for field: 'd'",
     "'test1s': Adding field: 'f' 'INT' '4'",
     "'test1s': Adding field: 'h' 'INT' '4'",
     "'test1s': Adding unique constraint on field: 'id'",
     "'test1s': Adding unique constraint on field: 'a'"
   ],
-  sync_field_options_change: ["'test1s': Removing unique constraint on field: 'a'", "'test1s': Removing field: 'h'", "'test1s': Adding unique constraint on field: 'b'"]
+  sync_field_options_change: [
+    "'test1s': Removing unique constraint on field: 'a'",
+    "'test1s': Removing field: 'h'",
+    "'test1s': Setting default value '23' for field: 'a'",
+    "'test1s': Adding unique constraint on field: 'b'"
+  ]
 };

@@ -97,8 +97,8 @@ describe("sync", () => {
           a: { defaultValue: 23, type: db.INT },
           b: { type: db.INT, unique: true },
           c: { notNull: true, type: db.INT() },
-          d: { type: db.INT8 },
-          f: { notNull: true, type: db.INT }
+          d: { defaultValue: 42, type: db.INT8 },
+          f: { notNull: true, type: db.INT8 }
         });
         await db.connect();
       });

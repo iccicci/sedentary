@@ -43,7 +43,7 @@ export class Meta<N extends native, R extends Record> extends Type<N, R> {
 }
 
 export class Field<N extends native, R extends unknown> extends Type<N, R> {
-  defaultValue?: string;
+  defaultValue?: native;
   fieldName?: string;
   notNull?: boolean;
   unique?: boolean;

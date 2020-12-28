@@ -84,6 +84,12 @@ export class MiniDB extends DB {
         this.log(`'${table.tableName}': Adding field: '${field.fieldName}' '${type}' '${size}'`);
         fields[field.fieldName] = { size, type };
       }
+
+      if(fields[field.fieldName].default) {
+      } else if(field.defaultValue) {
+        this.log(`'${table.tableName}': Setting default value '${field.defaultValue}' for field: '${field.fieldName}'`);
+        fields[field.fieldName].default = field.defaultValue;
+      }
     }
 
     await this.save();
