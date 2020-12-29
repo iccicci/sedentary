@@ -85,7 +85,14 @@ export class MiniDB extends DB {
         fields[field.fieldName] = { size, type };
       }
 
+      if(fields[field.fieldName].size !== size || fields[field.fieldName].type !== type) {
+        this.log(`'${table.tableName}': Changing field type: '${field.fieldName}' '${type}' '${size}'`);
+        fields[field.fieldName] = { size, type };
+      }
+
       if(fields[field.fieldName].default) {
+        if(! field.defaultValue) this.log(`'${table.tableName}': Dropping default value for field: '${field.fieldName}'`);
+        else if(fields[field.fieldName].default !== field.defaultValue) this.log(`'${table.tableName}': Changing default value to '${field.defaultValue}' for field: '${field.fieldName}'`);
       } else if(field.defaultValue) {
         this.log(`'${table.tableName}': Setting default value '${field.defaultValue}' for field: '${field.fieldName}'`);
         fields[field.fieldName].default = field.defaultValue;

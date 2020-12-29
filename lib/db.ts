@@ -1,5 +1,3 @@
-export type native = number | string | Date;
-
 export class Record {
   init(): void {}
 
@@ -8,13 +6,14 @@ export class Record {
   }
 }
 
-export class Type<N extends native, R extends unknown> {
+export class Type<N extends unknown, R extends unknown> {
+  base: unknown;
   native?: N;
   record?: R;
   size: number;
   type: string;
 
-  constructor(from: Partial<Type<native, unknown>>) {
+  constructor(from: Partial<Type<unknown, unknown>>) {
     Object.assign(this, from);
   }
 }
@@ -26,7 +25,7 @@ interface IMeta {
   tableName: string;
 }
 
-export class Meta<N extends native, R extends Record> extends Type<N, R> {
+export class Meta<N extends unknown, R extends Record> extends Type<N, R> {
   init: () => void;
   methods: { [key: string]: () => unknown };
   primaryKey: string;
@@ -42,8 +41,8 @@ export class Meta<N extends native, R extends Record> extends Type<N, R> {
   }
 }
 
-export class Field<N extends native, R extends unknown> extends Type<N, R> {
-  defaultValue?: native;
+export class Field<N extends unknown, R extends unknown> extends Type<N, R> {
+  defaultValue?: unknown;
   fieldName?: string;
   notNull?: boolean;
   unique?: boolean;
@@ -69,9 +68,9 @@ export interface Constraint {
 
 interface ITable {
   constraints: Constraint[];
-  fields: Field<native, unknown>[];
+  fields: Field<unknown, unknown>[];
   oid?: number;
-  parent: Meta<native, Record>;
+  parent: Meta<unknown, Record>;
   primaryKey: string;
   sync: boolean;
   tableName: string;

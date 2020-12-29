@@ -11,7 +11,7 @@ const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/m
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
-const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "7.14.7", pg: "8.5.1" }, "sedentary-sqlite": {} };
+const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "7.14.7", "@types/pg-format": "1.0.1", pg: "8.5.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
 
 const packagejson = {
   author:          "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
@@ -20,8 +20,8 @@ const packagejson = {
     "@types/mocha":                     "8.2.0",
     "@types/node":                      "14.14.16",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "4.11.0",
-    "@typescript-eslint/parser":        "4.11.0",
+    "@typescript-eslint/eslint-plugin": "4.11.1",
+    "@typescript-eslint/parser":        "4.11.1",
     eslint:                             "7.16.0",
     mocha:                              "8.2.1",
     prettier:                           "2.2.1",
@@ -43,11 +43,11 @@ const packagejson = {
   },
   readmeFilename: "README.md",
   scripts:        {
-    coverage:    "nyc -r lcov -r text -r text-summary -r html mocha -r ts-node/register test/*js test/*ts",
+    coverage:    "nyc -r lcov -r text -r text-summary -r html mocha -r ts-node/register test/*ts",
     gitignore:   "node -r ts-node/register utils.ts gitignore",
     npmignore:   "node -r ts-node/register utils.ts npmignore",
     packagejson: "node -r ts-node/register utils.ts packagejson",
-    test:        "mocha -r ts-node/register test/*js test/*ts",
+    test:        "mocha -r ts-node/register test/*ts",
     travis:      "node -r ts-node/register utils.ts travis",
     tsc:         "tsc --declaration",
     version:     "node -r ts-node/register utils.ts version"

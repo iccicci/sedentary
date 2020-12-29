@@ -49,7 +49,7 @@ export const expected = {
     "'test1s': Adding field: 'id' 'INT' '4'",
     "'test1s': Adding field: 'a' 'INT' '4'",
     "'test1s': Adding field: 'b' 'INT' '4'",
-    "'test1s': Adding field: 'c' 'INT' '4'",
+    "'test1s': Adding field: 'c' 'INT' '2'",
     "'test1s': Setting default value '23' for field: 'c'",
     "'test1s': Adding field: 'd' 'INT8' '8'",
     "'test1s': Setting default value '23' for field: 'd'",
@@ -62,6 +62,9 @@ export const expected = {
     "'test1s': Removing unique constraint on field: 'a'",
     "'test1s': Removing field: 'h'",
     "'test1s': Setting default value '23' for field: 'a'",
+    "'test1s': Dropping default value for field: 'c'",
+    "'test1s': Changing default value to '42' for field: 'd'",
+    "'test1s': Changing field type: 'f' 'INT8' '8'",
     "'test1s': Adding unique constraint on field: 'b'"
   ]
 };

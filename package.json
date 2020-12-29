@@ -7,8 +7,8 @@
     "@types/mocha": "8.2.0",
     "@types/node": "14.14.16",
     "@types/yamljs": "0.2.31",
-    "@typescript-eslint/eslint-plugin": "4.11.0",
-    "@typescript-eslint/parser": "4.11.0",
+    "@typescript-eslint/eslint-plugin": "4.11.1",
+    "@typescript-eslint/parser": "4.11.1",
     "eslint": "7.16.0",
     "mocha": "8.2.1",
     "nyc": "15.1.0",
@@ -43,15 +43,15 @@
   "readmeFilename": "README.md",
   "repository": "https://github.com/iccicci/sedentary",
   "scripts": {
-    "coverage": "nyc -r lcov -r text -r text-summary -r html mocha -r ts-node/register test/*js test/*ts",
+    "coverage": "nyc -r lcov -r text -r text-summary -r html mocha -r ts-node/register test/*ts",
     "gitignore": "node -r ts-node/register utils.ts gitignore",
     "npmignore": "node -r ts-node/register utils.ts npmignore",
     "packagejson": "node -r ts-node/register utils.ts packagejson",
-    "test": "mocha -r ts-node/register test/*js test/*ts",
+    "test": "mocha -r ts-node/register test/*ts",
     "travis": "node -r ts-node/register utils.ts travis",
     "tsc": "tsc --declaration",
     "version": "node -r ts-node/register utils.ts version"
   },
   "types": "index.d.ts",
-  "version": "0.0.9"
+  "version": "0.0.10"
 }

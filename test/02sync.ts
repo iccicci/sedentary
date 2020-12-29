@@ -83,8 +83,8 @@ describe("sync", () => {
       db.model("test1", {
         a: { type: db.INT, unique: true },
         b: { notNull: true, type: db.INT },
-        c: { defaultValue: "23", type: db.INT() },
-        d: { defaultValue: 23, notNull: true, type: db.INT8 },
+        c: { defaultValue: 23, type: db.INT(2) },
+        d: { defaultValue: "23", notNull: true, type: db.INT8 },
         e: { fieldName: "f", type: db.INT },
         g: { fieldName: "h", type: db.INT() }
       });
@@ -96,8 +96,8 @@ describe("sync", () => {
         db.model("test1", {
           a: { defaultValue: 23, type: db.INT },
           b: { type: db.INT, unique: true },
-          c: { notNull: true, type: db.INT() },
-          d: { defaultValue: 42, type: db.INT8 },
+          c: { notNull: true, type: db.INT(2) },
+          d: { defaultValue: "42", type: db.INT8 },
           f: { notNull: true, type: db.INT8 }
         });
         await db.connect();
