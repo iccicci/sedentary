@@ -84,14 +84,14 @@ describe("sync", () => {
         a: { type: db.INT, unique: true },
         b: { notNull: true, type: db.INT },
         c: { defaultValue: 23, type: db.INT(2) },
-        d: { defaultValue: "23", notNull: true, type: db.INT8 },
+        d: { defaultValue: "23", notNull: true, type: db.VARCHAR },
         e: { fieldName: "f", type: db.INT },
         g: { fieldName: "h", type: db.INT() }
       });
       await db.connect();
     });
 
-    describe("change field attributes", function() {
+    describe("change field options", function() {
       helper(expected.sync_field_options_change, true, async db => {
         db.model("test1", {
           a: { defaultValue: 23, type: db.INT },
@@ -99,6 +99,60 @@ describe("sync", () => {
           c: { notNull: true, type: db.INT(2) },
           d: { defaultValue: "42", type: db.INT8 },
           f: { notNull: true, type: db.INT8 }
+        });
+        await db.connect();
+      });
+    });
+  });
+
+  describe("field types", function() {
+    helper(expected.sync_field_types, async db => {
+      db.model("test1", {
+        a: db.VARCHAR(23),
+        b: db.VARCHAR(23),
+        c: db.VARCHAR(),
+        d: db.VARCHAR(23),
+        e: { defaultValue: "23", type: db.VARCHAR },
+        f: { defaultValue: "23", type: db.VARCHAR }
+      });
+      await db.connect();
+    });
+
+    describe("change field types", function() {
+      helper(expected.sync_field_types_change, true, async db => {
+        db.model("test1", {
+          a: db.INT(),
+          b: db.VARCHAR,
+          c: db.VARCHAR(23),
+          d: db.VARCHAR(42),
+          e: { defaultValue: "42", type: db.VARCHAR },
+          f: { defaultValue: "23", type: db.VARCHAR }
+        });
+        await db.connect();
+      });
+    });
+  });
+
+  describe("datetime", function() {
+    helper(expected.sync_datetime, async db => {
+      db.model("test1", {
+        a: db.DATETIME,
+        b: db.DATETIME,
+        c: db.VARCHAR,
+        d: db.DATETIME,
+        e: db.INT
+      });
+      await db.connect();
+    });
+
+    describe("datetime changes", function() {
+      helper(expected.sync_datetime_changes, true, async db => {
+        db.model("test1", {
+          a: db.DATETIME,
+          b: db.VARCHAR,
+          c: db.DATETIME,
+          d: db.INT8,
+          e: db.DATETIME
         });
         await db.connect();
       });

@@ -42,6 +42,23 @@ export const expected = {
     "'test2s': Adding unique constraint on field: 'a'",
     "'test2s': Adding unique constraint on field: 'b'"
   ],
+  sync_datetime: [
+    "Adding table: 'test1s'",
+    "Setting auto increment: 'test1s'",
+    "'test1s': Adding field: 'id' 'INT' '4'",
+    "'test1s': Adding field: 'a' 'DATETIME' ''",
+    "'test1s': Adding field: 'b' 'DATETIME' ''",
+    "'test1s': Adding field: 'c' 'VARCHAR' ''",
+    "'test1s': Adding field: 'd' 'DATETIME' ''",
+    "'test1s': Adding field: 'e' 'INT' '4'",
+    "'test1s': Adding unique constraint on field: 'id'"
+  ],
+  sync_datetime_changes: [
+    "'test1s': Changing field type: 'b' 'VARCHAR' ''",
+    "'test1s': Changing field type: 'c' 'DATETIME' ''",
+    "'test1s': Changing field type: 'd' 'INT8' '8'",
+    "'test1s': Changing field type: 'e' 'DATETIME' ''"
+  ],
   sync_drop_column:   ["'test2s': Removing unique constraint on field: 'b'", "'test2s': Removing field: 'b'"],
   sync_field_options: [
     "Adding table: 'test1s'",
@@ -51,7 +68,7 @@ export const expected = {
     "'test1s': Adding field: 'b' 'INT' '4'",
     "'test1s': Adding field: 'c' 'INT' '2'",
     "'test1s': Setting default value '23' for field: 'c'",
-    "'test1s': Adding field: 'd' 'INT8' '8'",
+    "'test1s': Adding field: 'd' 'VARCHAR' ''",
     "'test1s': Setting default value '23' for field: 'd'",
     "'test1s': Adding field: 'f' 'INT' '4'",
     "'test1s': Adding field: 'h' 'INT' '4'",
@@ -63,8 +80,30 @@ export const expected = {
     "'test1s': Removing field: 'h'",
     "'test1s': Setting default value '23' for field: 'a'",
     "'test1s': Dropping default value for field: 'c'",
+    "'test1s': Changing field type: 'd' 'INT8' '8'",
     "'test1s': Changing default value to '42' for field: 'd'",
     "'test1s': Changing field type: 'f' 'INT8' '8'",
     "'test1s': Adding unique constraint on field: 'b'"
+  ],
+  sync_field_types: [
+    "Adding table: 'test1s'",
+    "Setting auto increment: 'test1s'",
+    "'test1s': Adding field: 'id' 'INT' '4'",
+    "'test1s': Adding field: 'a' 'VARCHAR' '23'",
+    "'test1s': Adding field: 'b' 'VARCHAR' '23'",
+    "'test1s': Adding field: 'c' 'VARCHAR' ''",
+    "'test1s': Adding field: 'd' 'VARCHAR' '23'",
+    "'test1s': Adding field: 'e' 'VARCHAR' ''",
+    "'test1s': Setting default value '23' for field: 'e'",
+    "'test1s': Adding field: 'f' 'VARCHAR' ''",
+    "'test1s': Setting default value '23' for field: 'f'",
+    "'test1s': Adding unique constraint on field: 'id'"
+  ],
+  sync_field_types_change: [
+    "'test1s': Changing field type: 'a' 'INT' '4'",
+    "'test1s': Changing field type: 'b' 'VARCHAR' ''",
+    "'test1s': Changing field type: 'c' 'VARCHAR' '23'",
+    "'test1s': Changing field type: 'd' 'VARCHAR' '42'",
+    "'test1s': Changing default value to '42' for field: 'e'"
   ]
 };

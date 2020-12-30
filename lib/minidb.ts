@@ -81,13 +81,13 @@ export class MiniDB extends DB {
       const { size, type } = field;
 
       if(! fields[field.fieldName]) {
-        this.log(`'${table.tableName}': Adding field: '${field.fieldName}' '${type}' '${size}'`);
+        this.log(`'${table.tableName}': Adding field: '${field.fieldName}' '${type}' '${size || ""}'`);
         fields[field.fieldName] = { size, type };
       }
 
       if(fields[field.fieldName].size !== size || fields[field.fieldName].type !== type) {
-        this.log(`'${table.tableName}': Changing field type: '${field.fieldName}' '${type}' '${size}'`);
-        fields[field.fieldName] = { size, type };
+        this.log(`'${table.tableName}': Changing field type: '${field.fieldName}' '${type}' '${size || ""}'`);
+        fields[field.fieldName] = { ...fields[field.fieldName], size, type };
       }
 
       if(fields[field.fieldName].default) {

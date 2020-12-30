@@ -10,7 +10,7 @@ export class Type<N extends unknown, R extends unknown> {
   base: unknown;
   native?: N;
   record?: R;
-  size: number;
+  size?: number;
   type: string;
 
   constructor(from: Partial<Type<unknown, unknown>>) {

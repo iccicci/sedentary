@@ -65,8 +65,16 @@ export class Sedentary {
     this.db = new MiniDB(filename, this.log);
   }
 
+  DATETIME(): Type<Date, unknown> {
+    return new Type({ base: Date, type: "DATETIME" });
+  }
+
+  FKEY<N extends unknown, R extends Record>(record: Type<N, R>): Type<N, R> {
+    return new Type({ base: record.base, size: 0, type: "" });
+  }
+
   INT(size?: number): Type<number, unknown> {
-    const message = "Sedentary.INT: Wrong 'size': expected 2 or 4";
+    const message = "Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4";
 
     size = size ? this.checkSize(size, message) : 4;
 
@@ -79,8 +87,12 @@ export class Sedentary {
     return new Type({ base: String, size: 8, type: "INT8" });
   }
 
-  FKEY<N extends unknown, R extends Record>(record: Type<N, R>): Type<N, R> {
-    return new Type({ base: record.base, size: 0, type: "" });
+  VARCHAR(size?: number): Type<string, unknown> {
+    const message = "Sedentary.VARCHAR: 'size' argument: Wrong value, expected positive integer";
+
+    size = size ? this.checkSize(size, message) : undefined;
+
+    return new Type({ base: String, size, type: "VARCHAR" });
   }
 
   async connect(): Promise<void> {
@@ -100,10 +112,6 @@ export class Sedentary {
     this.log("Closing connection...");
     await this.db.end();
     this.log("Connection closed");
-  }
-
-  fldString<R extends unknown>(options?: { foreignKey: R }): Type<string, R> {
-    return new Type<string, R>({ base: String, size: 0, type: "" });
   }
 
   model<F extends FieldsDefinition, M extends Methods<T>, T extends Record & { id?: string } & Model<F, M>>(
@@ -176,7 +184,7 @@ export class Sedentary {
           let { defaultValue, fieldName, unique, type } = { defaultValue: undefined as unknown, fieldName: fname as string, unique: false, type: null as unknown };
 
           const call = (defaultValue: unknown, fieldName: string, unique: boolean, func: () => Type<unknown, unknown>, message: string) => {
-            if(func !== this.FKEY && func !== this.INT && func !== this.INT8) throw new Error(message);
+            if(func !== this.DATETIME && func !== this.FKEY && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(message);
 
             return new Field({ defaultValue, fieldName, unique, ...func() });
           };
@@ -256,19 +264,19 @@ export class Sedentary {
       }
     }
 
-    const load2: (boh: boolean) => Promise<T[]> = (boh: boolean) =>
+    const load: (boh: boolean) => Promise<T[]> = (boh: boolean) =>
       new Promise((resolve, reject) =>
         setTimeout(() => {
           if(boh) return resolve([new Class() as T]);
           reject(new Error("boh"));
         }, 10)
       );
-    Object.defineProperty(load2, "name", { value: name + "s.load" });
+    Object.defineProperty(load, "name", { value: name + "s.load" });
 
     const meta = { tableName, primaryKey, init, methods };
 
     Object.defineProperty(Class, "name", { value: name });
-    Object.defineProperty(Class, "load", { value: load2 });
+    Object.defineProperty(Class, "load", { value: load });
     Object.defineProperty(Class, "meta", { value: new Meta<N, T>(meta) });
     Object.defineProperty(Class.prototype.save, "name", { value: name + ".save" });
     Object.assign(Class, new Meta<N, T>(meta));
@@ -292,11 +300,11 @@ export const Package = Sedentary;
 
 const db = new Sedentary("gino");
 
-const Users = db.model("User", { foo: db.INT(), bar: db.fldString() }, {});
+const Users = db.model("User", { foo: db.INT(), bar: db.VARCHAR() }, {});
 
 const fields = {
   num: db.FKEY(Users),
-  str: db.fldString()
+  str: db.VARCHAR()
 };
 
 class Item extends db.model("Item", fields, {
