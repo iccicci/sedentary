@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { DB, Table } from "./db";
+import { DB, IndexDef, Table } from "./db";
 import { promises } from "fs";
 
 const { readFile, writeFile } = promises;
+
+function indexName(idx: IndexDef): string {
+  return `${idx.fields.reduce((t, c) => `${t}_${c}`)}_${idx.type}`;
+}
 
 export class MiniDB extends DB {
   private body: any;
@@ -51,7 +55,19 @@ export class MiniDB extends DB {
     await this.save();
   }
 
-  async dropIndexes(table: Table): Promise<void> {}
+  async dropIndexes(table: Table): Promise<void> {
+    const names = table.indexes.map(indexName);
+    const { indexes } = this.body.tables[table.tableName];
+
+    for(const name in indexes) {
+      if(names.indexOf(name) === -1) {
+        this.log(`'${table.tableName}': Removing index: '${name}'`);
+        delete indexes[name];
+      }
+    }
+
+    await this.save();
+  }
 
   async end(): Promise<void> {}
 
@@ -68,6 +84,21 @@ export class MiniDB extends DB {
       if(! constraints[constraint.type][constraint.field]) {
         this.log(`'${table.tableName}': Adding unique constraint on field: '${constraint.field}'`);
         constraints[constraint.type][constraint.field] = true;
+      }
+    }
+
+    await this.save();
+  }
+
+  async syncIndexes(table: Table): Promise<void> {
+    const { indexes } = this.body.tables[table.tableName];
+
+    for(const index of table.indexes) {
+      const name = indexName(index);
+
+      if(! (name in indexes)) {
+        this.log(`'${table.tableName}': Adding index: '${name}'`);
+        indexes[name] = index;
       }
     }
 
@@ -119,7 +150,7 @@ export class MiniDB extends DB {
 
     if(! this.body.tables[table.tableName]) {
       this.log(`Adding table: '${table.tableName}'`);
-      this.body.tables[table.tableName] = { constraints: { f: {}, u: {} }, fields: {} };
+      this.body.tables[table.tableName] = { constraints: { f: {}, u: {} }, fields: {}, indexes: {} };
 
       if(table.parent) {
         this.log(`Setting parent: '${table.parent.tableName}' - to table: '${table.tableName}'`);

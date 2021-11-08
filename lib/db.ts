@@ -66,9 +66,24 @@ export interface Constraint {
   type: "f" | "u";
 }
 
+type IndexField = string[] | string;
+
+export interface IndexDef {
+  fields: string[];
+  type: "btree" | "hash";
+}
+
+interface IndexOptions {
+  fields: IndexField;
+  type?: "btree" | "hash";
+}
+
+export type Index = IndexField | IndexOptions;
+
 interface ITable {
   constraints: Constraint[];
   fields: Field<unknown, unknown>[];
+  indexes: IndexDef[];
   oid?: number;
   parent: Meta<unknown, Record>;
   primaryKey: string;
@@ -122,6 +137,7 @@ export abstract class DB {
       await this.syncFields(table);
       await this.syncSequence(table);
       await this.syncConstraints(table);
+      await this.syncIndexes(table);
     }
   }
 
@@ -130,6 +146,7 @@ export abstract class DB {
   abstract dropIndexes(table: Table): Promise<void>;
   abstract syncConstraints(table: Table): Promise<void>;
   abstract syncFields(table: Table): Promise<void>;
+  abstract syncIndexes(table: Table): Promise<void>;
   abstract syncSequence(table: Table): Promise<void>;
   abstract syncTable(table: Table): Promise<void>;
 }

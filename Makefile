@@ -127,6 +127,7 @@ package.json: utils.ts
 
 package-lock.json: package.json
 	npm install --prune
+	npm audit fix
 ifeq (${PACKAGE}, sedentary)
 	npm link
 else
@@ -134,7 +135,7 @@ ifeq (${PARENT}, yes)
 	npm link sedentary
 endif
 endif
-	@touch package-lock.json
+	@touch $@
 
 pull: setup
 	git pull

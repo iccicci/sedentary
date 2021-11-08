@@ -105,57 +105,39 @@ describe("sync", () => {
     });
   });
 
-  describe("field types", function() {
-    helper(expected.sync_field_types, async db => {
-      db.model("test1", {
-        a: db.VARCHAR(23),
-        b: db.VARCHAR(23),
-        c: db.VARCHAR(),
-        d: db.VARCHAR(23),
-        e: { defaultValue: "23", type: db.VARCHAR },
-        f: { defaultValue: "23", type: db.VARCHAR }
-      });
+  describe.only("indexes 1", function() {
+    helper(expected.sync_index_1, async db => {
+      db.model("test1", { a: db.INT, b: db.INT8 }, { index: ["a"] });
       await db.connect();
     });
 
-    describe("change field types", function() {
-      helper(expected.sync_field_types_change, true, async db => {
-        db.model("test1", {
-          a: db.INT(),
-          b: db.VARCHAR,
-          c: db.VARCHAR(23),
-          d: db.VARCHAR(42),
-          e: { defaultValue: "42", type: db.VARCHAR },
-          f: { defaultValue: "23", type: db.VARCHAR }
-        });
+    describe("indexes 2", function() {
+      helper(expected.sync_index_2, true, async db => {
+        db.model("test1", { a: db.INT, b: db.INT8 }, { index: ["a", "b"] });
         await db.connect();
+      });
+
+      describe("indexes 3", function() {
+        helper(expected.sync_index_3, true, async db => {
+          db.model("test1", { a: db.INT, b: db.INT8 }, { index: ["a", ["a", "b"]] });
+          await db.connect();
+        });
+
+        describe("indexes 4", function() {
+          helper(expected.sync_index_4, true, async db => {
+            db.model("test1", { a: db.INT, b: db.INT8 }, { index: { fields: ["a"], type: "hash" } });
+            await db.connect();
+          });
+        });
       });
     });
   });
 
-  describe("datetime", function() {
-    helper(expected.sync_datetime, async db => {
-      db.model("test1", {
-        a: db.DATETIME,
-        b: db.DATETIME,
-        c: db.VARCHAR,
-        d: db.DATETIME,
-        e: db.INT
-      });
+  xdescribe("foreign keys", function() {
+    helper(expected.sync_foreign_keys, async db => {
+      class test1 extends db.model("test1", { a: db.INT, b: db.INT8, c: db.VARCHAR }) {}
+      db.model("test2", { a: db.FKEY(test1), b: db.FKEY(test1.a), c: db.FKEY(test1.b), d: db.FKEY(test1.c) });
       await db.connect();
-    });
-
-    describe("datetime changes", function() {
-      helper(expected.sync_datetime_changes, true, async db => {
-        db.model("test1", {
-          a: db.DATETIME,
-          b: db.VARCHAR,
-          c: db.DATETIME,
-          d: db.INT8,
-          e: db.DATETIME
-        });
-        await db.connect();
-      });
     });
   });
 });

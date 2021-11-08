@@ -11,26 +11,26 @@ const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/m
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
-const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "7.14.7", "@types/pg-format": "1.0.1", pg: "8.5.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
+const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.1", "@types/pg-format": "1.0.2", pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
 
 const packagejson = {
   author:          "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
   dependencies:    {},
   devDependencies: {
-    "@types/mocha":                     "8.2.0",
-    "@types/node":                      "14.14.16",
+    "@types/mocha":                     "9.0.0",
+    "@types/node":                      "16.11.6",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "4.11.1",
-    "@typescript-eslint/parser":        "4.11.1",
-    eslint:                             "7.16.0",
-    mocha:                              "8.2.1",
-    prettier:                           "2.2.1",
+    "@typescript-eslint/eslint-plugin": "5.3.0",
+    "@typescript-eslint/parser":        "5.3.0",
+    eslint:                             "8.2.0",
+    mocha:                              "9.1.3",
+    prettier:                           "2.4.1",
     nyc:                                "15.1.0",
-    "ts-node":                          "9.1.1",
-    typescript:                         "4.1.3",
+    "ts-node":                          "10.4.0",
+    typescript:                         "4.4.4",
     yamljs:                             "0.3.0"
   },
-  engines:  { node: ">=10.0" },
+  engines:  { node: ">=12.0" },
   keywords: ["DB", "ORM", "database", "migration", "mysql", "postgresql", "sqlite"],
   license:  "MIT",
   prettier: {
@@ -63,10 +63,10 @@ const before_script_common = [
 const conditions = { sedentary: "", "sedentary-pg": "&& $PG_VERSION == 13 " };
 const travis = {
   common: {
-    after_script:  [`if [[ \`node --version\` =~ ^v14 ${conditions[npm_package_name]}]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi`],
+    after_script:  [`if [[ \`node --version\` =~ ^v16 ${conditions[npm_package_name]}]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi`],
     before_script: before_script_common,
     language:      "node_js",
-    node_js:       ['"14"', '"12"', '"10"'],
+    node_js:       ["16", "14", "12"],
     script:        "npm run coverage",
     sudo:          "required"
   },

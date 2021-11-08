@@ -8,7 +8,7 @@ const rules = {
   "key-spacing":                                ["error", { align: { afterColon: true, beforeColon: false, on: "value" } }],
   "keyword-spacing":                            ["error", { before: true, overrides: { catch: { after: false }, if: { after: false }, for: { after: false }, switch: { after: false }, while: { after: false } } }],
   "linebreak-style":                            ["error", "unix"],
-  "no-console":                                 "error",
+  "no-console":                                 "warn",
   "no-mixed-spaces-and-tabs":                   ["error", "smart-tabs"],
   "nonblock-statement-body-position":           ["error", "beside"],
   semi:                                         ["error", "always"],

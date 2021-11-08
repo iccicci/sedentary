@@ -1,5 +1,5 @@
 after_script:
-  - 'if [[ `node --version` =~ ^v14 ]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi'
+  - 'if [[ `node --version` =~ ^v16 ]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi'
 before_script:
   - 'curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter'
   - 'chmod +x ./cc-test-reporter'
@@ -9,8 +9,8 @@ env:
     - CC_TEST_REPORTER_ID=1aa1f737e7bf7d2859a2c7d9a0d9634a0d9aa89e3a19476d576faa7d02a1d46f
 language: node_js
 node_js:
-  - '"14"'
-  - '"12"'
-  - '"10"'
+  - '16'
+  - '14'
+  - '12'
 script: 'npm run coverage'
 sudo: required
