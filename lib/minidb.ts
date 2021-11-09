@@ -106,27 +106,42 @@ export class MiniDB extends DB {
   }
 
   async syncFields(table: Table): Promise<void> {
-    for(const i in table.fields) {
-      const field = table.fields[i];
+    for(const field of table.fields) {
       const { fields } = this.body.tables[table.tableName];
-      const { size, type } = field;
+      const { defaultValue, fieldName, notNull, size, type } = field;
+      let dbField = fields[fieldName];
 
-      if(! fields[field.fieldName]) {
-        this.log(`'${table.tableName}': Adding field: '${field.fieldName}' '${type}' '${size || ""}'`);
-        fields[field.fieldName] = { size, type };
+      if(! dbField) {
+        this.log(`'${table.tableName}': Adding field: '${fieldName}' '${type}' '${size || ""}'`);
+        dbField = fields[fieldName] = { size, type };
       }
 
-      if(fields[field.fieldName].size !== size || fields[field.fieldName].type !== type) {
-        this.log(`'${table.tableName}': Changing field type: '${field.fieldName}' '${type}' '${size || ""}'`);
-        fields[field.fieldName] = { ...fields[field.fieldName], size, type };
+      if(dbField.size !== size || dbField.type !== type) {
+        this.log(`'${table.tableName}': Changing field type: '${fieldName}' '${type}' '${size || ""}'`);
+        dbField = fields[fieldName] = { ...dbField, size, type };
       }
 
-      if(fields[field.fieldName].default) {
-        if(! field.defaultValue) this.log(`'${table.tableName}': Dropping default value for field: '${field.fieldName}'`);
-        else if(fields[field.fieldName].default !== field.defaultValue) this.log(`'${table.tableName}': Changing default value to '${field.defaultValue}' for field: '${field.fieldName}'`);
-      } else if(field.defaultValue) {
-        this.log(`'${table.tableName}': Setting default value '${field.defaultValue}' for field: '${field.fieldName}'`);
-        fields[field.fieldName].default = field.defaultValue;
+      if(dbField.default) {
+        if(! defaultValue) {
+          this.log(`'${table.tableName}': Dropping default value for field: '${fieldName}'`);
+          delete dbField.default;
+        } else if(dbField.default !== defaultValue) {
+          this.log(`'${table.tableName}': Changing default value to '${defaultValue}' for field: '${fieldName}'`);
+          dbField.default = defaultValue;
+        }
+      } else if(defaultValue) {
+        this.log(`'${table.tableName}': Setting default value '${defaultValue}' for field: '${fieldName}'`);
+        dbField.default = defaultValue;
+      }
+
+      if(dbField.notNull) {
+        if(! notNull) {
+          this.log(`'${table.tableName}': Dropping not null for field: '${fieldName}'`);
+          delete dbField.notNull;
+        }
+      } else if(notNull) {
+        this.log(`'${table.tableName}': Setting not null for field: '${fieldName}'`);
+        dbField.notNull = true;
       }
     }
 

@@ -105,7 +105,7 @@ describe("sync", () => {
     });
   });
 
-  describe.only("indexes 1", function() {
+  xdescribe("indexes 1", function() {
     helper(expected.sync_index_1, async db => {
       db.model("test1", { a: db.INT, b: db.INT8 }, { index: ["a"] });
       await db.connect();
@@ -119,7 +119,7 @@ describe("sync", () => {
 
       describe("indexes 3", function() {
         helper(expected.sync_index_3, true, async db => {
-          db.model("test1", { a: db.INT, b: db.INT8 }, { index: ["a", ["a", "b"]] });
+          db.model("test1", { a: db.INT, b: db.INT8 }, { index: [["a", "b"]] });
           await db.connect();
         });
 

@@ -18,6 +18,7 @@ export const expected = {
     "Adding table: 'test1s'",
     "Setting auto increment: 'test1s'",
     "'test1s': Adding field: 'id' 'INT' '4'",
+    "'test1s': Setting not null for field: 'id'",
     "'test1s': Adding field: 'a' 'DATETIME' ''",
     "'test1s': Adding field: 'b' 'DATETIME' ''",
     "'test1s': Adding field: 'c' 'VARCHAR' ''",
@@ -35,14 +36,17 @@ export const expected = {
     "Adding table: 'test1s'",
     "Setting auto increment: 'test1s'",
     "'test1s': Adding field: 'id' 'INT' '4'",
+    "'test1s': Setting not null for field: 'id'",
     "'test1s': Adding field: 'a' 'VARCHAR' '23'",
     "'test1s': Adding field: 'b' 'VARCHAR' '23'",
     "'test1s': Adding field: 'c' 'VARCHAR' ''",
     "'test1s': Adding field: 'd' 'VARCHAR' '23'",
     "'test1s': Adding field: 'e' 'VARCHAR' ''",
     "'test1s': Setting default value '23' for field: 'e'",
+    "'test1s': Setting not null for field: 'e'",
     "'test1s': Adding field: 'f' 'VARCHAR' ''",
     "'test1s': Setting default value '23' for field: 'f'",
+    "'test1s': Setting not null for field: 'f'",
     "'test1s': Adding unique constraint on field: 'id'"
   ],
   types_int_change: [
@@ -52,12 +56,19 @@ export const expected = {
     "'test1s': Changing field type: 'd' 'VARCHAR' '42'",
     "'test1s': Changing default value to '42' for field: 'e'"
   ],
-  sync_create_table:        ["Adding table: 'test1s'", "Setting auto increment: 'test1s'", "'test1s': Adding field: 'id' 'INT' '4'", "'test1s': Adding unique constraint on field: 'id'"],
+  sync_create_table: [
+    "Adding table: 'test1s'",
+    "Setting auto increment: 'test1s'",
+    "'test1s': Adding field: 'id' 'INT' '4'",
+    "'test1s': Setting not null for field: 'id'",
+    "'test1s': Adding unique constraint on field: 'id'"
+  ],
   sync_create_table_exists: [""],
   sync_create_table_int8id: [
     "Adding table: 'test1s'",
     "Setting auto increment: 'test1s'",
     "'test1s': Adding field: 'id' 'INT8' '8'",
+    "'test1s': Setting not null for field: 'id'",
     "'test1s': Adding field: 'a' 'INT' '4'",
     "'test1s': Adding field: 'b' 'INT8' '8'",
     "'test1s': Adding unique constraint on field: 'id'"
@@ -70,12 +81,14 @@ export const expected = {
     "Adding table: 'test3s'",
     "Setting auto increment: 'test3s'",
     "'test3s': Adding field: 'id' 'INT' '4'",
+    "'test3s': Setting not null for field: 'id'",
     "'test3s': Adding unique constraint on field: 'id'"
   ],
   sync_create_table_parent_same: [""],
   sync_create_table_pk:          [
     "Adding table: 'test2s'",
     "'test2s': Adding field: 'a' 'INT' '4'",
+    "'test2s': Setting not null for field: 'a'",
     "'test2s': Adding field: 'b' 'INT' '4'",
     "'test2s': Adding unique constraint on field: 'a'",
     "'test2s': Adding unique constraint on field: 'b'"
@@ -85,12 +98,16 @@ export const expected = {
     "Adding table: 'test1s'",
     "Setting auto increment: 'test1s'",
     "'test1s': Adding field: 'id' 'INT' '4'",
+    "'test1s': Setting not null for field: 'id'",
     "'test1s': Adding field: 'a' 'INT' '4'",
     "'test1s': Adding field: 'b' 'INT' '4'",
+    "'test1s': Setting not null for field: 'b'",
     "'test1s': Adding field: 'c' 'INT' '2'",
     "'test1s': Setting default value '23' for field: 'c'",
+    "'test1s': Setting not null for field: 'c'",
     "'test1s': Adding field: 'd' 'VARCHAR' ''",
     "'test1s': Setting default value '23' for field: 'd'",
+    "'test1s': Setting not null for field: 'd'",
     "'test1s': Adding field: 'f' 'INT' '4'",
     "'test1s': Adding field: 'h' 'INT' '4'",
     "'test1s': Adding unique constraint on field: 'id'",
@@ -100,10 +117,13 @@ export const expected = {
     "'test1s': Removing unique constraint on field: 'a'",
     "'test1s': Removing field: 'h'",
     "'test1s': Setting default value '23' for field: 'a'",
+    "'test1s': Setting not null for field: 'a'",
+    "'test1s': Dropping not null for field: 'b'",
     "'test1s': Dropping default value for field: 'c'",
     "'test1s': Changing field type: 'd' 'INT8' '8'",
     "'test1s': Changing default value to '42' for field: 'd'",
     "'test1s': Changing field type: 'f' 'INT8' '8'",
+    "'test1s': Setting not null for field: 'f'",
     "'test1s': Adding unique constraint on field: 'b'"
   ],
   sync_foreign_keys: [
