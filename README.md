@@ -1,15 +1,15 @@
 # sedentary
 
-[![NPM version][npm-badge]][npm-url]
-[![Types][types-badge]][npm-url]
-[![NPM downloads][npm-downloads-badge]][npm-url]
-
 [![Build Status][travis-badge]][travis-url]
 [![Code Climate][code-badge]][code-url]
 [![Test Coverage][cover-badge]][code-url]
 
-[![Dependents][deps-badge]][npm-url]
+[![NPM version][npm-badge]][npm-url]
+[![NPM downloads][npm-downloads-badge]][npm-url]
 [![Stars][stars-badge]][github-url]
+
+[![Types][types-badge]][npm-url]
+[![Dependents][deps-badge]][npm-url]
 [![Donate][donate-badge]][donate-url]
 
 [code-badge]: https://codeclimate.com/github/iccicci/sedentary/badges/gpa.svg
@@ -24,7 +24,7 @@
 [npm-url]: https://www.npmjs.com/package/sedentary
 [stars-badge]: https://badgen.net/github/stars/iccicci/sedentary?icon=github&cache=300
 [travis-badge]: https://badgen.net/travis/iccicci/sedentary?icon=travis&cache=300
-[travis-url]: https://travis-ci.com/iccicci/sedentary
+[travis-url]: https://app.travis-ci.com/github/iccicci/sedentary
 [types-badge]: https://badgen.net/npm/types/sedentary?color=green&icon=typescript&cache=300
 
 # under development
@@ -95,10 +95,10 @@ The full documentation is on [sedentary.readthedocs.io](https://sedentary.readth
 
 Requires:
 
-- Node.js: **v10**
+- Node.js: **v12**
 - TypeScript: **v4.1** (or none if used in a JavaScript project).
 
-The package is tested under [all Node.js versions](https://travis-ci.org/iccicci/sedentary)
+The package is tested under [all Node.js versions](https://app.travis-ci.com/github/iccicci/sedentary)
 currently supported accordingly to [Node.js Release](https://github.com/nodejs/Release#readme).
 
 To work with the package under Windows, be sure to configure `bash.exe` as your _script-shell_.

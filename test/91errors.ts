@@ -78,8 +78,12 @@ describe("class Sedentary - errors", () => {
     errorHelper(db => db.model("test", {}, { parent: "test" as never }))("Sedentary.model: 'test' model: 'parent' option: Wrong type, expected 'Model'"));
   describe("Sedentary.model(,, { parent }) - type 2", () =>
     errorHelper(db => db.model("test", {}, { parent: { isModel: () => false } as never }))("Sedentary.model: 'test' model: 'parent' option: Wrong type, expected 'Model'"));
+  describe("Sedentary.model(,, { int8id, parent })", () =>
+    errorHelper(db => db.model("test", {}, { int8id: true, parent: "test" } as never))("Sedentary.model: 'test' model: 'int8id' and 'parent' options conflict each other"));
+  describe("Sedentary.model(,, { int8id, parent })", () =>
+    errorHelper(db => db.model("test", {}, { int8id: true, primaryKey: "test" } as never))("Sedentary.model: 'test' model: 'int8id' and 'primaryKey' options conflict each other"));
   describe("Sedentary.model(,, { parent, primaryKey })", () =>
-    errorHelper(db => db.model("test", {}, { parent: "test" as never, primaryKey: "test" } as never))("Sedentary.model: 'test' model: Both 'parent' and 'primaryKey' options provided"));
+    errorHelper(db => db.model("test", {}, { parent: "test", primaryKey: "test" } as never))("Sedentary.model: 'test' model: 'parent' and 'primaryKey' options conflict each other"));
   describe("Sedentary.model(,, { primaryKey }) - type", () =>
     errorHelper(db => db.model("test", {}, { primaryKey: {} as never }))("Sedentary.model: 'test' model: 'primaryKey' option: Wrong type, expected 'string'"));
   describe("Sedentary.model(,, { primaryKey }) - value", () =>

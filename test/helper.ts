@@ -37,9 +37,14 @@ export function helper(expected: string[], notClean: ((db: Sedentary) => Promise
   }
 
   before(async function() {
-    if(! notClean) await clean();
-    await test((db = new Sedentary(connection)));
-    await db.end();
+    try {
+      if(! notClean) await clean();
+      await test((db = new Sedentary(connection)));
+    } catch(e) {
+      throw e;
+    } finally {
+      await db.end();
+    }
   });
 
   if(expected[0]) {

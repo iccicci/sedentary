@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { DB, IndexDef, Table } from "./db";
+import { DB, Table } from "./db";
 import { promises } from "fs";
 
 const { readFile, writeFile } = promises;
-
-function indexName(idx: IndexDef): string {
-  return `${idx.fields.reduce((t, c) => `${t}_${c}`)}_${idx.type}`;
-}
 
 export class MiniDB extends DB {
   private body: any;
@@ -56,11 +52,12 @@ export class MiniDB extends DB {
   }
 
   async dropIndexes(table: Table): Promise<void> {
-    const names = table.indexes.map(indexName);
     const { indexes } = this.body.tables[table.tableName];
 
     for(const name in indexes) {
-      if(names.indexOf(name) === -1) {
+      const index = table.indexes.filter(_ => _.name === name);
+
+      if(index.length === 0 || ! this.indexesEq(indexes[name], index[0])) {
         this.log(`'${table.tableName}': Removing index: '${name}'`);
         delete indexes[name];
       }
@@ -94,10 +91,10 @@ export class MiniDB extends DB {
     const { indexes } = this.body.tables[table.tableName];
 
     for(const index of table.indexes) {
-      const name = indexName(index);
+      const { name } = index;
 
       if(! (name in indexes)) {
-        this.log(`'${table.tableName}': Adding index: '${name}'`);
+        this.log(`'${table.tableName}': Adding index: '${name}' on (${index.fields.map(_ => `'${_}'`).join(", ")}) type '${index.type}'${index.unique ? " unique" : ""}`);
         indexes[name] = index;
       }
     }

@@ -60,7 +60,7 @@ const before_script_common = [
   "chmod +x ./cc-test-reporter",
   "./cc-test-reporter before-build"
 ];
-const conditions = { sedentary: "", "sedentary-pg": "&& $PG_VERSION == 13 " };
+const conditions = { sedentary: "", "sedentary-pg": "&& $PG_VERSION == 14 " };
 const travis = {
   common: {
     after_script:  [`if [[ \`node --version\` =~ ^v16 ${conditions[npm_package_name]}]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi`],
@@ -77,11 +77,11 @@ const travis = {
       ...before_script_common,
       'psql -c "CREATE DATABASE sedentary;" -U postgres',
       "psql -c \"ALTER DATABASE sedentary SET timezone TO 'GMT';\" -U postgres",
-      'export SPG=\'{"user":"postgres","password":"postgres"}\''
+      'export SPG=\'{"database":"sedentary","password":"postgres","user":"postgres"}\''
     ],
     env: {
       global: ["CC_TEST_REPORTER_ID=c7519657dfea145349c1b7a98f7134f033c25f598b40ad5b077744eb4beb7c66"],
-      matrix: ["PG_VERSION=13", "PG_VERSION=12", "PG_VERSION=11", "PG_VERSION=10"]
+      matrix: ["PG_VERSION=14", "PG_VERSION=13", "PG_VERSION=12", "PG_VERSION=11", "PG_VERSION=10"]
     }
   }
 };

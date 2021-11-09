@@ -66,19 +66,22 @@ export interface Constraint {
   type: "f" | "u";
 }
 
-type IndexField = string[] | string;
+export type IndexFields = string[] | string;
 
 export interface IndexDef {
   fields: string[];
+  name: string;
   type: "btree" | "hash";
+  unique: boolean;
 }
 
 interface IndexOptions {
-  fields: IndexField;
+  fields: IndexFields;
   type?: "btree" | "hash";
+  unique?: boolean;
 }
 
-export type Index = IndexField | IndexOptions;
+export type Index = IndexFields | IndexOptions;
 
 interface ITable {
   constraints: Constraint[];
@@ -124,6 +127,15 @@ export abstract class DB {
   addTable(table: Table): void {
     this.tables[table.tableName] = table;
     this.tablesArr.push(table);
+  }
+
+  protected indexesEq(a: IndexDef, b: IndexDef): boolean {
+    if(a.fields.length !== b.fields.length) return false;
+    for(const i in a.fields) if(a.fields[i] !== b.fields[i]) return false;
+    if(a.type !== b.type) return false;
+    if(a.unique !== b.unique) return false;
+
+    return true;
   }
 
   async sync(): Promise<void> {

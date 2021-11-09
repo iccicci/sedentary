@@ -4,6 +4,7 @@ const rules = {
   "arrow-spacing":                              "error",
   "brace-style":                                ["error", "1tbs", { allowSingleLine: true }],
   curly:                                        ["error", "multi-or-nest"],
+  eqeqeq:                                       ["error"],
   indent:                                       ["error", 2],
   "key-spacing":                                ["error", { align: { afterColon: true, beforeColon: false, on: "value" } }],
   "keyword-spacing":                            ["error", { before: true, overrides: { catch: { after: false }, if: { after: false }, for: { after: false }, switch: { after: false }, while: { after: false } } }],

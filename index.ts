@@ -1,4 +1,4 @@
-import { Constraint, DB, Field, Index, IndexDef, Meta, Record, Table, Type } from "./lib/db";
+import { Constraint, DB, Field, Index, IndexDef, IndexFields, Meta, Record, Table, Type } from "./lib/db";
 import { MiniDB } from "./lib/minidb";
 
 type TypeDefinition<N extends unknown, R extends unknown> = (() => Type<N, R>) | Type<N, R>;
@@ -26,7 +26,7 @@ type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Type<N, R>>
 type Parent<T> = T extends Meta<unknown, infer R> ? R : never;
 
 type Options<M, T> = {
-  index?: Index[] | Index;
+  indexes?: { [key: string]: Index };
   init?: (this: T) => void;
   methods?: M;
   sync?: boolean;
@@ -42,7 +42,7 @@ export interface SchemaOptions {
   sync?: boolean;
 }
 
-const allowedOption = ["index", "init", "int8id", "methods", "parent", "primaryKey", "sync", "tableName", "type"];
+const allowedOption = ["indexes", "init", "int8id", "methods", "parent", "primaryKey", "sync", "tableName", "type"];
 
 export class Sedentary {
   protected db: DB;
@@ -146,11 +146,14 @@ export class Sedentary {
     if(! (options instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'options' argument: Wrong type, expected 'Object'`);
 
     for(const k in options) if(allowedOption.indexOf(k) === -1) throw new Error(`Sedentary.model: '${name}' model: 'options' argument: Unknown '${k}' option`);
+    if(options.int8id && options.parent) throw new Error(`Sedentary.model: '${name}' model: 'int8id' and 'parent' options conflict each other`);
+    if(options.int8id && options.primaryKey) throw new Error(`Sedentary.model: '${name}' model: 'int8id' and 'primaryKey' options conflict each other`);
+    if(options.parent && options.primaryKey) throw new Error(`Sedentary.model: '${name}' model: 'parent' and 'primaryKey' options conflict each other`);
 
     const constraints: Constraint[] = [];
-    const { index, int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name + "s", ...options };
+    const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name + "s", ...options };
     let { methods } = options;
-    const indexes: IndexDef[] = [];
+    const iarray: IndexDef[] = [];
     const pkName = primaryKey || "id";
     let farray: Field<unknown, unknown>[] = int8id
       ? [new Field<string, unknown>({ fieldName: "id", notNull: true, size: 8, type: "INT8", unique: true })]
@@ -159,8 +162,6 @@ export class Sedentary {
     if(methods && ! (methods instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'methods' option: Wrong type, expected 'Object'`);
 
     if(parent) {
-      if(primaryKey) throw new Error(`Sedentary.model: '${name}' model: Both 'parent' and 'primaryKey' options provided`);
-
       methods = (methods ? { ...(parent.methods || {}), ...methods } : parent.methods) as never;
 
       try {
@@ -174,7 +175,7 @@ export class Sedentary {
     if(primaryKey && Object.keys(fields).indexOf(primaryKey) === -1) throw new Error(`Sedentary.model: '${name}' model: 'primaryKey' option: Field '${primaryKey}' does not exists`);
 
     if(parent || primaryKey) farray = [];
-    if(! parent) constraints.push({ name: `${tableName}_${pkName}_unique`, type: "u", field: pkName });
+    if(! parent) iarray.push({ fields: [pkName], name: `${tableName}_${pkName}_unique`, type: "btree", unique: true });
 
     for(const fname in fields) {
       if(["base", "constructor", "load", "meta", "name", "prototype", "save", "size", "type"].indexOf(fname) !== -1) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: Reserved name`);
@@ -227,25 +228,26 @@ export class Sedentary {
 
       farray.push(new Field({ defaultValue, fieldName, notNull, size, type, unique }));
 
-      if(unique) {
-        constraints.push({
-          name:  `${tableName}_${fieldName}_unique`,
-          type:  "u",
-          field: fieldName
-        });
-      }
+      if(unique && fname !== pkName) iarray.push({ fields: [fieldName], name: `${tableName}_${fieldName}_unique`, type: "btree", unique: true });
     }
 
-    if(index) {
+    if(indexes) {
       const flds = fields;
-      const checkIndex = (idx: Index, i: number): void => {
+
+      if(! (indexes instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'indexes' option: Wrong type, expected 'Object'`);
+
+      for(const iname in indexes) {
+        if(iarray.filter(_ => _.name === iname).length !== 0) throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: index name already inferred by the unique constraint on a field`);
+
+        const idx = indexes[iname];
         const checkField = (field: string, l: number): void => {
-          if(typeof field !== "string") throw new Error(`Sedentary.model: '${name}' model: #${i} index: #${l} field: Wrong type, expected 'string'`);
-          if(! (field in flds)) throw new Error(`Sedentary.model: '${name}' model: #${i} index: #${l} field: Unknown field '${field}'`);
+          if(typeof field !== "string") throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: #${l} field: Wrong type, expected 'string'`);
+          if(! (field in flds)) throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: #${l} field: Unknown field '${field}'`);
         };
 
-        let fields: string[];
+        let fields: IndexFields;
         let type: "btree" | "hash" = "btree";
+        let unique = false;
 
         if(idx instanceof Array) {
           idx.forEach(checkField);
@@ -253,34 +255,28 @@ export class Sedentary {
         } else if(typeof idx === "string") {
           checkField(idx, 0);
           fields = [idx];
-        } else {
-          for(const k in idx) if(["fields", "type"].indexOf(k) === -1) throw new Error(`Sedentary.model: '${name}' model: #${i} index: Unknown index option '${k}'`);
+        } else if(idx instanceof Object) {
+          for(const k in idx) if(["fields", "type", "unique"].indexOf(k) === -1) throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: Unknown index option '${k}'`);
 
-          if(! idx.fields) throw new Error(`Sedentary.model: '${name}' model: #${i} index: Missing 'fields' option`);
-          if(idx.fields instanceof Array) {
-            idx.fields.forEach(checkField);
-            fields = idx.fields;
-          } else if(typeof idx.fields === "string") {
-            checkField(idx.fields, 0);
-            fields = [idx.fields];
-          } else throw new Error(`Sedentary.model: '${name}' model: #${i} index: 'fields' option: Wrong type, expected 'FieldNames'`);
+          ({ fields, type, unique } = { type: "btree", unique: false, ...idx });
 
-          if(idx.type) {
-            if(typeof idx.type !== "string") throw new Error(`Sedentary.model: '${name}' model: #${i} index: 'type' option: Wrong type, expected 'string'`);
-            if(["btree", "hash"].indexOf(idx.type) === -1) throw new Error(`Sedentary.model: '${name}' model: #${i} index: 'type' option: Wrong value, expected 'btree' or 'hash'`);
+          if(! fields) throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: Missing 'fields' option`);
+          if(fields instanceof Array) fields.forEach(checkField);
+          else if(typeof fields === "string") {
+            checkField(fields, 0);
+            fields = [fields];
+          } else throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: 'fields' option: Wrong type, expected 'FieldNames'`);
 
-            type = idx.type;
-          }
-        }
+          if(typeof type !== "string") throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: 'type' option: Wrong type, expected 'string'`);
+          if(["btree", "hash"].indexOf(type) === -1) throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: 'type' option: Wrong value, expected 'btree' or 'hash'`);
+          if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: 'unique' option: Wrong type, expected 'boolean'`);
+        } else throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: Wrong type, expected 'Object'`);
 
-        indexes.push({ fields, type });
-      };
-
-      if(index instanceof Array) index.forEach(checkIndex);
-      else checkIndex(index, 0);
+        iarray.push({ fields, name: iname, type, unique });
+      }
     }
 
-    this.db.addTable(new Table({ constraints, fields: farray, indexes, parent, primaryKey, sync, tableName }));
+    this.db.addTable(new Table({ constraints, fields: farray, indexes: iarray, parent, primaryKey, sync, tableName }));
     this.models[name] = true;
 
     const init = parent
