@@ -18,10 +18,10 @@ const packagejson = {
   dependencies:    {},
   devDependencies: {
     "@types/mocha":                     "9.0.0",
-    "@types/node":                      "16.11.6",
+    "@types/node":                      "16.11.7",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "5.3.0",
-    "@typescript-eslint/parser":        "5.3.0",
+    "@typescript-eslint/eslint-plugin": "5.3.1",
+    "@typescript-eslint/parser":        "5.3.1",
     eslint:                             "8.2.0",
     mocha:                              "9.1.3",
     prettier:                           "2.4.1",

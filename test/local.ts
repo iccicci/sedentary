@@ -24,9 +24,13 @@ export const expected = {
     "'test1s': Adding field: 'c' 'VARCHAR' ''",
     "'test1s': Adding field: 'd' 'DATETIME' ''",
     "'test1s': Adding field: 'e' 'INT' '4'",
+    "'test1s': Adding field: 'f' 'DATETIME' ''",
+    "'test1s': Setting default value '1976-01-23T14:00:00.000Z' for field: 'f'",
+    "'test1s': Setting not null for field: 'f'",
     "'test1s': Adding index: 'test1s_id_unique' on ('id') type 'btree' unique"
   ],
   types_datetime_changes: [
+    "'test1s': Removing field: 'f'",
     "'test1s': Changing field type: 'b' 'VARCHAR' ''",
     "'test1s': Changing field type: 'c' 'DATETIME' ''",
     "'test1s': Changing field type: 'd' 'INT8' '8'",

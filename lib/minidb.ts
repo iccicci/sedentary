@@ -127,7 +127,7 @@ export class MiniDB extends DB {
           dbField.default = defaultValue;
         }
       } else if(defaultValue) {
-        this.log(`'${table.tableName}': Setting default value '${defaultValue}' for field: '${fieldName}'`);
+        this.log(`'${table.tableName}': Setting default value '${defaultValue instanceof Date ? defaultValue.toISOString() : defaultValue}' for field: '${fieldName}'`);
         dbField.default = defaultValue;
       }
 

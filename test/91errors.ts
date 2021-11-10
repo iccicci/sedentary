@@ -69,6 +69,10 @@ describe("class Sedentary - errors", () => {
     errorHelper(db => db.model("test", { test: { defaultValue: 23, type: Sedentary.prototype.INT8 } }))(
       "Sedentary.model: 'test' model: 'test' field: 'defaultValue' option: Wrong type, expected 'string'"
     ));
+  describe("Sedentary.model(, { [key]: type }) - Date", () =>
+    errorHelper(db => db.model("test", { test: { defaultValue: 23, type: Sedentary.prototype.DATETIME } }))(
+      "Sedentary.model: 'test' model: 'test' field: 'defaultValue' option: Wrong type, expected 'Date'"
+    ));
   describe("Sedentary.model(,, options) - type", () => errorHelper(db => db.model("test", null, "test" as never))("Sedentary.model: 'test' model: 'options' argument: Wrong type, expected 'Object'"));
   describe("Sedentary.model(,, options) - option", () =>
     errorHelper(db => db.model("test", null, { test: "test" } as never))("Sedentary.model: 'test' model: 'options' argument: Unknown 'test' option"));
@@ -88,4 +92,34 @@ describe("class Sedentary - errors", () => {
     errorHelper(db => db.model("test", {}, { primaryKey: {} as never }))("Sedentary.model: 'test' model: 'primaryKey' option: Wrong type, expected 'string'"));
   describe("Sedentary.model(,, { primaryKey }) - value", () =>
     errorHelper(db => db.model("test", {}, { primaryKey: "test" } as never))("Sedentary.model: 'test' model: 'primaryKey' option: Field 'test' does not exists"));
+  describe("Sedentary.model(,, { indexes }) - type", () =>
+    errorHelper(db => db.model("test", {}, { indexes: "test" } as never))("Sedentary.model: 'test' model: 'indexes' option: Wrong type, expected 'Object'"));
+  describe("Sedentary.model(,, { indexes: { inferred } })", () =>
+    errorHelper(db => db.model("test", {}, { indexes: { tests_id_unique: {} } } as never))(
+      "Sedentary.model: 'test' model: 'tests_id_unique' index: index name already inferred by the unique constraint on a field"
+    ));
+  describe("Sedentary.model(,, { indexes: { field } }) - type", () =>
+    errorHelper(db => db.model("test", {}, { indexes: { a: { fields: [23] } } } as never))("Sedentary.model: 'test' model: 'a' index: #1 field: Wrong type, expected 'string'"));
+  describe("Sedentary.model(,, { indexes: { field } }) - type", () =>
+    errorHelper(db => db.model("test", {}, { indexes: { a: { fields: "test" } } } as never))("Sedentary.model: 'test' model: 'a' index: #1 field: Unknown field 'test'"));
+  describe("Sedentary.model(,, { indexes: { field } }) - type", () =>
+    errorHelper(db => db.model("test", {}, { indexes: { a: 23 } } as never))("Sedentary.model: 'test' model: 'a' index: Wrong type, expected 'Object'"));
+  describe("Sedentary.model(,, { indexes: { option } }) - option", () =>
+    errorHelper(db => db.model("test", {}, { indexes: { a: { test: 23 } } } as never))("Sedentary.model: 'test' model: 'a' index: Unknown index option 'test'"));
+  describe("Sedentary.model(,, { indexes: { fields } }) - missing", () =>
+    errorHelper(db => db.model("test", {}, { indexes: { a: {} } } as never))("Sedentary.model: 'test' model: 'a' index: Missing 'fields' option"));
+  describe("Sedentary.model(,, { indexes: { field } }) - type", () =>
+    errorHelper(db => db.model("test", {}, { indexes: { a: { fields: 23 } } } as never))("Sedentary.model: 'test' model: 'a' index: 'fields' option: Wrong type, expected 'FieldNames'"));
+  describe("Sedentary.model(,, { indexes: { type } }) - type", () =>
+    errorHelper(db => db.model("test", { a: db.INT }, { indexes: { a: { fields: "a", type: 23 } } } as never))(
+      "Sedentary.model: 'test' model: 'a' index: 'type' option: Wrong type, expected 'string'"
+    ));
+  describe("Sedentary.model(,, { indexes: { type } }) - value", () =>
+    errorHelper(db => db.model("test", { a: db.INT }, { indexes: { a: { fields: "a", type: "test" } } } as never))(
+      "Sedentary.model: 'test' model: 'a' index: 'type' option: Wrong value, expected 'btree' or 'hash'"
+    ));
+  describe("Sedentary.model(,, { unique: { type } }) - type", () =>
+    errorHelper(db => db.model("test", { a: db.INT }, { indexes: { a: { fields: "a", unique: 23 } } } as never))(
+      "Sedentary.model: 'test' model: 'a' index: 'unique' option: Wrong type, expected 'boolean'"
+    ));
 });

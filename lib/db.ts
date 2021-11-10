@@ -1,4 +1,6 @@
-export class Record {
+export type Natural = Date | Record<string, unknown> | boolean | number | string;
+
+export class Entry {
   init(): void {}
 
   async save(): Promise<boolean> {
@@ -6,14 +8,14 @@ export class Record {
   }
 }
 
-export class Type<N extends unknown, R extends unknown> {
+export class Type<N extends Natural, E extends Entry> {
   base: unknown;
   native?: N;
-  record?: R;
+  record?: E;
   size?: number;
   type: string;
 
-  constructor(from: Partial<Type<unknown, unknown>>) {
+  constructor(from: Partial<Type<N, Entry>>) {
     Object.assign(this, from);
   }
 }
@@ -25,7 +27,7 @@ interface IMeta {
   tableName: string;
 }
 
-export class Meta<N extends unknown, R extends Record> extends Type<N, R> {
+export class Meta<N extends Natural, E extends Entry> extends Type<N, E> {
   init: () => void;
   methods: { [key: string]: () => unknown };
   primaryKey: string;
@@ -41,13 +43,13 @@ export class Meta<N extends unknown, R extends Record> extends Type<N, R> {
   }
 }
 
-export class Field<N extends unknown, R extends unknown> extends Type<N, R> {
+export class Field<N extends Natural, E extends Entry> extends Type<N, E> {
   defaultValue?: unknown;
   fieldName?: string;
   notNull?: boolean;
   unique?: boolean;
 
-  constructor(from: Partial<Field<N, R>>) {
+  constructor(from: Partial<Field<N, E>>) {
     super(from);
   }
 }
@@ -85,10 +87,10 @@ export type Index = IndexFields | IndexOptions;
 
 interface ITable {
   constraints: Constraint[];
-  fields: Field<unknown, unknown>[];
+  fields: Field<Natural, Entry>[];
   indexes: IndexDef[];
   oid?: number;
-  parent: Meta<unknown, Record>;
+  parent: Meta<Natural, Entry>;
   primaryKey: string;
   sync: boolean;
   tableName: string;

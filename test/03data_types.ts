@@ -39,7 +39,8 @@ describe("data types", () => {
         b: db.DATETIME,
         c: db.VARCHAR,
         d: db.DATETIME,
-        e: db.INT
+        e: db.INT,
+        f: { defaultValue: new Date("1976-01-23T14:00:00.000Z"), type: db.DATETIME() }
       });
       await db.connect();
     });

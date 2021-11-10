@@ -1,29 +1,29 @@
-import { Constraint, DB, Field, Index, IndexDef, IndexFields, Meta, Record, Table, Type } from "./lib/db";
+import { Constraint, DB, Entry, Field, Index, IndexDef, IndexFields, Meta, Natural, Table, Type } from "./lib/db";
 import { MiniDB } from "./lib/minidb";
 
-type TypeDefinition<N extends unknown, R extends unknown> = (() => Type<N, R>) | Type<N, R>;
-interface FieldOptions<N extends unknown, R extends unknown> {
+type TypeDefinition<N extends Natural, E extends Entry> = (() => Type<N, E>) | Type<N, E>;
+interface FieldOptions<N extends Natural, E extends Entry> {
   defaultValue?: N;
   fieldName?: string;
   notNull?: boolean;
-  type: TypeDefinition<N, R>;
+  type: TypeDefinition<N, E>;
   unique?: boolean;
 }
 
-type FieldDefinition<N extends unknown, R extends unknown> = TypeDefinition<N, R> | FieldOptions<N, R>;
-type FieldsDefinition = { [key: string]: FieldDefinition<unknown, unknown> };
+type FieldDefinition<N extends Natural, E extends Entry> = TypeDefinition<N, E> | FieldOptions<N, E>;
+type FieldsDefinition = { [key: string]: FieldDefinition<Natural, Entry> };
 
-type ForeignKeyFileds<T, k> = T extends FieldDefinition<unknown, infer R> ? (R extends Record ? k : never) : never;
-type ForeignKey<T> = T extends FieldDefinition<unknown, infer R> ? () => Promise<R> : never;
+type ForeignKeyFileds<T, k> = T extends FieldDefinition<Natural, infer E> ? (E extends Entry ? k : never) : never;
+type ForeignKey<T> = T extends FieldDefinition<Natural, infer E> ? () => Promise<E> : never;
 type Keys<F extends FieldsDefinition> = { [f in keyof F]?: ForeignKeyFileds<F[f], f> }[keyof F];
 
 type Methods<T> = { [key: string]: (this: T) => unknown };
 
-type Native__<T> = T extends Type<infer N, unknown> ? N : never;
-type Native_<T> = T extends () => Type<infer N, infer R> ? Native__<Type<N, R>> : Native__<T>;
-type Native<T> = T extends FieldOptions<infer N, infer R> ? Native__<Type<N, R>> : Native_<T>;
+type Native__<T> = T extends Type<infer N, Entry> ? N : never;
+type Native_<T> = T extends () => Type<infer N, infer E> ? Native__<Type<N, E>> : Native__<T>;
+type Native<T> = T extends FieldOptions<infer N, infer E> ? Native__<Type<N, E>> : Native_<T>;
 
-type Parent<T> = T extends Meta<unknown, infer R> ? R : never;
+type Parent<T> = T extends Meta<Natural, infer R> ? R : never;
 
 type Options<M, T> = {
   indexes?: { [key: string]: Index };
@@ -35,7 +35,7 @@ type Options<M, T> = {
 
 type Model<F extends FieldsDefinition, M> = { [f in keyof F]?: Native<F[f]> } & { [f in Keys<F> & string as `${f}Load`]?: ForeignKey<F[f]> } & M;
 
-type Ancestor<F, N extends unknown, T extends Record> = (new () => T) & { [f in keyof F]?: Meta<Native<F[f]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>;
+type Ancestor<F, N extends Natural, E extends Entry> = (new () => E) & { [f in keyof F]?: Meta<Native<F[f]>, E> } & { load: (boh: boolean) => Promise<E[]> } & Meta<N, E>;
 
 export interface SchemaOptions {
   log?: (message: string) => void;
@@ -68,15 +68,15 @@ export class Sedentary {
     this.db = new MiniDB(filename, this.log);
   }
 
-  DATETIME(): Type<Date, unknown> {
+  DATETIME(): Type<Date, Entry> {
     return new Type({ base: Date, type: "DATETIME" });
   }
 
-  FKEY<N extends unknown, R extends Record>(record: Type<N, R>): Type<N, R> {
-    return new Type({ base: record.base, size: 0, type: "" });
+  FKEY<N extends Natural, E extends Entry>(field: Type<N, E>): Type<N, E> {
+    return new Type({ base: field.base, size: 0, type: "" });
   }
 
-  INT(size?: number): Type<number, unknown> {
+  INT(size?: number): Type<number, Entry> {
     const message = "Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4";
 
     size = size ? this.checkSize(size, message) : 4;
@@ -86,11 +86,11 @@ export class Sedentary {
     return new Type({ base: Number, size, type: "INT" });
   }
 
-  INT8(): Type<string, unknown> {
+  INT8(): Type<string, Entry> {
     return new Type({ base: String, size: 8, type: "INT8" });
   }
 
-  VARCHAR(size?: number): Type<string, unknown> {
+  VARCHAR(size?: number): Type<string, Entry> {
     const message = "Sedentary.VARCHAR: 'size' argument: Wrong value, expected positive integer";
 
     size = size ? this.checkSize(size, message) : undefined;
@@ -117,23 +117,19 @@ export class Sedentary {
     this.log("Connection closed");
   }
 
-  model<F extends FieldsDefinition, M extends Methods<T>, T extends Record & { id?: string } & Model<F, M>>(
-    name: string,
-    fields: F,
-    options?: Options<M, T> & { int8id: true }
-  ): Ancestor<F, string, T>;
-  model<F extends FieldsDefinition, K extends keyof F, M extends Methods<T>, N extends K extends keyof F ? Native<F[K]> : never, T extends Record & Model<F, M>>(
+  model<F extends FieldsDefinition, M extends Methods<T>, T extends Entry & { id?: string } & Model<F, M>>(name: string, fields: F, options?: Options<M, T> & { int8id: true }): Ancestor<F, string, T>;
+  model<F extends FieldsDefinition, K extends keyof F, M extends Methods<T>, N extends K extends keyof F ? Native<F[K]> : never, T extends Entry & Model<F, M>>(
     name: string,
     fields: F,
     options?: Options<M, T> & { primaryKey: K }
   ): Ancestor<F, N, T>;
-  model<F extends FieldsDefinition, M extends Methods<T>, P extends Meta<unknown, Record>, N extends P extends Meta<infer N, Record> ? N : never, T extends Parent<P> & Model<F, M>>(
+  model<F extends FieldsDefinition, M extends Methods<T>, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & Model<F, M>>(
     name: string,
     fields: F,
     options?: Options<M, T> & { parent: P }
   ): Ancestor<F, N, T>;
-  model<F extends FieldsDefinition, M extends Methods<T>, T extends Record & { id?: number } & Model<F, M>>(name: string, fields: F, options?: Options<M, T>): Ancestor<F, number, T>;
-  model<F extends FieldsDefinition, K extends string, M extends Methods<T>, N extends unknown, P extends Meta<unknown, Record>, T extends Record & Model<F, M>>(
+  model<F extends FieldsDefinition, M extends Methods<T>, T extends Entry & { id?: number } & Model<F, M>>(name: string, fields: F, options?: Options<M, T>): Ancestor<F, number, T>;
+  model<F extends FieldsDefinition, K extends string, M extends Methods<T>, N extends Natural, P extends Meta<Natural, Entry>, T extends Entry & Model<F, M>>(
     name: string,
     fields: F,
     options?: Options<M, T> & { int8id?: boolean; parent?: P; primaryKey?: K }
@@ -155,9 +151,9 @@ export class Sedentary {
     let { methods } = options;
     const iarray: IndexDef[] = [];
     const pkName = primaryKey || "id";
-    let farray: Field<unknown, unknown>[] = int8id
-      ? [new Field<string, unknown>({ fieldName: "id", notNull: true, size: 8, type: "INT8", unique: true })]
-      : [new Field<number, unknown>({ fieldName: "id", notNull: true, size: 4, type: "INT", unique: true })];
+    let farray: Field<Natural, Entry>[] = int8id
+      ? [new Field<string, Entry>({ fieldName: "id", notNull: true, size: 8, type: "INT8", unique: true })]
+      : [new Field<number, Entry>({ fieldName: "id", notNull: true, size: 4, type: "INT", unique: true })];
 
     if(methods && ! (methods instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'methods' option: Wrong type, expected 'Object'`);
 
@@ -182,12 +178,12 @@ export class Sedentary {
 
       const field = fields[fname];
       // eslint-disable-next-line prefer-const
-      let { defaultValue, fieldName, notNull, size, type, unique } = ((): Field<unknown, unknown> => {
-        const ret = ((): Field<unknown, unknown> => {
+      let { defaultValue, fieldName, notNull, size, type, unique } = ((): Field<Natural, Entry> => {
+        const ret = ((): Field<Natural, Entry> => {
           // eslint-disable-next-line prefer-const
           let { defaultValue, fieldName, notNull, unique, type } = { defaultValue: undefined as unknown, fieldName: fname as string, notNull: false, unique: false, type: null as unknown };
 
-          const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<unknown, unknown>, message: string) => {
+          const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, Entry>, message: string) => {
             if(func !== this.DATETIME && func !== this.FKEY && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(message);
 
             return new Field({ defaultValue, fieldName, notNull, unique, ...func() });
@@ -197,13 +193,13 @@ export class Sedentary {
           if(field instanceof Function) return call(undefined, fname, false, false, field as never, `Sedentary.model: '${name}' model: '${fname}' field: Wrong type, expected 'Field'`);
           if(! (field instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: Wrong field type, expected 'Field'`);
 
-          ({ defaultValue, fieldName, notNull, unique, type } = ({ notNull: false, ...field } as unknown) as FieldOptions<unknown, unknown>);
+          ({ defaultValue, fieldName, notNull, unique, type } = { notNull: false, ...field } as unknown as FieldOptions<Natural, Entry>);
           if(! fieldName) fieldName = fname;
 
           if(defaultValue === null) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'defaultValue' option: Does 'null' default value really makes sense?`);
           if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'fieldName' option: Wrong type, expected 'string'`);
           if(! type) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: Missing 'type' option`);
-          if(type instanceof Type) return new Field({ ...(({ notNull: false, ...field } as unknown) as Type<unknown, unknown>), fieldName, ...type });
+          if(type instanceof Type) return new Field({ ...({ notNull: false, ...field } as unknown as Type<Natural, Entry>), fieldName, ...type });
           if(type instanceof Function) return call(defaultValue, fieldName, notNull, unique, type as never, `Sedentary.model: '${name}' model: '${fname}' field: 'type' option: Wrong type, expected 'Type'`);
 
           throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'type' option: Wrong type, expected 'Type'`);
@@ -212,6 +208,7 @@ export class Sedentary {
         const { base, defaultValue } = ret;
 
         if(defaultValue !== undefined) {
+          if(base === Date && ! (defaultValue instanceof Date)) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'defaultValue' option: Wrong type, expected 'Date'`);
           if(base === Number && typeof defaultValue !== "number") throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'defaultValue' option: Wrong type, expected 'number'`);
           if(base === String && typeof defaultValue !== "string") throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'defaultValue' option: Wrong type, expected 'string'`);
         }
@@ -241,8 +238,8 @@ export class Sedentary {
 
         const idx = indexes[iname];
         const checkField = (field: string, l: number): void => {
-          if(typeof field !== "string") throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: #${l} field: Wrong type, expected 'string'`);
-          if(! (field in flds)) throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: #${l} field: Unknown field '${field}'`);
+          if(typeof field !== "string") throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: #${l + 1} field: Wrong type, expected 'string'`);
+          if(! (field in flds)) throw new Error(`Sedentary.model: '${name}' model: '${iname}' index: #${l + 1} field: Unknown field '${field}'`);
         };
 
         let fields: IndexFields;
