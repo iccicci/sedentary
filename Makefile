@@ -1,4 +1,4 @@
-EXTENSIONS=$(shell RETURN="" ; for i in sedentary-mysql sedentary-pg sedentary-sqlite ; do if [ -d $$i ] ; then RETURN="$$RETURN $$i" ; fi ; done ; echo $$RETURN)
+EXTENSIONS=$(shell RETURN="" ; for i in sedentary-mysql sedentary-pg sedentary-sqlite ; do if [ -f $$i/package.json ] ; then RETURN="$$RETURN $$i" ; fi ; done ; echo $$RETURN)
 PACKAGE=$(notdir $(shell pwd))
 PACKAGES=${EXTENSIONS} .
 SHELL=/bin/bash
@@ -35,19 +35,19 @@ test/%.ts: ../test/%.ts
 	cp $< $@
 
 .codeclimate.yml: ../.codeclimate.yml
-	cp ../.codeclimate.yml .
+	cp $< $@
 
 .eslintrc.js: ../.eslintrc.js
-	cp ../.eslintrc.js .
+	cp $< $@
 
 .gitattributes: ../.gitattributes
-	cp ../.gitattributes .
+	cp $< $@
 
 LICENSE: ../LICENSE
-	cp ../LICENSE .
+	cp $< $@
 
 Makefile: ../Makefile
-	cp ../Makefile .
+	cp $< $@
 
 setup: .codeclimate.yml .eslintrc.js .gitattributes LICENSE tsconfig.json utils.ts ${TESTS} ${VSCODE}
 
@@ -62,10 +62,10 @@ package.json: Makefile setup
 pull: Makefile
 
 tsconfig.json: ../tsconfig.json
-	cp ../tsconfig.json .
+	cp $< $@
 
 utils.ts: ../utils.ts
-	cp ../utils.ts .
+	cp $< $@
 
 test: Makefile
 
@@ -89,10 +89,13 @@ ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i clean ; done
 endif
 
-commit: node
+commit:
+	@if [ -z "${MESSAGE}" ] ; then echo "Missing MESSAGE!" ; exit 1 ; fi
 ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i commit ; done
 endif
+	git add .
+	-git commit -m "${MESSAGE}"
 
 coverage: setup rm
 	npm run coverage
@@ -110,11 +113,6 @@ install: package-lock.json
 ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i install ; done
 endif
-
-node: setup
-	@if [ -z "${MESSAGE}" ] ; then echo "Missing MESSAGE!" ; exit 1 ; fi
-	git add .
-	-git commit -m "${MESSAGE}"
 
 outdated: setup
 	-npm outdated

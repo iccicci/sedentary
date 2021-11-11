@@ -5,7 +5,7 @@ const { readFile, writeFile } = promises;
 
 const { VERSION, npm_package_name } = process.env;
 
-const common: string[] = ["*.tgz", "coverage", "node_modules", "sedentary-mysql", "sedentary-pg", "sedentary-sqlite", "test.json", ""];
+const common: string[] = ["*.tgz", "coverage", "node_modules", "test.json", ""];
 const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "index.d.ts", "index.js", "lib/*.d.ts", "lib/*.js"];
 const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "test", "tsconfig.json", "utils.ts"];
 
