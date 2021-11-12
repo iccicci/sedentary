@@ -16,7 +16,7 @@ class Logger extends Writable {
   }
 }
 
-export function createLogger(log: ((message: string) => void) | undefined) {
+export function createLogger(log: ((message: string) => void) | null | undefined) {
   // eslint-disable-next-line no-console
-  return log ? new Console(new Logger(log)).log : console.log;
+  return log ? new Console(new Logger(log)).log : log === null ? () => {} : console.log;
 }

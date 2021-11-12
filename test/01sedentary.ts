@@ -1,6 +1,6 @@
 import { deepStrictEqual as de, strictEqual as eq, ok } from "assert";
 
-import { Package, Sedentary } from "./helper";
+import { Package, Sedentary, helper } from "./helper";
 import { connection, wrongConnection, wrongConnectionError } from "./local";
 
 describe("class Sedentary", () => {
@@ -34,5 +34,9 @@ describe("class Sedentary", () => {
 
     it("error", () => eq(error.message, wrongConnectionError));
     it("log", () => de(db.logs, ["Connecting...\n", `Connecting: ${wrongConnectionError}\n`]));
+  });
+
+  describe("null logger", function() {
+    helper([], true, { log: null }, async db => await db.connect());
   });
 });

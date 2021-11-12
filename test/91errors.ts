@@ -51,7 +51,11 @@ describe("class Sedentary - errors", () => {
   describe("Sedentary.model(, { [key] }) - value", () =>
     errorHelper(db => db.model("test", { test: () => null as never }))("Sedentary.model: 'test' model: 'test' field: Wrong type, expected 'Field'"));
   describe("Sedentary.model(, { [key]: fieldName })", () =>
-    errorHelper(db => db.model("test", { test: { fieldName: (): boolean => true } as never }))("Sedentary.model: 'test' model: 'test' field: 'fieldName' option: Wrong type, expected 'string'"));
+    errorHelper(db => db.model("test", { test: { fieldName: 23 } as never }))("Sedentary.model: 'test' model: 'test' field: 'fieldName' option: Wrong type, expected 'string'"));
+  describe("Sedentary.model(, { [key]: notNull })", () =>
+    errorHelper(db => db.model("test", { test: { notNull: 23 } as never }))("Sedentary.model: 'test' model: 'test' field: 'notNull' option: Wrong type, expected 'boolean'"));
+  describe("Sedentary.model(, { [key]: unique })", () =>
+    errorHelper(db => db.model("test", { test: { unique: 23 } as never }))("Sedentary.model: 'test' model: 'test' field: 'unique' option: Wrong type, expected 'boolean'"));
   describe("Sedentary.model(, { [key]: type }) - missing", () => errorHelper(db => db.model("test", { test: {} as never }))("Sedentary.model: 'test' model: 'test' field: Missing 'type' option"));
   describe("Sedentary.model(, { [key]: type }) - type", () =>
     errorHelper(db => db.model("test", { test: { type: true } as never }))("Sedentary.model: 'test' model: 'test' field: 'type' option: Wrong type, expected 'Type'"));

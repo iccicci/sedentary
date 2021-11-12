@@ -12,6 +12,7 @@ const rules = {
   "no-console":                                 "warn",
   "no-mixed-spaces-and-tabs":                   ["error", "smart-tabs"],
   "nonblock-statement-body-position":           ["error", "beside"],
+  "prefer-const":                               ["error", { destructuring: "all" }],
   semi:                                         ["error", "always"],
   "space-before-function-paren":                ["error", { anonymous: "never", asyncArrow: "always", named: "never" }],
   "space-unary-ops":                            ["error", { nonwords: false, words: true, overrides: { "!": true } }],

@@ -1,6 +1,6 @@
 import { deepStrictEqual as de, strictEqual as eq } from "assert";
 
-import { Package } from "..";
+import { Package, SchemaOptions } from "..";
 import { clean, connection } from "./local";
 
 export { Package } from "..";
@@ -9,22 +9,31 @@ export class Sedentary extends Package {
   logs: string[] = [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(connection: any | string) {
-    super(connection, { log: message => this.logs.push(message) });
+  constructor(connection: any | string, options?: SchemaOptions) {
+    super(connection, { log: message => this.logs.push(message), ...options });
   }
 }
 
 const logs = ["Connecting...\n", "Connected, syncing...\n", "Synced\n", "Closing connection...\n", "Connection closed\n"];
 
-export function helper(expected: string[], test: (db: Sedentary) => Promise<void>): void;
-export function helper(expected: string[], notClean: ((db: Sedentary) => Promise<void>) | boolean, test?: (db: Sedentary) => Promise<void>): void;
-export function helper(expected: string[], notClean: ((db: Sedentary) => Promise<void>) | boolean, test?: (db: Sedentary) => Promise<void>): void {
+type Test = (db: Sedentary) => Promise<void>;
+
+export function helper(expected: string[], test: Test): void;
+export function helper(expected: string[], notClean: Test | boolean, test?: Test): void;
+export function helper(expected: string[], notClean: Test | boolean, options?: Test | SchemaOptions, test?: Test): void;
+export function helper(expected: string[], notClean: Test | boolean, options?: Test | SchemaOptions, test?: Test): void {
   let db: Sedentary;
   let j = 0;
 
   if(typeof notClean === "function") {
     test = notClean;
     notClean = false;
+    options = {};
+  }
+
+  if(typeof options === "function") {
+    test = options;
+    options = {};
   }
 
   function log(): string {
@@ -39,7 +48,7 @@ export function helper(expected: string[], notClean: ((db: Sedentary) => Promise
   before(async function() {
     try {
       if(! notClean) await clean();
-      await test((db = new Sedentary(connection)));
+      await test((db = new Sedentary(connection, options as SchemaOptions)));
     } catch(e) {
       throw e;
     } finally {
@@ -50,7 +59,7 @@ export function helper(expected: string[], notClean: ((db: Sedentary) => Promise
   if(expected[0]) {
     for(const i in expected) it(expected[i].slice(0, -1), () => eq(log(), expected[i]));
     it("End", () => de(db.logs, ["Synced\n", "Closing connection...\n", "Connection closed\n"]));
-  } else it("End", () => de(db.logs, logs));
+  } else it("End", () => de(db.logs, (options as SchemaOptions).log === null ? [] : logs));
 }
 
 export function errorHelper(test: (db: Sedentary) => void): (message: string) => void {

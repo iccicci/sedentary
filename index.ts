@@ -39,7 +39,7 @@ type Model<F extends FieldsDefinition, M> = { [f in keyof F]?: Native<F[f]> } & 
 type Ancestor<F, N extends Natural, E extends Entry> = (new () => E) & { [f in keyof F]?: Meta<Native<F[f]>, E> } & { load: (boh: boolean) => Promise<E[]> } & Meta<N, E>;
 
 export interface SchemaOptions {
-  log?: (message: string) => void;
+  log?: ((message: string) => void) | null;
   sync?: boolean;
 }
 
@@ -170,33 +170,30 @@ export class Sedentary {
     if(parent || primaryKey) farray = [];
     if(! parent) iarray.push({ fields: [pkName], name: `${tableName}_${pkName}_unique`, type: "btree", unique: true });
 
+    const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, Entry>, message: string) => {
+      if(func !== this.DATETIME && func !== this.FKEY && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(message);
+
+      return new Field({ defaultValue, fieldName, notNull, unique, ...func() });
+    };
+
     for(const fname in fields) {
       if(["base", "constructor", "load", "meta", "name", "prototype", "save", "size", "type"].indexOf(fname) !== -1) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: Reserved name`);
 
       const field = fields[fname];
-      // eslint-disable-next-line prefer-const
       let { defaultValue, fieldName, notNull, size, type, unique } = ((): Field<Natural, Entry> => {
         const ret = ((): Field<Natural, Entry> => {
-          // eslint-disable-next-line prefer-const
-          let { defaultValue, fieldName, notNull, unique, type } = { defaultValue: undefined as unknown, fieldName: fname as string, notNull: false, unique: false, type: null as unknown };
-
-          const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, Entry>, message: string) => {
-            if(func !== this.DATETIME && func !== this.FKEY && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(message);
-
-            return new Field({ defaultValue, fieldName, notNull, unique, ...func() });
-          };
-
-          if(field instanceof Type) return new Field({ fieldName: fname, ...{ notNull: false, ...field } });
+          if(field instanceof Type) return new Field({ fieldName: fname, notNull: false, ...field });
           if(field instanceof Function) return call(undefined, fname, false, false, field as never, `Sedentary.model: '${name}' model: '${fname}' field: Wrong type, expected 'Field'`);
           if(! (field instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: Wrong field type, expected 'Field'`);
 
-          ({ defaultValue, fieldName, notNull, unique, type } = { notNull: false, ...field } as unknown as FieldOptions<Natural, Entry>);
-          if(! fieldName) fieldName = fname;
+          const { defaultValue, fieldName, notNull, unique, type } = { defaultValue: undefined, fieldName: fname, notNull: false, unique: false, ...field } as FieldOptions<Natural, Entry>;
 
           if(defaultValue === null) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'defaultValue' option: Does 'null' default value really makes sense?`);
           if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'fieldName' option: Wrong type, expected 'string'`);
-          if(! type) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: Missing 'type' option`);
-          if(type instanceof Type) return new Field({ ...({ notNull: false, ...field } as unknown as Type<Natural, Entry>), fieldName, ...type });
+          if(typeof notNull !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'notNull' option: Wrong type, expected 'boolean'`);
+          if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'unique' option: Wrong type, expected 'boolean'`);
+          if(type === undefined) throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: Missing 'type' option`);
+          if(type instanceof Type) return new Field({ defaultValue, fieldName, notNull, unique, ...type });
           if(type instanceof Function) return call(defaultValue, fieldName, notNull, unique, type as never, `Sedentary.model: '${name}' model: '${fname}' field: 'type' option: Wrong type, expected 'Type'`);
 
           throw new Error(`Sedentary.model: '${name}' model: '${fname}' field: 'type' option: Wrong type, expected 'Type'`);
