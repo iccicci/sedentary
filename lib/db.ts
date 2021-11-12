@@ -117,7 +117,7 @@ export abstract class DB {
   tables: { [key: string]: Table } = {};
   tablesArr: Table[] = [];
 
-  protected log: (message: string) => void;
+  protected log: (...data: unknown[]) => void;
 
   abstract connect(): Promise<void>;
   abstract end(): Promise<void>;

@@ -1,4 +1,5 @@
 import { Constraint, DB, Entry, Field, Index, IndexDef, IndexFields, Meta, Natural, Table, Type } from "./lib/db";
+import { createLogger } from "./lib/log";
 import { MiniDB } from "./lib/minidb";
 
 type TypeDefinition<N extends Natural, E extends Entry> = (() => Type<N, E>) | Type<N, E>;
@@ -46,24 +47,20 @@ const allowedOption = ["indexes", "init", "int8id", "methods", "parent", "primar
 
 export class Sedentary {
   protected db: DB;
-  protected log: (message: string) => void;
+  protected log: (...data: unknown[]) => void;
 
   private sync = true;
   private models: { [key: string]: boolean } = {};
 
   constructor(filename: string, options?: SchemaOptions) {
-    if(typeof filename !== "string") throw new Error("Sedentary.constructor: 'filename' argument: Wrong type, expected 'string'");
+    if(typeof filename !== "string") throw new Error("new Sedentary: 'filename' argument: Wrong type, expected 'string'");
     if(! options) options = {};
-    if(! (options instanceof Object)) throw new Error("Sedentary.constructor: 'options' argument: Wrong type, expected 'Object'");
+    if(! (options instanceof Object)) throw new Error("new Sedentary: 'options' argument: Wrong type, expected 'Object'");
 
-    for(const k in options) {
-      if(["log", "sync"].indexOf(k) === -1) throw new Error(`Sedentary.constructor: 'options' argument: Unknown '${k}' option`);
+    for(const k in options) if(["log", "sync"].indexOf(k) === -1) throw new Error(`new Sedentary: 'options' argument: Unknown '${k}' option`);
 
-      this[k] = options[k];
-    }
-
-    // eslint-disable-next-line no-console
-    this.log ||= console.log;
+    this.log = createLogger(options.log);
+    this.sync = options.sync;
 
     this.db = new MiniDB(filename, this.log);
   }
@@ -106,7 +103,7 @@ export class Sedentary {
       await this.db.sync();
       this.log("Synced");
     } catch(e) {
-      this.log("Connecting: " + e.message);
+      this.log("Connecting:", e.message);
       throw e;
     }
   }

@@ -17,7 +17,7 @@ describe("class Sedentary", () => {
     });
 
     it("ok", () => ok(true));
-    it("log", () => de(db.logs, ["Connecting...", "Connected, syncing...", "Synced", "Closing connection...", "Connection closed"]));
+    it("log", () => de(db.logs, ["Connecting...\n", "Connected, syncing...\n", "Synced\n", "Closing connection...\n", "Connection closed\n"]));
   });
 
   describe("connect error", () => {
@@ -33,6 +33,6 @@ describe("class Sedentary", () => {
     });
 
     it("error", () => eq(error.message, wrongConnectionError));
-    it("log", () => de(db.logs, ["Connecting...", "Connecting: " + wrongConnectionError]));
+    it("log", () => de(db.logs, ["Connecting...\n", `Connecting: ${wrongConnectionError}\n`]));
   });
 });

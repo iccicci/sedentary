@@ -6,7 +6,7 @@ import { errorHelper } from "./helper";
 describe("class Sedentary - errors", () => {
   let err: Error;
 
-  describe("Sedentary.constructor(filename)", () => {
+  describe("new Sedentary(filename)", () => {
     before(async () => {
       try {
         new Sedentary([] as never);
@@ -15,10 +15,10 @@ describe("class Sedentary - errors", () => {
       }
     });
 
-    it("message", () => eq(err.message, "Sedentary.constructor: 'filename' argument: Wrong type, expected 'string'"));
+    it("message", () => eq(err.message, "new Sedentary: 'filename' argument: Wrong type, expected 'string'"));
   });
 
-  describe("Sedentary.constructor(, options) - type", () => {
+  describe("new Sedentary(, options) - type", () => {
     before(async () => {
       try {
         new Sedentary("", "test" as never);
@@ -27,10 +27,10 @@ describe("class Sedentary - errors", () => {
       }
     });
 
-    it("message", () => eq(err.message, "Sedentary.constructor: 'options' argument: Wrong type, expected 'Object'"));
+    it("message", () => eq(err.message, "new Sedentary: 'options' argument: Wrong type, expected 'Object'"));
   });
 
-  describe("Sedentary.constructor(, options) - option", () => {
+  describe("new Sedentary(, options) - option", () => {
     before(async () => {
       try {
         new Sedentary("", { test: "test" } as never);
@@ -39,7 +39,7 @@ describe("class Sedentary - errors", () => {
       }
     });
 
-    it("message", () => eq(err.message, "Sedentary.constructor: 'options' argument: Unknown 'test' option"));
+    it("message", () => eq(err.message, "new Sedentary: 'options' argument: Unknown 'test' option"));
   });
 
   describe("Sedentary.model(name) - type", () => errorHelper(db => db.model({} as never, {}))("Sedentary.model: 'name' argument: Wrong type, expected 'string'"));

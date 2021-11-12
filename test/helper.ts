@@ -14,7 +14,7 @@ export class Sedentary extends Package {
   }
 }
 
-const logs = ["Connecting...", "Connected, syncing...", "Synced", "Closing connection...", "Connection closed"];
+const logs = ["Connecting...\n", "Connected, syncing...\n", "Synced\n", "Closing connection...\n", "Connection closed\n"];
 
 export function helper(expected: string[], test: (db: Sedentary) => Promise<void>): void;
 export function helper(expected: string[], notClean: ((db: Sedentary) => Promise<void>) | boolean, test?: (db: Sedentary) => Promise<void>): void;
@@ -48,8 +48,8 @@ export function helper(expected: string[], notClean: ((db: Sedentary) => Promise
   });
 
   if(expected[0]) {
-    for(const i in expected) it(expected[i], () => eq(log(), expected[i]));
-    it("End", () => de(db.logs, ["Synced", "Closing connection...", "Connection closed"]));
+    for(const i in expected) it(expected[i].slice(0, -1), () => eq(log(), expected[i]));
+    it("End", () => de(db.logs, ["Synced\n", "Closing connection...\n", "Connection closed\n"]));
   } else it("End", () => de(db.logs, logs));
 }
 
