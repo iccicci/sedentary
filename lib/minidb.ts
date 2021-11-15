@@ -29,7 +29,7 @@ export class MiniDB extends DB {
     const { constraints } = this.body.tables[table.tableName];
 
     for(const constraint in constraints.u) {
-      if(! table.constraints.filter(({ field, type }) => field === constraint && type === "u").length) {
+      if(! table.constraints.filter(({ attribute, type }) => attribute === constraint && type === "u").length) {
         this.log(`'${table.tableName}': Removing unique constraint on field: '${constraint}'`);
         delete constraints.u[constraint];
       }
@@ -41,10 +41,10 @@ export class MiniDB extends DB {
   async dropFields(table: Table): Promise<void> {
     const { fields } = this.body.tables[table.tableName];
 
-    for(const field in fields) {
-      if(table.fields.filter(f => f.fieldName === field).length === 0) {
-        this.log(`'${table.tableName}': Removing field: '${field}'`);
-        delete fields[field];
+    for(const attribute in fields) {
+      if(table.attributes.filter(f => f.fieldName === attribute).length === 0) {
+        this.log(`'${table.tableName}': Removing field: '${attribute}'`);
+        delete fields[attribute];
       }
     }
 
@@ -55,7 +55,7 @@ export class MiniDB extends DB {
     const { indexes } = this.body.tables[table.tableName];
 
     for(const name in indexes) {
-      const index = table.indexes.filter(_ => _.name === name);
+      const index = table.indexes.filter(_ => _.indexName === name);
 
       if(index.length === 0 || ! this.indexesEq(indexes[name], index[0])) {
         this.log(`'${table.tableName}': Removing index: '${name}'`);
@@ -78,9 +78,9 @@ export class MiniDB extends DB {
     for(const i in table.constraints) {
       const constraint = table.constraints[i];
 
-      if(! constraints[constraint.type][constraint.field]) {
-        this.log(`'${table.tableName}': Adding unique constraint on field: '${constraint.field}'`);
-        constraints[constraint.type][constraint.field] = true;
+      if(! constraints[constraint.type][constraint.attribute]) {
+        this.log(`'${table.tableName}': Adding unique constraint on field: '${constraint.attribute}'`);
+        constraints[constraint.type][constraint.attribute] = true;
       }
     }
 
@@ -91,11 +91,11 @@ export class MiniDB extends DB {
     const { indexes } = this.body.tables[table.tableName];
 
     for(const index of table.indexes) {
-      const { name } = index;
+      const { indexName } = index;
 
-      if(! (name in indexes)) {
-        this.log(`'${table.tableName}': Adding index: '${name}' on (${index.fields.map(_ => `'${_}'`).join(", ")}) type '${index.type}'${index.unique ? " unique" : ""}`);
-        indexes[name] = index;
+      if(! (indexName in indexes)) {
+        this.log(`'${table.tableName}': Adding index: '${indexName}' on (${index.attributes.map(_ => `'${_}'`).join(", ")}) type '${index.type}'${index.unique ? " unique" : ""}`);
+        indexes[indexName] = index;
       }
     }
 
@@ -103,42 +103,42 @@ export class MiniDB extends DB {
   }
 
   async syncFields(table: Table): Promise<void> {
-    for(const field of table.fields) {
+    for(const attribute of table.attributes) {
       const { fields } = this.body.tables[table.tableName];
-      const { defaultValue, fieldName, notNull, size, type } = field;
-      let dbField = fields[fieldName];
+      const { defaultValue, fieldName, notNull, size, type } = attribute;
+      let field = fields[fieldName];
 
-      if(! dbField) {
+      if(! field) {
         this.log(`'${table.tableName}': Adding field: '${fieldName}' '${type}' '${size || ""}'`);
-        dbField = fields[fieldName] = { size, type };
+        field = fields[fieldName] = { size, type };
       }
 
-      if(dbField.size !== size || dbField.type !== type) {
+      if(field.size !== size || field.type !== type) {
         this.log(`'${table.tableName}': Changing field type: '${fieldName}' '${type}' '${size || ""}'`);
-        dbField = fields[fieldName] = { ...dbField, size, type };
+        field = fields[fieldName] = { ...field, size, type };
       }
 
-      if(dbField.default) {
+      if(field.default) {
         if(! defaultValue) {
           this.log(`'${table.tableName}': Dropping default value for field: '${fieldName}'`);
-          delete dbField.default;
-        } else if(dbField.default !== defaultValue) {
+          delete field.default;
+        } else if(field.default !== defaultValue) {
           this.log(`'${table.tableName}': Changing default value to '${defaultValue}' for field: '${fieldName}'`);
-          dbField.default = defaultValue;
+          field.default = defaultValue;
         }
       } else if(defaultValue) {
         this.log(`'${table.tableName}': Setting default value '${defaultValue instanceof Date ? defaultValue.toISOString() : defaultValue}' for field: '${fieldName}'`);
-        dbField.default = defaultValue;
+        field.default = defaultValue;
       }
 
-      if(dbField.notNull) {
+      if(field.notNull) {
         if(! notNull) {
           this.log(`'${table.tableName}': Dropping not null for field: '${fieldName}'`);
-          delete dbField.notNull;
+          delete field.notNull;
         }
       } else if(notNull) {
         this.log(`'${table.tableName}': Setting not null for field: '${fieldName}'`);
-        dbField.notNull = true;
+        field.notNull = true;
       }
     }
 

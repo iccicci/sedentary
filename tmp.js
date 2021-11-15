@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
 
 // The account we use to store followings
-const followingsUID = 3186068;
+//const followingsUID = 3186068;
+const followingsUID = 95946583;
 // Gather the loggedUID from window.localStorage
 const { loggedUID } = window.localStorage;
 // Gather the CSRF-Token from the cookies
@@ -119,5 +120,7 @@ async function doAll() {
 
   return "Done";
 }
+
+// https://booyah.live/studio/3999290?source=31
 
 await doAll();

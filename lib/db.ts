@@ -10,46 +10,37 @@ export class Entry {
 
 export class Type<N extends Natural, E extends Entry> {
   base: unknown;
+  entry?: E;
   native?: N;
-  record?: E;
   size?: number;
   type: string;
 
-  constructor(from: Partial<Type<N, Entry>>) {
+  constructor(from: Type<N, E>) {
     Object.assign(this, from);
   }
 }
 
-interface IMeta {
-  init: () => void;
-  methods: { [key: string]: () => unknown };
-  primaryKey: string;
-  tableName: string;
-}
-
 export class Meta<N extends Natural, E extends Entry> extends Type<N, E> {
   init: () => void;
+  isModel?: () => boolean;
   methods: { [key: string]: () => unknown };
   primaryKey: string;
   tableName: string;
 
-  constructor(options: IMeta) {
-    super({ size: 0, type: "" });
-    Object.assign(this, options);
-  }
-
-  isModel(): boolean {
-    return true;
+  constructor(from: Meta<N, E>) {
+    super(from);
   }
 }
 
-export class Field<N extends Natural, E extends Entry> extends Type<N, E> {
+export class Attribute<N extends Natural, E extends Entry> extends Type<N, E> {
+  attributeName: string;
   defaultValue?: unknown;
-  fieldName?: string;
-  notNull?: boolean;
+  fieldName: string;
+  notNull: boolean;
+  tableName: string;
   unique?: boolean;
 
-  constructor(from: Partial<Field<N, E>>) {
+  constructor(from: Attribute<N, E>) {
     super(from);
   }
 }
@@ -63,32 +54,22 @@ function autoImplement<T>() {
 }
 
 export interface Constraint {
-  field: string;
-  name: string;
+  attribute: string;
+  constraintName: string;
   type: "f" | "u";
 }
 
-export type IndexFields = string[] | string;
-
-export interface IndexDef {
-  fields: string[];
-  name: string;
+export interface Index {
+  attributes: string[];
+  indexName: string;
   type: "btree" | "hash";
   unique: boolean;
 }
 
-interface IndexOptions {
-  fields: IndexFields;
-  type?: "btree" | "hash";
-  unique?: boolean;
-}
-
-export type Index = IndexFields | IndexOptions;
-
 interface ITable {
+  attributes: Attribute<Natural, Entry>[];
   constraints: Constraint[];
-  fields: Field<Natural, Entry>[];
-  indexes: IndexDef[];
+  indexes: Index[];
   oid?: number;
   parent: Meta<Natural, Entry>;
   primaryKey: string;
@@ -131,9 +112,9 @@ export abstract class DB {
     this.tablesArr.push(table);
   }
 
-  protected indexesEq(a: IndexDef, b: IndexDef): boolean {
-    if(a.fields.length !== b.fields.length) return false;
-    for(const i in a.fields) if(a.fields[i] !== b.fields[i]) return false;
+  protected indexesEq(a: Index, b: Index): boolean {
+    if(a.attributes.length !== b.attributes.length) return false;
+    for(const i in a.attributes) if(a.attributes[i] !== b.attributes[i]) return false;
     if(a.type !== b.type) return false;
     if(a.unique !== b.unique) return false;
 

@@ -119,13 +119,13 @@ describe("sync", () => {
 
       describe("indexes 3", function() {
         helper(expected.sync_index_3, true, async db => {
-          db.model("test1", { a: db.INT, b: db.INT8 }, { indexes: { ia: { fields: "a", type: "hash" }, ib: { fields: ["a", "b"], unique: true } } });
+          db.model("test1", { a: db.INT, b: db.INT8 }, { indexes: { ia: { attributes: "a", type: "hash" }, ib: { attributes: ["a", "b"], unique: true } } });
           await db.connect();
         });
 
         describe("indexes 4", function() {
           helper(expected.sync_index_4, true, async db => {
-            db.model("test1", { a: db.INT, b: db.INT8 }, { indexes: { ia: { fields: ["a", "b"] }, ib: { fields: ["b", "a"], unique: true } } });
+            db.model("test1", { a: db.INT, b: db.INT8 }, { indexes: { ia: { attributes: ["a", "b"] }, ib: { attributes: ["b", "a"], unique: true } } });
             await db.connect();
           });
         });
