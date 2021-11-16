@@ -3,8 +3,8 @@ import { createLogger } from "./lib/log";
 import { MiniDB } from "./lib/minidb";
 
 export { Entry, Natural, Type } from "./lib/db";
-export type TypeDefinition<N extends Natural, E extends Entry> = (() => Type<N, E>) | Type<N, E>;
-export interface AttributeOptions<N extends Natural, E extends Entry> {
+export type TypeDefinition<N extends Natural, E> = (() => Type<N, E>) | Type<N, E>;
+export interface AttributeOptions<N extends Natural, E> {
   defaultValue?: N;
   fieldName?: string;
   notNull?: boolean;
@@ -12,19 +12,19 @@ export interface AttributeOptions<N extends Natural, E extends Entry> {
   unique?: boolean;
 }
 
-export type AttributeDefinition<N extends Natural, E extends Entry> = TypeDefinition<N, E> | AttributeOptions<N, E>;
-export type AttributesDefinition = { [key: string]: AttributeDefinition<Natural, Entry> };
+export type AttributeDefinition<N extends Natural, E> = TypeDefinition<N, E> | AttributeOptions<N, E>;
+export type AttributesDefinition = { [key: string]: AttributeDefinition<Natural, unknown> };
 
 type KeysAttributes<T, k> = T extends AttributeDefinition<Natural, infer E> ? (E extends Entry ? k : never) : never;
 type Keys<F extends AttributesDefinition> = { [f in keyof F]?: KeysAttributes<F[f], f> }[keyof F];
 
 type Methods<T> = { [key: string]: (this: T) => unknown };
 
-type Native__<T> = T extends Type<infer N, Entry> ? N : never;
+type Native__<T> = T extends Type<infer N, unknown> ? N : never;
 type Native_<T> = T extends () => Type<infer N, infer E> ? Native__<Type<N, E>> : Native__<T>;
 type Native<T> = T extends AttributeOptions<infer N, infer E> ? Native__<Type<N, E>> : Native_<T>;
 
-type Parent<T> = T extends Meta<Natural, infer R> ? R : never;
+type Parent<T> = T extends Meta<Natural, infer E> ? E : never;
 
 export type IndexAttributes = string[] | string;
 
@@ -45,8 +45,8 @@ export type ModelOptions<M, T> = {
 };
 
 type ForeignKey<T> = T extends AttributeDefinition<Natural, infer E> ? () => Promise<E> : never;
-type Model<F extends AttributesDefinition, M> = { [f in keyof F]?: Native<F[f]> } & { [f in Keys<F> & string as `${f}Load`]?: ForeignKey<F[f]> } & M;
-type Ancestor<F, N extends Natural, E extends Entry> = (new () => E) & { [f in keyof F]?: Meta<Native<F[f]>, E> } & { load: (boh: boolean) => Promise<E[]> } & Meta<N, E>;
+type Model<A extends AttributesDefinition, M> = { [a in keyof A]?: Native<A[a]> } & { [a in Keys<A> & string as `${a}Load`]?: ForeignKey<A[a]> } & M;
+type Ancestor<A, N extends Natural, T extends Entry> = (new () => T) & { [a in keyof A]?: Meta<Native<A[a]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>;
 
 export interface SchemaOptions {
   log?: ((message: string) => void) | null;
@@ -56,35 +56,8 @@ export interface SchemaOptions {
 const allowedOption = ["indexes", "init", "int8id", "methods", "parent", "primaryKey", "sync", "tableName", "type"];
 
 const reservedNames = [
-  "attribute",
-  "attributes",
-  "attributeName",
-  "autoIncrement",
-  "autoIncrementOwn",
-  "base",
-  "class",
-  "constraintName",
-  "constructor",
-  "defaultValue",
-  "entry",
-  "fieldName",
-  "indexName",
-  "init",
-  "isModel",
-  "load",
-  "meta",
-  "methods",
-  "name",
-  "native",
-  "parent",
-  "primaryKey",
-  "prototype",
-  "oid",
-  "save",
-  "size",
-  "sync",
-  "tableName",
-  "type"
+  ...["attributeName", "base", "class", "constructor", "defaultValue", "entry", "fieldName", "init", "isModel"],
+  ...["load", "meta", "methods", "name", "primaryKey", "prototype", "save", "size", "tableName", "type"]
 ];
 
 export class Sedentary {
@@ -107,7 +80,7 @@ export class Sedentary {
     this.db = new MiniDB(filename, this.log);
   }
 
-  DATETIME(): Type<Date, Entry> {
+  DATETIME(): Type<Date, unknown> {
     return new Type({ base: Date, type: "DATETIME" });
   }
 
@@ -117,7 +90,7 @@ export class Sedentary {
     return new Type({ base, size, type });
   }
 
-  INT(size?: number): Type<number, Entry> {
+  INT(size?: number): Type<number, unknown> {
     const message = "Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4";
 
     size = size ? this.checkSize(size, message) : 4;
@@ -127,11 +100,11 @@ export class Sedentary {
     return new Type({ base: Number, size, type: "INT" });
   }
 
-  INT8(): Type<string, Entry> {
+  INT8(): Type<string, unknown> {
     return new Type({ base: String, size: 8, type: "INT8" });
   }
 
-  VARCHAR(size?: number): Type<string, Entry> {
+  VARCHAR(size?: number): Type<string, unknown> {
     const message = "Sedentary.VARCHAR: 'size' argument: Wrong value, expected positive integer";
 
     size = size ? this.checkSize(size, message) : undefined;
@@ -158,30 +131,30 @@ export class Sedentary {
     this.log("Connection closed");
   }
 
-  model<F extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: string } & Model<F, M>>(
+  model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: string } & Model<A, M>>(
     name: string,
-    attributes: F,
+    attributes: A,
     options?: ModelOptions<M, T> & { int8id: true }
-  ): Ancestor<F, string, T>;
-  model<F extends AttributesDefinition, K extends keyof F, M extends Methods<T>, N extends K extends keyof F ? Native<F[K]> : never, T extends Entry & Model<F, M>>(
+  ): Ancestor<A, string, T>;
+  model<A extends AttributesDefinition, K extends keyof A, M extends Methods<T>, N extends K extends keyof A ? Native<A[K]> : never, T extends Entry & Model<A, M>>(
     name: string,
-    attributes: F,
+    attributes: A,
     options?: ModelOptions<M, T> & { primaryKey: K }
-  ): Ancestor<F, N, T>;
-  model<F extends AttributesDefinition, M extends Methods<T>, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & Model<F, M>>(
+  ): Ancestor<A, N, T>;
+  model<A extends AttributesDefinition, M extends Methods<T>, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & Model<A, M>>(
     name: string,
-    attributes: F,
+    attributes: A,
     options?: ModelOptions<M, T> & { parent: P }
-  ): Ancestor<F, N, T>;
-  model<F extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: number } & Model<F, M>>(name: string, attributes: F, options?: ModelOptions<M, T>): Ancestor<F, number, T>;
-  model<F extends AttributesDefinition, K extends string, M extends Methods<T>, N extends Natural, P extends Meta<Natural, Entry>, T extends Entry & Model<F, M>>(
+  ): Ancestor<A, N, T>;
+  model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: number } & Model<A, M>>(name: string, attributes: A, options?: ModelOptions<M, T>): Ancestor<A, number, T>;
+  model<A extends AttributesDefinition, K extends string, M extends Methods<T>, N extends Natural, P extends Meta<Natural, Entry>, T extends Entry & Model<A, M>>(
     name: string,
-    attributes: F,
+    attributes: A,
     options?: ModelOptions<M, T> & { int8id?: boolean; parent?: P; primaryKey?: K }
-  ): Ancestor<F, N, T> {
+  ): Ancestor<A, N, T> {
     if(typeof name !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
     if(this.models[name]) throw new Error(`Sedentary.model: '${name}' model: Model already defined`);
-    if(! attributes) attributes = {} as F;
+    if(! attributes) attributes = {} as A;
     if(! (attributes instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'attributes' argument: Wrong type, expected 'Object'`);
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'options' argument: Wrong type, expected 'Object'`);
@@ -194,9 +167,9 @@ export class Sedentary {
     const constraints: Constraint[] = [];
     const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name, ...options };
     let { methods } = options;
-    let aarray: Attribute<Natural, Entry>[] = int8id
-      ? [new Attribute<string, Entry>({ ...this.INT8(), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })]
-      : [new Attribute<number, Entry>({ ...this.INT(4), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })];
+    let aarray: Attribute<Natural, unknown>[] = int8id
+      ? [new Attribute<string, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })]
+      : [new Attribute<number, unknown>({ ...this.INT(4), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })];
     let iarray: Index[] = [{ attributes: ["id"], indexName: `${tableName}_id_unique`, type: "btree", unique: true }];
     const pk = aarray[0];
 
@@ -223,23 +196,21 @@ export class Sedentary {
     for(const attributeName in attributes) {
       if(reservedNames.indexOf(attributeName) !== -1) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Reserved name`);
 
-      const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, Entry>, message: string) => {
+      const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message: string) => {
         if(func !== this.DATETIME && func !== this.FKEY && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(message);
 
         return new Attribute({ attributeName, defaultValue, fieldName, notNull, tableName, unique, ...func() });
       };
 
       const attribute = attributes[attributeName];
-      let { base, defaultValue, fieldName, notNull, size, type, unique } = ((): Attribute<Natural, Entry> => {
-        const ret = ((): Attribute<Natural, Entry> => {
+      let { base, defaultValue, fieldName, notNull, size, type, unique } = ((): Attribute<Natural, unknown> => {
+        const ret = ((): Attribute<Natural, unknown> => {
           if(attribute instanceof Type) return new Attribute({ attributeName, fieldName: attributeName, notNull: false, tableName, ...attribute });
           if(attribute instanceof Function) return call(undefined, attributeName, false, false, attribute, `Sedentary.model: '${name}' model: '${attributeName}' attribute: Wrong type, expected 'Attribute'`);
           if(! (attribute instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Wrong attribute type, expected 'Attribute'`);
 
-          const { defaultValue, fieldName, notNull, unique, type } = { defaultValue: undefined, fieldName: attributeName, notNull: false, unique: false, ...attribute } as AttributeOptions<
-            Natural,
-            Entry
-          >;
+          const attributeDefaults = { defaultValue: undefined, fieldName: attributeName, notNull: false, unique: false, ...attribute } as AttributeOptions<Natural, unknown>;
+          const { defaultValue, fieldName, notNull, unique, type } = attributeDefaults;
 
           if(defaultValue === null) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'defaultValue' option: Does 'null' default value really makes sense?`);
           if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'fieldName' option: Wrong type, expected 'string'`);
@@ -332,7 +303,7 @@ export class Sedentary {
         : parent.init
       : options.init;
 
-    const flds: { [f in keyof F]?: Meta<Native<F[f]>, T> } = {};
+    const flds: { [a in keyof A]?: Meta<Native<A[a]>, T> } = {};
 
     for(const key in attributes) flds[key] = null;
 
@@ -372,7 +343,7 @@ export class Sedentary {
     for(const attribute of aarray) Object.defineProperty(Class, attribute.attributeName, { value: attribute });
     for(const key of ["attributeName", "base", "fieldName", "size", "type"]) Object.defineProperty(Class, key, { value: pk[key] });
 
-    return Class as Ancestor<F, N, T>;
+    return Class as Ancestor<A, N, T>;
   }
 
   checkSize(size: number, message: string): number {
@@ -390,12 +361,6 @@ export const Package = Sedentary;
 const db = new Sedentary("gino");
 
 const Users = db.model("User", { foo: db.INT(), bar: db.VARCHAR() }, {});
-
-const u = new Users();
-
-try {
-  u.barLoad();
-} catch(e) {}
 
 class Item extends db.model(
   "Item",

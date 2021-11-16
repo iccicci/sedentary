@@ -8,7 +8,7 @@ export class Entry {
   }
 }
 
-export class Type<N extends Natural, E extends Entry> {
+export class Type<N extends Natural, E> {
   base: unknown;
   entry?: E;
   native?: N;
@@ -20,7 +20,7 @@ export class Type<N extends Natural, E extends Entry> {
   }
 }
 
-export class Meta<N extends Natural, E extends Entry> extends Type<N, E> {
+export class Meta<N extends Natural, E> extends Type<N, E> {
   init: () => void;
   isModel?: () => boolean;
   methods: { [key: string]: () => unknown };
@@ -32,7 +32,7 @@ export class Meta<N extends Natural, E extends Entry> extends Type<N, E> {
   }
 }
 
-export class Attribute<N extends Natural, E extends Entry> extends Type<N, E> {
+export class Attribute<N extends Natural, E> extends Type<N, E> {
   attributeName: string;
   defaultValue?: unknown;
   fieldName: string;
@@ -67,11 +67,11 @@ export interface Index {
 }
 
 interface ITable {
-  attributes: Attribute<Natural, Entry>[];
+  attributes: Attribute<Natural, unknown>[];
   constraints: Constraint[];
   indexes: Index[];
   oid?: number;
-  parent: Meta<Natural, Entry>;
+  parent: Meta<Natural, unknown>;
   primaryKey: string;
   sync: boolean;
   tableName: string;
