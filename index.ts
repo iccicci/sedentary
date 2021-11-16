@@ -36,11 +36,18 @@ export interface IndexOptions {
 
 export type IndexDefinition = IndexAttributes | IndexOptions;
 
-export type ModelOptions<T> = {
+export type BaseModelOptions<T> = {
   indexes?: { [key: string]: IndexDefinition };
   init?: (this: T) => void;
   sync?: boolean;
   tableName?: string;
+};
+
+export type ModelOptions<K extends string, M extends Methods<T>, P extends Meta<Natural, Entry>, T extends Entry> = BaseModelOptions<T> & {
+  int8id?: boolean;
+  methods?: M;
+  parent?: P;
+  primaryKey?: K;
 };
 
 type ForeignKey<T> = T extends AttributeDefinition<Natural, infer E> ? () => Promise<E> : never;
@@ -134,39 +141,39 @@ export class Sedentary {
   model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: string } & ModelWithMetods<A, M>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<T> & { int8id: true; methods: M }
+    options?: BaseModelOptions<T> & { int8id: true; methods: M }
   ): Ancestor<A, string, T>;
   model<A extends AttributesDefinition, K extends keyof A, M extends Methods<T>, N extends K extends keyof A ? Native<A[K]> : never, T extends Entry & ModelWithMetods<A, M>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<T> & { methods: M; primaryKey: K }
+    options?: BaseModelOptions<T> & { methods: M; primaryKey: K }
   ): Ancestor<A, N, T>;
   model<A extends AttributesDefinition, M extends Methods<T>, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & ModelWithMetods<A, M>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<T> & { methods: M; parent: P }
+    options?: BaseModelOptions<T> & { methods: M; parent: P }
   ): Ancestor<A, N, T>;
   model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: number } & ModelWithMetods<A, M>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<T> & { methods: M }
+    options?: BaseModelOptions<T> & { methods: M }
   ): Ancestor<A, number, T>;
-  model<A extends AttributesDefinition, T extends Entry & { id?: string } & Model<A>>(name: string, attributes: A, options?: ModelOptions<T> & { int8id: true }): Ancestor<A, string, T>;
+  model<A extends AttributesDefinition, T extends Entry & { id?: string } & Model<A>>(name: string, attributes: A, options?: BaseModelOptions<T> & { int8id: true }): Ancestor<A, string, T>;
   model<A extends AttributesDefinition, K extends keyof A, N extends K extends keyof A ? Native<A[K]> : never, T extends Entry & Model<A>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<T> & { primaryKey: K }
+    options?: BaseModelOptions<T> & { primaryKey: K }
   ): Ancestor<A, N, T>;
   model<A extends AttributesDefinition, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & Model<A>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<T> & { parent: P }
+    options?: BaseModelOptions<T> & { parent: P }
   ): Ancestor<A, N, T>;
-  model<A extends AttributesDefinition, T extends Entry & { id?: number } & Model<A>>(name: string, attributes: A, options?: ModelOptions<T>): Ancestor<A, number, T>;
+  model<A extends AttributesDefinition, T extends Entry & { id?: number } & Model<A>>(name: string, attributes: A, options?: BaseModelOptions<T>): Ancestor<A, number, T>;
   model<A extends AttributesDefinition, K extends string, M extends Methods<T>, N extends Natural, P extends Meta<Natural, Entry>, T extends Entry &(Model<A> | ModelWithMetods<A, M>)>(
     name: string,
     attributes: A,
-    options?: ModelOptions<T> & { int8id?: boolean; methods?: M; parent?: P; primaryKey?: K }
+    options?: ModelOptions<K, M, P, T>
   ): Ancestor<A, N, T> {
     if(typeof name !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
     if(this.models[name]) throw new Error(`Sedentary.model: '${name}' model: Model already defined`);
@@ -186,7 +193,7 @@ export class Sedentary {
     let aarray: Attribute<Natural, unknown>[] = int8id
       ? [new Attribute<string, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })]
       : [new Attribute<number, unknown>({ ...this.INT(4), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })];
-    let iarray: Index[] = [{ attributes: ["id"], indexName: `${tableName}_id_unique`, type: "btree", unique: true }];
+    let iarray: Index[] = [{ fields: ["id"], indexName: `${tableName}_id_unique`, type: "btree", unique: true }];
     const pk = aarray[0];
 
     if(methods && ! (methods instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'methods' option: Wrong type, expected 'Object'`);
@@ -259,7 +266,7 @@ export class Sedentary {
 
       aarray.push(new Attribute({ attributeName, base, defaultValue, fieldName, notNull, size, tableName, type, unique }));
 
-      if(unique) iarray.push({ attributes: [fieldName], indexName: `${tableName}_${fieldName}_unique`, type: "btree", unique: true });
+      if(unique) iarray.push({ fields: [fieldName], indexName: `${tableName}_${fieldName}_unique`, type: "btree", unique: true });
     }
 
     if(indexes) {
@@ -271,7 +278,7 @@ export class Sedentary {
         if(iarray.filter(_ => _.indexName === indexName).length !== 0) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: index name already inferred by the unique constraint on an attribute`);
 
         const idx = indexes[indexName];
-        const checkField = (attribute: string, l: number): void => {
+        const checkAttribute = (attribute: string, l: number): void => {
           if(typeof attribute !== "string") throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: #${l + 1} attribute: Wrong type, expected 'string'`);
           if(! (attribute in flds)) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: #${l + 1} attribute: Unknown attribute '${attribute}'`);
         };
@@ -281,10 +288,10 @@ export class Sedentary {
         let unique = false;
 
         if(idx instanceof Array) {
-          idx.forEach(checkField);
+          idx.forEach(checkAttribute);
           attributes = idx;
         } else if(typeof idx === "string") {
-          checkField(idx, 0);
+          checkAttribute(idx, 0);
           attributes = [idx];
         } else if(idx instanceof Object) {
           for(const k in idx) if(["attributes", "type", "unique"].indexOf(k) === -1) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Unknown index option '${k}'`);
@@ -292,9 +299,9 @@ export class Sedentary {
           ({ attributes, type, unique } = { type: "btree", unique: false, ...idx });
 
           if(! attributes) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Missing 'attributes' option`);
-          if(attributes instanceof Array) attributes.forEach(checkField);
+          if(attributes instanceof Array) attributes.forEach(checkAttribute);
           else if(typeof attributes === "string") {
-            checkField(attributes, 0);
+            checkAttribute(attributes, 0);
             attributes = [attributes];
           } else throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'attributes' option: Wrong type, expected 'FieldNames'`);
 
@@ -303,7 +310,7 @@ export class Sedentary {
           if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'unique' option: Wrong type, expected 'boolean'`);
         } else throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Wrong type, expected 'Object'`);
 
-        iarray.push({ attributes, indexName, type, unique });
+        iarray.push({ fields: attributes, indexName, type, unique });
       }
     }
 

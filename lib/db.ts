@@ -60,7 +60,7 @@ export interface Constraint {
 }
 
 export interface Index {
-  attributes: string[];
+  fields: string[];
   indexName: string;
   type: "btree" | "hash";
   unique: boolean;
@@ -113,8 +113,8 @@ export abstract class DB {
   }
 
   protected indexesEq(a: Index, b: Index): boolean {
-    if(a.attributes.length !== b.attributes.length) return false;
-    for(const i in a.attributes) if(a.attributes[i] !== b.attributes[i]) return false;
+    if(a.fields.length !== b.fields.length) return false;
+    for(const i in a.fields) if(a.fields[i] !== b.fields[i]) return false;
     if(a.type !== b.type) return false;
     if(a.unique !== b.unique) return false;
 

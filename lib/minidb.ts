@@ -94,7 +94,7 @@ export class MiniDB extends DB {
       const { indexName } = index;
 
       if(! (indexName in indexes)) {
-        this.log(`'${table.tableName}': Adding index: '${indexName}' on (${index.attributes.map(_ => `'${_}'`).join(", ")}) type '${index.type}'${index.unique ? " unique" : ""}`);
+        this.log(`'${table.tableName}': Adding index: '${indexName}' on (${index.fields.map(_ => `'${_}'`).join(", ")}) type '${index.type}'${index.unique ? " unique" : ""}`);
         indexes[indexName] = index;
       }
     }
