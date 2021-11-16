@@ -36,16 +36,16 @@ export interface IndexOptions {
 
 export type IndexDefinition = IndexAttributes | IndexOptions;
 
-export type ModelOptions<M, T> = {
+export type ModelOptions<T> = {
   indexes?: { [key: string]: IndexDefinition };
   init?: (this: T) => void;
-  methods?: M;
   sync?: boolean;
   tableName?: string;
 };
 
 type ForeignKey<T> = T extends AttributeDefinition<Natural, infer E> ? () => Promise<E> : never;
-type Model<A extends AttributesDefinition, M> = { [a in keyof A]?: Native<A[a]> } & { [a in Keys<A> & string as `${a}Load`]?: ForeignKey<A[a]> } & M;
+type ModelWithMetods<A extends AttributesDefinition, M> = { [a in keyof A]?: Native<A[a]> } & { [a in Keys<A> & string as `${a}Load`]?: ForeignKey<A[a]> } & M;
+type Model<A extends AttributesDefinition> = { [a in keyof A]?: Native<A[a]> } & { [a in Keys<A> & string as `${a}Load`]?: ForeignKey<A[a]> };
 type Ancestor<A, N extends Natural, T extends Entry> = (new () => T) & { [a in keyof A]?: Meta<Native<A[a]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>;
 
 export interface SchemaOptions {
@@ -131,26 +131,42 @@ export class Sedentary {
     this.log("Connection closed");
   }
 
-  model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: string } & Model<A, M>>(
+  model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: string } & ModelWithMetods<A, M>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<M, T> & { int8id: true }
+    options?: ModelOptions<T> & { int8id: true; methods: M }
   ): Ancestor<A, string, T>;
-  model<A extends AttributesDefinition, K extends keyof A, M extends Methods<T>, N extends K extends keyof A ? Native<A[K]> : never, T extends Entry & Model<A, M>>(
+  model<A extends AttributesDefinition, K extends keyof A, M extends Methods<T>, N extends K extends keyof A ? Native<A[K]> : never, T extends Entry & ModelWithMetods<A, M>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<M, T> & { primaryKey: K }
+    options?: ModelOptions<T> & { methods: M; primaryKey: K }
   ): Ancestor<A, N, T>;
-  model<A extends AttributesDefinition, M extends Methods<T>, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & Model<A, M>>(
+  model<A extends AttributesDefinition, M extends Methods<T>, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & ModelWithMetods<A, M>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<M, T> & { parent: P }
+    options?: ModelOptions<T> & { methods: M; parent: P }
   ): Ancestor<A, N, T>;
-  model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: number } & Model<A, M>>(name: string, attributes: A, options?: ModelOptions<M, T>): Ancestor<A, number, T>;
-  model<A extends AttributesDefinition, K extends string, M extends Methods<T>, N extends Natural, P extends Meta<Natural, Entry>, T extends Entry & Model<A, M>>(
+  model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: number } & ModelWithMetods<A, M>>(
     name: string,
     attributes: A,
-    options?: ModelOptions<M, T> & { int8id?: boolean; parent?: P; primaryKey?: K }
+    options?: ModelOptions<T> & { methods: M }
+  ): Ancestor<A, number, T>;
+  model<A extends AttributesDefinition, T extends Entry & { id?: string } & Model<A>>(name: string, attributes: A, options?: ModelOptions<T> & { int8id: true }): Ancestor<A, string, T>;
+  model<A extends AttributesDefinition, K extends keyof A, N extends K extends keyof A ? Native<A[K]> : never, T extends Entry & Model<A>>(
+    name: string,
+    attributes: A,
+    options?: ModelOptions<T> & { primaryKey: K }
+  ): Ancestor<A, N, T>;
+  model<A extends AttributesDefinition, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & Model<A>>(
+    name: string,
+    attributes: A,
+    options?: ModelOptions<T> & { parent: P }
+  ): Ancestor<A, N, T>;
+  model<A extends AttributesDefinition, T extends Entry & { id?: number } & Model<A>>(name: string, attributes: A, options?: ModelOptions<T>): Ancestor<A, number, T>;
+  model<A extends AttributesDefinition, K extends string, M extends Methods<T>, N extends Natural, P extends Meta<Natural, Entry>, T extends Entry &(Model<A> | ModelWithMetods<A, M>)>(
+    name: string,
+    attributes: A,
+    options?: ModelOptions<T> & { int8id?: boolean; methods?: M; parent?: P; primaryKey?: K }
   ): Ancestor<A, N, T> {
     if(typeof name !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
     if(this.models[name]) throw new Error(`Sedentary.model: '${name}' model: Model already defined`);
@@ -409,12 +425,6 @@ class Next extends db.model(
     primaryKey: "a"
   }
 ) {}
-
-const n = new Next();
-
-try {
-  n.aLoad();
-} catch(e) {}
 
 class Current extends db.model(
   "Current",
