@@ -61,19 +61,21 @@ describe("class Sedentary - errors", () => {
     errorHelper(db => db.model("test", { test: { type: true } as never }))("Sedentary.model: 'test' model: 'test' attribute: 'type' option: Wrong type, expected 'Type'"));
   describe("Sedentary.model(, { [key]: type }) - value", () =>
     errorHelper(db => db.model("test", { test: { type: (): boolean => true } as never }))("Sedentary.model: 'test' model: 'test' attribute: 'type' option: Wrong type, expected 'Type'"));
-  describe("Sedentary.model(, { [key]: type }) - null", () =>
+  describe("Sedentary.model(, { [key]: type }) - db.FKEY", () =>
+    errorHelper(db => db.model("test", { test: db.FKEY as never }))("Sedentary.model: 'test' model: 'test' attribute: 'this.FKEY' can't be used directly"));
+  describe("Sedentary.model(, { [key]: defaultValue }) - null", () =>
     errorHelper(db => db.model("test", { test: { defaultValue: null, type: Sedentary.prototype.INT } }))(
       "Sedentary.model: 'test' model: 'test' attribute: 'defaultValue' option: Does 'null' default value really makes sense?"
     ));
-  describe("Sedentary.model(, { [key]: type }) - number", () =>
+  describe("Sedentary.model(, { [key]: defaultValue }) - number", () =>
     errorHelper(db => db.model("test", { test: { defaultValue: "23", type: Sedentary.prototype.INT } }))(
       "Sedentary.model: 'test' model: 'test' attribute: 'defaultValue' option: Wrong type, expected 'number'"
     ));
-  describe("Sedentary.model(, { [key]: type }) - string", () =>
+  describe("Sedentary.model(, { [key]: defaultValue }) - string", () =>
     errorHelper(db => db.model("test", { test: { defaultValue: 23, type: Sedentary.prototype.INT8 } }))(
       "Sedentary.model: 'test' model: 'test' attribute: 'defaultValue' option: Wrong type, expected 'string'"
     ));
-  describe("Sedentary.model(, { [key]: type }) - Date", () =>
+  describe("Sedentary.model(, { [key]: defaultValue }) - Date", () =>
     errorHelper(db => db.model("test", { test: { defaultValue: 23, type: Sedentary.prototype.DATETIME } }))(
       "Sedentary.model: 'test' model: 'test' attribute: 'defaultValue' option: Wrong type, expected 'Date'"
     ));

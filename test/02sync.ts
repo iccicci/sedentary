@@ -133,11 +133,20 @@ describe("sync", () => {
     });
   });
 
-  xdescribe("foreign keys", function() {
-    helper(expected.sync_foreign_keys, async db => {
-      class test1 extends db.model("test1", { a: db.INT, b: db.INT8, c: db.VARCHAR }) {}
+  describe.only("foreign keys 1", function() {
+    helper(expected.sync_foreign_keys_1, async db => {
+      class test1 extends db.model("test1", { a: { type: db.INT, unique: true }, b: { type: db.INT8, unique: true }, c: { fieldName: "d", type: db.VARCHAR, unique: true } }) {}
       db.model("test2", { a: db.FKEY(test1), b: db.FKEY(test1.a), c: db.FKEY(test1.b), d: db.FKEY(test1.c) });
       await db.connect();
+    });
+
+    describe("foreign keys 2", function() {
+      helper(expected.sync_foreign_keys_2, true, async db => {
+        class test1 extends db.model("test1", { a: { type: db.INT, unique: true }, b: db.INT8, c: { fieldName: "d", type: db.VARCHAR } }) {}
+        class test3 extends db.model("test3", { b: db.INT8 }) {}
+        db.model("test2", { a: db.FKEY(test1.a), b: db.FKEY(test1.a), c: db.FKEY(test3.b) });
+        await db.connect();
+      });
     });
   });
 });

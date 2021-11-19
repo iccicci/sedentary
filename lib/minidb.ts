@@ -28,10 +28,10 @@ export class MiniDB extends DB {
   async dropConstraints(table: Table): Promise<void> {
     const { constraints } = this.body.tables[table.tableName];
 
-    for(const constraint in constraints.u) {
-      if(! table.constraints.filter(({ attribute, type }) => attribute === constraint && type === "u").length) {
-        this.log(`'${table.tableName}': Removing unique constraint on field: '${constraint}'`);
-        delete constraints.u[constraint];
+    for(const constraint in constraints.f) {
+      if(! table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "f").length) {
+        this.log(`'${table.tableName}': Removing foreign key: '${constraint}'`);
+        delete constraints.f[constraint];
       }
     }
 
@@ -77,10 +77,12 @@ export class MiniDB extends DB {
 
     for(const i in table.constraints) {
       const constraint = table.constraints[i];
+      const { constraintName, type } = constraint;
+      const { fieldName, foreignKey } = constraint.attribute;
 
-      if(! constraints[constraint.type][constraint.attribute]) {
-        this.log(`'${table.tableName}': Adding unique constraint on field: '${constraint.attribute}'`);
-        constraints[constraint.type][constraint.attribute] = true;
+      if(! constraints[type][constraintName]) {
+        this.log(`'${table.tableName}': Adding foreign key '${constraint.constraintName}' on field: '${fieldName}' references '${foreignKey.tableName}(${foreignKey.fieldName})'`);
+        constraints[type][constraintName] = { fieldName, toField: foreignKey.fieldName, toTable: foreignKey.tableName };
       }
     }
 
@@ -162,7 +164,7 @@ export class MiniDB extends DB {
 
     if(! this.body.tables[table.tableName]) {
       this.log(`Adding table: '${table.tableName}'`);
-      this.body.tables[table.tableName] = { constraints: { f: {}, u: {} }, fields: {}, indexes: {} };
+      this.body.tables[table.tableName] = { constraints: { f: {} }, fields: {}, indexes: {} };
 
       if(table.parent) {
         this.log(`Setting parent: '${table.parent.tableName}' - to table: '${table.tableName}'`);

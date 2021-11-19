@@ -93,8 +93,8 @@ export class Sedentary {
 
   FKEY<N extends Natural, E extends Entry>(attribute: Type<N, E>): Type<N, E> {
     const { attributeName, base, fieldName, size, tableName, type } = attribute as never;
-    console.log("fk", { attributeName, base, fieldName, size, tableName, type }, attribute);
-    return new Type({ base, size, type });
+
+    return new Type({ base, foreignKey: { attributeName, fieldName, tableName }, size, type });
   }
 
   INT(size?: number): Type<number, unknown> {
@@ -219,20 +219,21 @@ export class Sedentary {
     for(const attributeName in attributes) {
       if(reservedNames.indexOf(attributeName) !== -1) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Reserved name`);
 
-      const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message: string) => {
-        if(func !== this.DATETIME && func !== this.FKEY && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(message);
+      const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message1: string, message2: string) => {
+        if(func === this.FKEY) throw new Error(`${message1} 'this.FKEY' can't be used directly`);
+        if(func !== this.DATETIME && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(`${message1} ${message2}`);
 
         return new Attribute({ attributeName, defaultValue, fieldName, notNull, tableName, unique, ...func() });
       };
 
-      const attribute = attributes[attributeName];
-      let { base, defaultValue, fieldName, notNull, size, type, unique } = ((): Attribute<Natural, unknown> => {
+      const attributeDefinition = attributes[attributeName];
+      let { base, defaultValue, fieldName, foreignKey, notNull, size, type, unique } = ((): Attribute<Natural, unknown> => {
         const ret = ((): Attribute<Natural, unknown> => {
-          if(attribute instanceof Type) return new Attribute({ attributeName, fieldName: attributeName, notNull: false, tableName, ...attribute });
-          if(attribute instanceof Function) return call(undefined, attributeName, false, false, attribute, `Sedentary.model: '${name}' model: '${attributeName}' attribute: Wrong type, expected 'Attribute'`);
-          if(! (attribute instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Wrong attribute type, expected 'Attribute'`);
+          if(attributeDefinition instanceof Type) return new Attribute({ attributeName, fieldName: attributeName, notNull: false, tableName, ...attributeDefinition });
+          if(attributeDefinition instanceof Function) return call(undefined, attributeName, false, false, attributeDefinition, `Sedentary.model: '${name}' model: '${attributeName}' attribute:`, "Wrong type, expected 'Attribute'");
+          if(! (attributeDefinition instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Wrong attribute type, expected 'Attribute'`);
 
-          const attributeDefaults = { defaultValue: undefined, fieldName: attributeName, notNull: false, unique: false, ...attribute } as AttributeOptions<Natural, unknown>;
+          const attributeDefaults = { defaultValue: undefined, fieldName: attributeName, notNull: false, unique: false, ...attributeDefinition } as AttributeOptions<Natural, unknown>;
           const { defaultValue, fieldName, notNull, unique, type } = attributeDefaults;
 
           if(defaultValue === null) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'defaultValue' option: Does 'null' default value really makes sense?`);
@@ -241,7 +242,7 @@ export class Sedentary {
           if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'unique' option: Wrong type, expected 'boolean'`);
           if(type === undefined) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Missing 'type' option`);
           if(type instanceof Type) return new Attribute({ attributeName, defaultValue, fieldName, notNull, tableName, unique, ...type });
-          if(type instanceof Function) return call(defaultValue, fieldName, notNull, unique, type, `Sedentary.model: '${name}' model: '${attributeName}' attribute: 'type' option: Wrong type, expected 'Type'`);
+          if(type instanceof Function) return call(defaultValue, fieldName, notNull, unique, type, `Sedentary.model: '${name}' model: '${attributeName}' attribute: 'type' option:`, "Wrong type, expected 'Type'");
 
           throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'type' option: Wrong type, expected 'Type'`);
         })();
@@ -257,6 +258,8 @@ export class Sedentary {
         return ret;
       })();
 
+      console.log("ffkk", foreignKey);
+
       if(primaryKey === (attributeName as never)) {
         notNull = true;
         unique = true;
@@ -264,8 +267,10 @@ export class Sedentary {
 
       if(defaultValue) notNull = true;
 
-      aarray.push(new Attribute({ attributeName, base, defaultValue, fieldName, notNull, size, tableName, type, unique }));
+      const attribute = new Attribute({ attributeName, base, defaultValue, fieldName, foreignKey, notNull, size, tableName, type, unique });
 
+      aarray.push(attribute);
+      if(foreignKey) constraints.push({ attribute, constraintName: `fkey_${fieldName}_${foreignKey.tableName}_${foreignKey.fieldName}`, type: "f" });
       if(unique) iarray.push({ fields: [fieldName], indexName: `${tableName}_${fieldName}_unique`, type: "btree", unique: true });
     }
 

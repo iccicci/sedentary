@@ -14,6 +14,11 @@ export class Type<N extends Natural, E> {
   native?: N;
   size?: number;
   type: string;
+  foreignKey?: {
+    attributeName: string;
+    fieldName: string;
+    tableName: string;
+  };
 
   constructor(from: Type<N, E>) {
     Object.assign(this, from);
@@ -54,9 +59,9 @@ function autoImplement<T>() {
 }
 
 export interface Constraint {
-  attribute: string;
+  attribute: Attribute<Natural, unknown>;
   constraintName: string;
-  type: "f" | "u";
+  type: "f";
 }
 
 export interface Index {
