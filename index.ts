@@ -57,6 +57,7 @@ type Ancestor<A, N extends Natural, T extends Entry> = (new () => T) & { [a in k
 
 export interface SchemaOptions {
   log?: ((message: string) => void) | null;
+  serverless?: boolean;
   sync?: boolean;
 }
 
@@ -92,9 +93,7 @@ export class Sedentary {
   }
 
   FKEY<N extends Natural, E extends Entry>(attribute: Type<N, E>): Type<N, E> {
-    const { attributeName, base, fieldName, size, tableName, type, unique } = attribute as never;
-
-    if(! unique) throw new Error(`Sedentary.FKEY: '${tableName}' table: '${attributeName}' attribute: is not unique: can't be used as FKEY target`);
+    const { attributeName, base, fieldName, size, tableName, type } = attribute as never;
 
     return new Type({ base, foreignKey: { attributeName, fieldName, tableName }, size, type });
   }

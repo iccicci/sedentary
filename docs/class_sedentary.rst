@@ -1,58 +1,35 @@
-===
-API
-===
+.. _class Sedentary:
 
-.. toctree::
-   :maxdepth: 2
-   :caption: API
-
-   class_sedentary
-
-.. _Class Fields:
-
-Class: Fields
-=============
-
-.. _Class Model:
-
-Class: Model
-============
-
-.. _Class ModelOptions:
-
-Class: ModelOptions
-===================
-
-.. _Class SchemaOptions:
-
-Class: SchemaOptions
-====================
-
-- ``log(message)?``: Function_ - The function **Sedentary** will use to log. Default: console.log_
-    - ``message?``: string_ - The message to log.
-    - returns void_.
-- ``sync?``: boolean_ - Indicates if the SCHEMA should be synced. Default ``true``
-
-If ``sync`` is ``false`` **Sedentary** will not sync the SCHEMA, will simply check if the configured
-:ref:`Models<Class Model>` are compliant to the SCHEMA.
-
-.. _Class Sedentary2:
-
-Class: Sedentary
-================
+===============
+class Sedentary
+===============
 
 The base ORM class.
 
 .. _new Sedentary:
 
 new Sedentary()
-----------------------------------
+---------------
 
 **new Sedentary(filename[, options])**
 
 - ``filename``: string_ - The name of the JSON-DB file.
-- ``options?``: :ref:`SchemaOptions<Class SchemaOptions>` - The options for the SCHEMA. Default: ``{}``
-- returns the :ref:`Sedentary<Class Sedentary>` object to interact with the DB.
+- ``options?``: :ref:`SchemaOptions<class SchemaOptions>` - The options for the SCHEMA. Default: ``{}``
+- returns the :ref:`Sedentary<class Sedentary>` object to interact with the DB.
+
+.. _new SedentaryPG:
+
+new SedentaryPG()
+-----------------
+
+**new Sedentary(config[, options])**
+
+- ``config``: pg.PoolConfig_ - The connection configuration object.
+- ``options?``: :ref:`SchemaOptions<class SchemaOptions>` - The options for the SCHEMA. Default: ``{}``
+- returns the :ref:`SedentaryPG<class Sedentary>` object to interact with the DB.
+
+:ref:`SedentaryPG<class Sedentary>` uses pg.Pool_ to connect to the DataBase; please refer to node-postgres_ and its
+documentation_ for details about the ``config`` object.
 
 .. _sedentary.connect:
 
@@ -100,5 +77,9 @@ Defines one model. Should be called once for each model/TABLE to be configured.
 .. _Promise: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
 .. _boolean: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type
 .. _console.log: https://developer.mozilla.org/en-US/docs/Web/API/Console/log
+.. _documentation: https://node-postgres.com/
+.. _node-postgres: https://www.npmjs.com/package/pg
+.. _pg.Pool: https://node-postgres.com/api/pool
+.. _pg.PoolConfig: https://node-postgres.com/features/connecting
 .. _string: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type
 .. _void: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/void

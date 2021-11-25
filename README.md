@@ -9,6 +9,7 @@
 [![Stars][stars-badge]][github-url]
 
 [![Types][types-badge]][npm-url]
+[![Documentation][doc-badge]][doc-url]
 [![Dependents][deps-badge]][npm-url]
 [![Donate][donate-badge]][donate-url]
 
@@ -16,6 +17,8 @@
 [code-url]: https://codeclimate.com/github/iccicci/sedentary
 [cover-badge]: https://codeclimate.com/github/iccicci/sedentary/badges/coverage.svg
 [deps-badge]: https://badgen.net/npm/dependents/sedentary?icon=npm&cache=300
+[doc-badge]: https://readthedocs.org/projects/sedentary/badge/?version=latest
+[doc-url]: https://sedentary.readthedocs.io/
 [donate-badge]: https://badgen.net/badge/donate/bitcoin?icon=bitcoin&cache=300
 [donate-url]: https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB
 [github-url]: https://github.com/iccicci/sedentary

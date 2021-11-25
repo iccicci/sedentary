@@ -51,7 +51,7 @@ export class MiniDB extends DB {
     const { fields } = this.body.tables[table.tableName];
 
     for(const attribute in fields) {
-      if(table.attributes.filter(f => f.fieldName === attribute).length === 0) {
+      if(! table.findField(attribute)) {
         this.log(`'${table.tableName}': Removing field: '${attribute}'`);
         delete fields[attribute];
       }

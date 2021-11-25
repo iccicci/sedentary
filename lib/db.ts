@@ -75,7 +75,6 @@ interface ITable {
   attributes: Attribute<Natural, unknown>[];
   constraints: Constraint[];
   indexes: Index[];
-  oid?: number;
   parent: Meta<Natural, unknown>;
   primaryKey: string;
   sync: boolean;
@@ -83,8 +82,9 @@ interface ITable {
 }
 
 export class Table extends autoImplement<ITable>() {
-  autoIncrement: boolean;
-  autoIncrementOwn: boolean;
+  autoIncrement?: boolean;
+  autoIncrementOwn?: boolean;
+  oid?: number;
 
   constructor(defaults: ITable) {
     super(defaults);
@@ -97,11 +97,14 @@ export class Table extends autoImplement<ITable>() {
       }
     }
   }
+
+  findField(name: string): Attribute<Natural, unknown> {
+    return this.attributes.filter(_ => _.fieldName === name)[0];
+  }
 }
 
 export abstract class DB {
-  tables: { [key: string]: Table } = {};
-  tablesArr: Table[] = [];
+  tables: Table[] = [];
 
   protected log: (...data: unknown[]) => void;
 
@@ -113,8 +116,12 @@ export abstract class DB {
   }
 
   addTable(table: Table): void {
-    this.tables[table.tableName] = table;
-    this.tablesArr.push(table);
+    //this.tables[table.tableName] = table;
+    this.tables.push(table);
+  }
+
+  findTable(name: string): Table {
+    return this.tables.filter(_ => _.tableName === name)[0];
   }
 
   protected indexesEq(a: Index, b: Index): boolean {
@@ -127,9 +134,7 @@ export abstract class DB {
   }
 
   async sync(): Promise<void> {
-    for(const i in this.tablesArr) {
-      const table = this.tablesArr[i];
-
+    for(const table of this.tables) {
       await this.syncTable(table);
       const indexes = await this.dropConstraints(table);
       await this.dropIndexes(table, indexes);
