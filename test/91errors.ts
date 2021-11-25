@@ -101,7 +101,7 @@ describe("class Sedentary - errors", () => {
   describe("Sedentary.model(,, { indexes }) - type", () =>
     errorHelper(db => db.model("test", {}, { indexes: "test" } as never))("Sedentary.model: 'test' model: 'indexes' option: Wrong type, expected 'Object'"));
   describe("Sedentary.model(,, { indexes: { inferred } })", () =>
-    errorHelper(db => db.model("test", {}, { indexes: { test_id_unique: {} } } as never))(
+    errorHelper(db => db.model("test", { a: { type: db.INT, unique: true } }, { indexes: { test_id_unique: { attributes: "a" } } } as never))(
       "Sedentary.model: 'test' model: 'test_id_unique' index: index name already inferred by the unique constraint on an attribute"
     ));
   describe("Sedentary.model(,, { indexes: { attribute } }) - type", () =>
@@ -128,4 +128,9 @@ describe("class Sedentary - errors", () => {
     errorHelper(db => db.model("test", { a: db.INT }, { indexes: { a: { attributes: "a", unique: 23 } } } as never))(
       "Sedentary.model: 'test' model: 'a' index: 'unique' option: Wrong type, expected 'boolean'"
     ));
+  describe("Sedentary.FKEY() - not unique target", () =>
+    errorHelper(db => {
+      class test1 extends db.model("test1", { a: db.INT }) {}
+      db.model("test", { a: db.FKEY(test1.a) });
+    })("Sedentary.FKEY: 'test1' table: 'a' attribute: is not unique: can't be used as FKEY target"));
 });

@@ -25,17 +25,26 @@ export class MiniDB extends DB {
     }
   }
 
-  async dropConstraints(table: Table): Promise<void> {
+  async dropConstraints(table: Table): Promise<number[]> {
     const { constraints } = this.body.tables[table.tableName];
 
-    for(const constraint in constraints.f) {
+    for(const constraint of Object.keys(constraints.f).sort()) {
       if(! table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "f").length) {
         this.log(`'${table.tableName}': Removing foreign key: '${constraint}'`);
         delete constraints.f[constraint];
       }
     }
 
+    for(const constraint of Object.keys(constraints.u).sort()) {
+      if(! table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "u").length) {
+        this.log(`'${table.tableName}': Removing unique constraint from field: '${constraints.u[constraint].fieldName}'`);
+        delete constraints.u[constraint];
+      }
+    }
+
     await this.save();
+
+    return [];
   }
 
   async dropFields(table: Table): Promise<void> {
@@ -51,7 +60,8 @@ export class MiniDB extends DB {
     await this.save();
   }
 
-  async dropIndexes(table: Table): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async dropIndexes(table: Table, constraintIndexes: number[]): Promise<void> {
     const { indexes } = this.body.tables[table.tableName];
 
     for(const name in indexes) {
@@ -75,14 +85,21 @@ export class MiniDB extends DB {
   async syncConstraints(table: Table): Promise<void> {
     const { constraints } = this.body.tables[table.tableName];
 
-    for(const i in table.constraints) {
-      const constraint = table.constraints[i];
+    for(const constraint of table.constraints) {
       const { constraintName, type } = constraint;
       const { fieldName, foreignKey } = constraint.attribute;
 
       if(! constraints[type][constraintName]) {
-        this.log(`'${table.tableName}': Adding foreign key '${constraint.constraintName}' on field: '${fieldName}' references '${foreignKey.tableName}(${foreignKey.fieldName})'`);
-        constraints[type][constraintName] = { fieldName, toField: foreignKey.fieldName, toTable: foreignKey.tableName };
+        switch(type) {
+        case "f":
+          this.log(`'${table.tableName}': Adding foreign key '${constraint.constraintName}' on field: '${fieldName}' references '${foreignKey.tableName}(${foreignKey.fieldName})'`);
+          constraints[type][constraintName] = { fieldName, toField: foreignKey.fieldName, toTable: foreignKey.tableName };
+          break;
+        case "u":
+          this.log(`'${table.tableName}': Adding unique constraint on field: '${fieldName}'`);
+          constraints[type][constraintName] = { fieldName };
+          break;
+        }
       }
     }
 
@@ -164,7 +181,7 @@ export class MiniDB extends DB {
 
     if(! this.body.tables[table.tableName]) {
       this.log(`Adding table: '${table.tableName}'`);
-      this.body.tables[table.tableName] = { constraints: { f: {} }, fields: {}, indexes: {} };
+      this.body.tables[table.tableName] = { constraints: { f: {}, u: {} }, fields: {}, indexes: {} };
 
       if(table.parent) {
         this.log(`Setting parent: '${table.parent.tableName}' - to table: '${table.tableName}'`);

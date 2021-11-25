@@ -79,7 +79,7 @@ export class Sedentary {
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error("new Sedentary: 'options' argument: Wrong type, expected 'Object'");
 
-    for(const k in options) if(["log", "sync"].indexOf(k) === -1) throw new Error(`new Sedentary: 'options' argument: Unknown '${k}' option`);
+    for(const k in options) if(! ["log", "sync"].includes(k)) throw new Error(`new Sedentary: 'options' argument: Unknown '${k}' option`);
 
     this.log = createLogger(options.log);
     if("sync" in options) this.sync = options.sync;
@@ -92,7 +92,9 @@ export class Sedentary {
   }
 
   FKEY<N extends Natural, E extends Entry>(attribute: Type<N, E>): Type<N, E> {
-    const { attributeName, base, fieldName, size, tableName, type } = attribute as never;
+    const { attributeName, base, fieldName, size, tableName, type, unique } = attribute as never;
+
+    if(! unique) throw new Error(`Sedentary.FKEY: '${tableName}' table: '${attributeName}' attribute: is not unique: can't be used as FKEY target`);
 
     return new Type({ base, foreignKey: { attributeName, fieldName, tableName }, size, type });
   }
@@ -182,18 +184,18 @@ export class Sedentary {
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'options' argument: Wrong type, expected 'Object'`);
 
-    for(const k in options) if(allowedOption.indexOf(k) === -1) throw new Error(`Sedentary.model: '${name}' model: 'options' argument: Unknown '${k}' option`);
+    for(const k in options) if(! allowedOption.includes(k)) throw new Error(`Sedentary.model: '${name}' model: 'options' argument: Unknown '${k}' option`);
     if(options.int8id && options.parent) throw new Error(`Sedentary.model: '${name}' model: 'int8id' and 'parent' options conflict each other`);
     if(options.int8id && options.primaryKey) throw new Error(`Sedentary.model: '${name}' model: 'int8id' and 'primaryKey' options conflict each other`);
     if(options.parent && options.primaryKey) throw new Error(`Sedentary.model: '${name}' model: 'parent' and 'primaryKey' options conflict each other`);
 
-    const constraints: Constraint[] = [];
     const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name, ...options };
     let { methods } = options;
     let aarray: Attribute<Natural, unknown>[] = int8id
       ? [new Attribute<string, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })]
       : [new Attribute<number, unknown>({ ...this.INT(4), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })];
-    let iarray: Index[] = [{ fields: ["id"], indexName: `${tableName}_id_unique`, type: "btree", unique: true }];
+    let constraints: Constraint[] = [{ attribute: aarray[0], constraintName: `${tableName}_id_unique`, type: "u" }];
+    const iarray: Index[] = [];
     const pk = aarray[0];
 
     if(methods && ! (methods instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'methods' option: Wrong type, expected 'Object'`);
@@ -209,15 +211,15 @@ export class Sedentary {
     }
 
     if(primaryKey && typeof primaryKey !== "string") throw new Error(`Sedentary.model: '${name}' model: 'primaryKey' option: Wrong type, expected 'string'`);
-    if(primaryKey && Object.keys(attributes).indexOf(primaryKey) === -1) throw new Error(`Sedentary.model: '${name}' model: 'primaryKey' option: Attribute '${primaryKey}' does not exists`);
+    if(primaryKey && ! Object.keys(attributes).includes(primaryKey)) throw new Error(`Sedentary.model: '${name}' model: 'primaryKey' option: Attribute '${primaryKey}' does not exists`);
 
     if(parent || primaryKey) {
       aarray = [];
-      iarray = [];
+      constraints = [];
     }
 
     for(const attributeName in attributes) {
-      if(reservedNames.indexOf(attributeName) !== -1) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Reserved name`);
+      if(reservedNames.includes(attributeName)) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Reserved name`);
 
       const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message1: string, message2: string) => {
         if(func === this.FKEY) throw new Error(`${message1} 'this.FKEY' can't be used directly`);
@@ -258,8 +260,6 @@ export class Sedentary {
         return ret;
       })();
 
-      console.log("ffkk", foreignKey);
-
       if(primaryKey === (attributeName as never)) {
         notNull = true;
         unique = true;
@@ -271,7 +271,7 @@ export class Sedentary {
 
       aarray.push(attribute);
       if(foreignKey) constraints.push({ attribute, constraintName: `fkey_${fieldName}_${foreignKey.tableName}_${foreignKey.fieldName}`, type: "f" });
-      if(unique) iarray.push({ fields: [fieldName], indexName: `${tableName}_${fieldName}_unique`, type: "btree", unique: true });
+      if(unique) constraints.push({ attribute, constraintName: `${tableName}_${fieldName}_unique`, type: "u" });
     }
 
     if(indexes) {
@@ -280,7 +280,7 @@ export class Sedentary {
       if(! (indexes instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'indexes' option: Wrong type, expected 'Object'`);
 
       for(const indexName in indexes) {
-        if(iarray.filter(_ => _.indexName === indexName).length !== 0) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: index name already inferred by the unique constraint on an attribute`);
+        if(aarray.filter(({ fieldName, unique }) => unique && `${tableName}_${fieldName}_unique` === indexName).length !== 0) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: index name already inferred by the unique constraint on an attribute`);
 
         const idx = indexes[indexName];
         const checkAttribute = (attribute: string, l: number): void => {
@@ -299,7 +299,7 @@ export class Sedentary {
           checkAttribute(idx, 0);
           attributes = [idx];
         } else if(idx instanceof Object) {
-          for(const k in idx) if(["attributes", "type", "unique"].indexOf(k) === -1) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Unknown index option '${k}'`);
+          for(const k in idx) if(! ["attributes", "type", "unique"].includes(k)) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Unknown index option '${k}'`);
 
           ({ attributes, type, unique } = { type: "btree", unique: false, ...idx });
 
@@ -311,7 +311,7 @@ export class Sedentary {
           } else throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'attributes' option: Wrong type, expected 'FieldNames'`);
 
           if(typeof type !== "string") throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'type' option: Wrong type, expected 'string'`);
-          if(["btree", "hash"].indexOf(type) === -1) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'type' option: Wrong value, expected 'btree' or 'hash'`);
+          if(! ["btree", "hash"].includes(type)) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'type' option: Wrong value, expected 'btree' or 'hash'`);
           if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'unique' option: Wrong type, expected 'boolean'`);
         } else throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Wrong type, expected 'Object'`);
 
@@ -369,7 +369,7 @@ export class Sedentary {
     Object.assign(Class, new Meta<N, T>(meta));
     Object.assign(Class.prototype, methods);
     for(const attribute of aarray) Object.defineProperty(Class, attribute.attributeName, { value: attribute });
-    for(const key of ["attributeName", "base", "fieldName", "size", "type"]) Object.defineProperty(Class, key, { value: pk[key] });
+    for(const key of ["attributeName", "base", "fieldName", "size", "type", "unique"]) Object.defineProperty(Class, key, { value: pk[key] });
 
     return Class as Ancestor<A, N, T>;
   }
@@ -388,7 +388,7 @@ export const Package = Sedentary;
 
 const db = new Sedentary("gino");
 
-const Users = db.model("User", { foo: db.INT(), bar: db.VARCHAR() }, {});
+const Users = db.model("User", { foo: db.INT(), bar: { type: db.VARCHAR(), unique: true } }, {});
 
 class Item extends db.model(
   "Item",
@@ -440,7 +440,7 @@ class Next extends db.model(
 
 class Current extends db.model(
   "Current",
-  { b: db.FKEY(Next) },
+  { b: { type: db.FKEY(Next), unique: true } },
   {
     init: function() {
       this.b = 24;

@@ -27,7 +27,7 @@ export const expected = {
     "'test1': Adding field: 'f' 'DATETIME' ''\n",
     "'test1': Setting default value '1976-01-23T14:00:00.000Z' for field: 'f'\n",
     "'test1': Setting not null for field: 'f'\n",
-    "'test1': Adding index: 'test1_id_unique' on ('id') type 'btree' unique\n"
+    "'test1': Adding unique constraint on field: 'id'\n"
   ],
   types_datetime_changes: [
     "'test1': Removing field: 'f'\n",
@@ -51,7 +51,7 @@ export const expected = {
     "'test1': Adding field: 'f' 'VARCHAR' ''\n",
     "'test1': Setting default value '23' for field: 'f'\n",
     "'test1': Setting not null for field: 'f'\n",
-    "'test1': Adding index: 'test1_id_unique' on ('id') type 'btree' unique\n"
+    "'test1': Adding unique constraint on field: 'id'\n"
   ],
   types_int_change: [
     "'test1': Changing field type: 'a' 'INT' '4'\n",
@@ -65,7 +65,7 @@ export const expected = {
     "Setting auto increment: 'test1'\n",
     "'test1': Adding field: 'id' 'INT' '4'\n",
     "'test1': Setting not null for field: 'id'\n",
-    "'test1': Adding index: 'test1_id_unique' on ('id') type 'btree' unique\n"
+    "'test1': Adding unique constraint on field: 'id'\n"
   ],
   sync_create_table_exists: [""],
   sync_create_table_int8id: [
@@ -75,7 +75,7 @@ export const expected = {
     "'test1': Setting not null for field: 'id'\n",
     "'test1': Adding field: 'a' 'INT' '4'\n",
     "'test1': Adding field: 'b' 'INT8' '8'\n",
-    "'test1': Adding index: 'test1_id_unique' on ('id') type 'btree' unique\n"
+    "'test1': Adding unique constraint on field: 'id'\n"
   ],
   sync_create_table_parent:        ["Adding table: 'test3'\n", "Setting parent: 'test1' - to table: 'test3'\n"],
   sync_create_table_parent_add:    ["Removing table: 'test3'\n", "Adding table: 'test3'\n", "Setting parent: 'test1' - to table: 'test3'\n"],
@@ -86,7 +86,7 @@ export const expected = {
     "Setting auto increment: 'test3'\n",
     "'test3': Adding field: 'id' 'INT' '4'\n",
     "'test3': Setting not null for field: 'id'\n",
-    "'test3': Adding index: 'test3_id_unique' on ('id') type 'btree' unique\n"
+    "'test3': Adding unique constraint on field: 'id'\n"
   ],
   sync_create_table_parent_same: [""],
   sync_create_table_pk:          [
@@ -94,10 +94,10 @@ export const expected = {
     "'test2': Adding field: 'a' 'INT' '4'\n",
     "'test2': Setting not null for field: 'a'\n",
     "'test2': Adding field: 'b' 'INT' '4'\n",
-    "'test2': Adding index: 'test2_a_unique' on ('a') type 'btree' unique\n",
-    "'test2': Adding index: 'test2_b_unique' on ('b') type 'btree' unique\n"
+    "'test2': Adding unique constraint on field: 'a'\n",
+    "'test2': Adding unique constraint on field: 'b'\n"
   ],
-  sync_drop_column:   ["'test2': Removing index: 'test2_b_unique'\n", "'test2': Removing field: 'b'\n"],
+  sync_drop_column:   ["'test2': Removing unique constraint from field: 'b'\n", "'test2': Removing field: 'b'\n"],
   sync_field_options: [
     "Adding table: 'test1'\n",
     "Setting auto increment: 'test1'\n",
@@ -114,11 +114,11 @@ export const expected = {
     "'test1': Setting not null for field: 'd'\n",
     "'test1': Adding field: 'f' 'INT' '4'\n",
     "'test1': Adding field: 'h' 'INT' '4'\n",
-    "'test1': Adding index: 'test1_id_unique' on ('id') type 'btree' unique\n",
-    "'test1': Adding index: 'test1_a_unique' on ('a') type 'btree' unique\n"
+    "'test1': Adding unique constraint on field: 'id'\n",
+    "'test1': Adding unique constraint on field: 'a'\n"
   ],
   sync_field_options_change: [
-    "'test1': Removing index: 'test1_a_unique'\n",
+    "'test1': Removing unique constraint from field: 'a'\n",
     "'test1': Removing field: 'h'\n",
     "'test1': Setting default value '23' for field: 'a'\n",
     "'test1': Setting not null for field: 'a'\n",
@@ -128,7 +128,7 @@ export const expected = {
     "'test1': Changing default value to '42' for field: 'd'\n",
     "'test1': Changing field type: 'f' 'INT8' '8'\n",
     "'test1': Setting not null for field: 'f'\n",
-    "'test1': Adding index: 'test1_b_unique' on ('b') type 'btree' unique\n"
+    "'test1': Adding unique constraint on field: 'b'\n"
   ],
   sync_foreign_keys_1: [
     "Adding table: 'test1'\n",
@@ -138,10 +138,10 @@ export const expected = {
     "'test1': Adding field: 'a' 'INT' '4'\n",
     "'test1': Adding field: 'b' 'INT8' '8'\n",
     "'test1': Adding field: 'd' 'VARCHAR' ''\n",
-    "'test1': Adding index: 'test1_id_unique' on ('id') type 'btree' unique\n",
-    "'test1': Adding index: 'test1_a_unique' on ('a') type 'btree' unique\n",
-    "'test1': Adding index: 'test1_b_unique' on ('b') type 'btree' unique\n",
-    "'test1': Adding index: 'test1_d_unique' on ('d') type 'btree' unique\n",
+    "'test1': Adding unique constraint on field: 'id'\n",
+    "'test1': Adding unique constraint on field: 'a'\n",
+    "'test1': Adding unique constraint on field: 'b'\n",
+    "'test1': Adding unique constraint on field: 'd'\n",
     "Adding table: 'test2'\n",
     "Setting auto increment: 'test2'\n",
     "'test2': Adding field: 'id' 'INT' '4'\n",
@@ -150,21 +150,22 @@ export const expected = {
     "'test2': Adding field: 'b' 'INT' '4'\n",
     "'test2': Adding field: 'c' 'INT8' '8'\n",
     "'test2': Adding field: 'd' 'VARCHAR' ''\n",
+    "'test2': Adding unique constraint on field: 'id'\n",
     "'test2': Adding foreign key 'fkey_a_test1_id' on field: 'a' references 'test1(id)'\n",
     "'test2': Adding foreign key 'fkey_b_test1_a' on field: 'b' references 'test1(a)'\n",
     "'test2': Adding foreign key 'fkey_c_test1_b' on field: 'c' references 'test1(b)'\n",
-    "'test2': Adding foreign key 'fkey_d_test1_d' on field: 'd' references 'test1(d)'\n",
-    "'test2': Adding index: 'test2_id_unique' on ('id') type 'btree' unique\n"
+    "'test2': Adding foreign key 'fkey_d_test1_d' on field: 'd' references 'test1(d)'\n"
   ],
   sync_foreign_keys_2: [
-    "'test1': Removing index: 'test1_b_unique'\n",
-    "'test1': Removing index: 'test1_d_unique'\n",
+    "'test1': Removing unique constraint from field: 'b'\n",
+    "'test1': Removing unique constraint from field: 'd'\n",
     "Adding table: 'test3'\n",
     "Setting auto increment: 'test3'\n",
     "'test3': Adding field: 'id' 'INT' '4'\n",
     "'test3': Setting not null for field: 'id'\n",
     "'test3': Adding field: 'b' 'INT8' '8'\n",
-    "'test3': Adding index: 'test3_id_unique' on ('id') type 'btree' unique\n",
+    "'test3': Adding unique constraint on field: 'id'\n",
+    "'test3': Adding unique constraint on field: 'b'\n",
     "'test2': Removing foreign key: 'fkey_a_test1_id'\n",
     "'test2': Removing foreign key: 'fkey_c_test1_b'\n",
     "'test2': Removing foreign key: 'fkey_d_test1_d'\n",
@@ -179,7 +180,7 @@ export const expected = {
     "'test1': Setting not null for field: 'id'\n",
     "'test1': Adding field: 'a' 'INT' '4'\n",
     "'test1': Adding field: 'b' 'INT8' '8'\n",
-    "'test1': Adding index: 'test1_id_unique' on ('id') type 'btree' unique\n",
+    "'test1': Adding unique constraint on field: 'id'\n",
     "'test1': Adding index: 'ia' on ('a') type 'btree'\n"
   ],
   sync_index_2: ["'test1': Adding index: 'ib' on ('a', 'b') type 'btree'\n"],

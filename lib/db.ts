@@ -61,7 +61,7 @@ function autoImplement<T>() {
 export interface Constraint {
   attribute: Attribute<Natural, unknown>;
   constraintName: string;
-  type: "f";
+  type: "f" | "u";
 }
 
 export interface Index {
@@ -131,8 +131,8 @@ export abstract class DB {
       const table = this.tablesArr[i];
 
       await this.syncTable(table);
-      await this.dropConstraints(table);
-      await this.dropIndexes(table);
+      const indexes = await this.dropConstraints(table);
+      await this.dropIndexes(table, indexes);
       await this.dropFields(table);
       await this.syncFields(table);
       await this.syncSequence(table);
@@ -141,9 +141,9 @@ export abstract class DB {
     }
   }
 
-  abstract dropConstraints(table: Table): Promise<void>;
+  abstract dropConstraints(table: Table): Promise<number[]>;
   abstract dropFields(table: Table): Promise<void>;
-  abstract dropIndexes(table: Table): Promise<void>;
+  abstract dropIndexes(table: Table, constraintIndexes: number[]): Promise<void>;
   abstract syncConstraints(table: Table): Promise<void>;
   abstract syncFields(table: Table): Promise<void>;
   abstract syncIndexes(table: Table): Promise<void>;
