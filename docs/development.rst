@@ -5,30 +5,8 @@ Development
 Due to the organization of the :ref:`packages`, probably any change will requires appropriate changes on the
 :ref:`sedentary package <package sedentary>` itself and on some *DB engine dedicated extension* as well.
 
-In order to do that, the required *DB engine dedicated extensions* repositories should be cheked out in the root
-directory of the repository of the :ref:`sedentary package <package sedentary>` obtaining following directories
-structure:
-
-.. code::
-
-    :
-    |
-    +- sedentary
-    |  |
-    |  +- package.json
-    |  |
-    |  +- lib
-    |  |  |
-    |  |  +- transaction.ts
-    :  :  :
-    |  |
-    |  +- sedentary-pg
-    |     |
-    |     +- package.json
-    |     |
-    |     +- lib
-    |     |  |
-    :     :  :
+In order to do that, the *DataBase engine dedicated extensions* repositories are added as ``git submodule`` of the
+:ref:`sedentary package <package sedentary>` repository.
 
 Some ``make`` target have been added to support development of the packages together:
 

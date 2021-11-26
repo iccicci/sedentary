@@ -36,7 +36,7 @@ export interface IndexOptions {
 
 export type IndexDefinition = IndexAttributes | IndexOptions;
 
-export type BaseModelOptions<T> = {
+type BaseModelOptions<T> = {
   indexes?: { [key: string]: IndexDefinition };
   init?: (this: T) => void;
   sync?: boolean;
@@ -55,7 +55,7 @@ type ModelWithMetods<A extends AttributesDefinition, M> = { [a in keyof A]?: Nat
 type Model<A extends AttributesDefinition> = { [a in keyof A]?: Native<A[a]> } & { [a in Keys<A> & string as `${a}Load`]?: ForeignKey<A[a]> };
 type Ancestor<A, N extends Natural, T extends Entry> = (new () => T) & { [a in keyof A]?: Meta<Native<A[a]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T>;
 
-export interface SchemaOptions {
+export interface SedentaryOptions {
   log?: ((message: string) => void) | null;
   serverless?: boolean;
   sync?: boolean;
@@ -75,7 +75,7 @@ export class Sedentary {
   private sync = true;
   private models: { [key: string]: boolean } = {};
 
-  constructor(filename: string, options?: SchemaOptions) {
+  constructor(filename: string, options?: SedentaryOptions) {
     if(typeof filename !== "string") throw new Error("new Sedentary: 'filename' argument: Wrong type, expected 'string'");
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error("new Sedentary: 'options' argument: Wrong type, expected 'Object'");
@@ -188,6 +188,7 @@ export class Sedentary {
     if(options.int8id && options.primaryKey) throw new Error(`Sedentary.model: '${name}' model: 'int8id' and 'primaryKey' options conflict each other`);
     if(options.parent && options.primaryKey) throw new Error(`Sedentary.model: '${name}' model: 'parent' and 'primaryKey' options conflict each other`);
 
+    let autoIncrement = true;
     const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name, ...options };
     let { methods } = options;
     let aarray: Attribute<Natural, unknown>[] = int8id
@@ -213,6 +214,7 @@ export class Sedentary {
     if(primaryKey && ! Object.keys(attributes).includes(primaryKey)) throw new Error(`Sedentary.model: '${name}' model: 'primaryKey' option: Attribute '${primaryKey}' does not exists`);
 
     if(parent || primaryKey) {
+      autoIncrement = false;
       aarray = [];
       constraints = [];
     }
@@ -318,7 +320,7 @@ export class Sedentary {
       }
     }
 
-    this.db.addTable(new Table({ constraints, attributes: aarray, indexes: iarray, parent, primaryKey, sync, tableName }));
+    this.db.tables.push(new Table({ autoIncrement, constraints, attributes: aarray, indexes: iarray, parent, sync, tableName }));
     this.models[name] = true;
 
     const init = parent

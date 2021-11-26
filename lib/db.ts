@@ -73,30 +73,17 @@ export interface Index {
 
 interface ITable {
   attributes: Attribute<Natural, unknown>[];
+  autoIncrement: boolean;
   constraints: Constraint[];
   indexes: Index[];
   parent: Meta<Natural, unknown>;
-  primaryKey: string;
   sync: boolean;
   tableName: string;
 }
 
 export class Table extends autoImplement<ITable>() {
-  autoIncrement?: boolean;
   autoIncrementOwn?: boolean;
   oid?: number;
-
-  constructor(defaults: ITable) {
-    super(defaults);
-
-    if(! this.primaryKey) {
-      if(this.parent) this.primaryKey = this.parent.primaryKey;
-      else {
-        this.primaryKey = "id";
-        this.autoIncrement = true;
-      }
-    }
-  }
 
   findField(name: string): Attribute<Natural, unknown> {
     return this.attributes.filter(_ => _.fieldName === name)[0];
@@ -113,11 +100,6 @@ export abstract class DB {
 
   constructor(log: (message: string) => void) {
     this.log = log;
-  }
-
-  addTable(table: Table): void {
-    //this.tables[table.tableName] = table;
-    this.tables.push(table);
   }
 
   findTable(name: string): Table {
