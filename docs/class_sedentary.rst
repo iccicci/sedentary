@@ -1,15 +1,16 @@
 .. _class Sedentary:
 
-===============
 class Sedentary
 ===============
 
 The base ORM class.
 
+**TODO**
+
 .. _new Sedentary:
 
 new Sedentary(filename[, options])
-==================================
+----------------------------------
 
 - ``filename``: string_ - The name of the JSON-DB file.
 - ``options?``: :ref:`SedentaryOptions<interface SedentaryOptions>` - The options for the SCHEMA. Default: ``{}``
@@ -18,7 +19,7 @@ new Sedentary(filename[, options])
 .. _new SedentaryPG:
 
 new SedentaryPG(config[, options])
-==================================
+----------------------------------
 
 - ``config``: pg.PoolConfig_ - The connection configuration object.
 - ``options?``: :ref:`SedentaryOptions<interface SedentaryOptions>` - The options for the SCHEMA. Default: ``{}``
@@ -30,29 +31,31 @@ documentation_ for details about the ``config`` object.
 .. _sedentary.connect:
 
 sedentary.connect()
-===================
+-------------------
 
 - returns a Promise_ which resolves with void_.
 
 Connects to the DataBase and syncs the schema.
 
-**Note:** Must be called only once.
+.. note::
+    Must be called only once.
 
 .. _sedentary.end:
 
 sedentary.end()
-===============
+---------------
 
 - returns a Promise_ which resolves with void_.
 
 Closes the connection with the DataBase.
 
-**Note:** Must be called only once, after :ref:`sedentary.connect()<sedentary.connect>`.
+.. note::
+    Must be called only once, after :ref:`sedentary.connect()<sedentary.connect>`.
 
 .. _sedentary.model:
 
 sedentary.model(name, fields[, options])
-========================================
+----------------------------------------
 
 - ``name``: string_ - The name of the model.
 - ``fields``: :ref:`Fields<Class Fields>` - The object with the fileds definitions.
@@ -61,7 +64,8 @@ sedentary.model(name, fields[, options])
 
 Defines one model. Should be called once for each model/TABLE to be configured.
 
-**Note:** Must be called before :ref:`sedentary.connect()<sedentary.connect>`.
+.. note::
+    Must be called before :ref:`sedentary.connect()<sedentary.connect>`.
 
 .. _Function: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions
 .. _Promise: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise

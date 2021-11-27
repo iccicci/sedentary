@@ -1,6 +1,6 @@
-============
+************
 Introduction
-============
+************
 
 This package is designed **to make easy the process of applying changes to the database after model definition
 changes**, more than offer a quick and easy database access interface. Applying changes to the database after releasing
@@ -14,8 +14,8 @@ changes to the models (or the database schema). This package tries to solve thes
 Packages
 ========
 
-The project is organized with a base package :ref:`package sedentary` itself plus a package specialized for each DB
-engine.
+The project is organized with a base package :ref:`package sedentary` itself plus a package specialized for each
+DataBase engine.
 
 Nowadays only the :ref:`PostgreSQL<package sedentary-pg>` specialization package is provided.
 

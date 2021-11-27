@@ -42,6 +42,30 @@ describe("class Sedentary - errors", () => {
     it("message", () => eq(err.message, "new Sedentary: 'options' argument: Unknown 'test' option"));
   });
 
+  describe("new Sedentary(, { log }) - type", () => {
+    before(async () => {
+      try {
+        new Sedentary("", { log: "test" } as never);
+      } catch(e) {
+        err = e;
+      }
+    });
+
+    it("message", () => eq(err.message, "new Sedentary: 'log' option: Wrong type, expected 'null' or 'Function'"));
+  });
+
+  describe("new Sedentary(, { sync }) - type", () => {
+    before(async () => {
+      try {
+        new Sedentary("", { sync: "test" } as never);
+      } catch(e) {
+        err = e;
+      }
+    });
+
+    it("message", () => eq(err.message, "new Sedentary: 'sync' option: Wrong type, expected 'boolean'"));
+  });
+
   describe("Sedentary.model(name) - type", () => errorHelper(db => db.model({} as never, {}))("Sedentary.model: 'name' argument: Wrong type, expected 'string'"));
   describe("Sedentary.model(name) - already defined", () => errorHelper(db => db.model("test1", {}) && db.model("test1", {}))("Sedentary.model: 'test1' model: Model already defined"));
   describe("Sedentary.model(, attributes)", () => errorHelper(db => db.model("test", "test" as never))("Sedentary.model: 'test' model: 'attributes' argument: Wrong type, expected 'Object'"));

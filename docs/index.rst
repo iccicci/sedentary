@@ -1,6 +1,6 @@
-=========
+#########
 Sedentary
-=========
+#########
 
 The ORM which **never** needs to migrate.
 

@@ -1,6 +1,6 @@
-===========
+***********
 Development
-===========
+***********
 
 Due to the organization of the :ref:`packages`, probably any change will requires appropriate changes on the
 :ref:`sedentary package <package sedentary>` itself and on some *DB engine dedicated extension* as well.

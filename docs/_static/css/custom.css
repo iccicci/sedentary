@@ -1,0 +1,21 @@
+@import "theme.css";
+
+.wy-menu-vertical {
+  width: 350px;
+}
+
+.wy-nav-content-wrap {
+  margin-left: 350px;
+}
+
+.wy-nav-side {
+  width: 350px;
+}
+
+.wy-side-nav-search {
+  width: 350px;
+}
+
+.wy-side-scroll {
+  width: 370px;
+}

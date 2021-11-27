@@ -1,6 +1,6 @@
-===
+***
 API
-===
+***
 
 .. toctree::
    :maxdepth: 2
@@ -10,3 +10,5 @@ API
    class_sedentary
    interface_modeloptions
    interface_sedentaryoptions
+   type_indexdefinition
+   type_methods

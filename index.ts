@@ -35,9 +35,10 @@ export interface IndexOptions {
 }
 
 export type IndexDefinition = IndexAttributes | IndexOptions;
+export type IndexesDefinition = { [key: string]: IndexDefinition };
 
 type BaseModelOptions<T> = {
-  indexes?: { [key: string]: IndexDefinition };
+  indexes?: IndexesDefinition;
   init?: (this: T) => void;
   sync?: boolean;
   tableName?: string;
@@ -71,8 +72,8 @@ const reservedNames = [
 export class Sedentary {
   protected db: DB;
   protected log: (...data: unknown[]) => void;
+  protected sync = true;
 
-  private sync = true;
   private models: { [key: string]: boolean } = {};
 
   constructor(filename: string, options?: SedentaryOptions) {
@@ -82,10 +83,14 @@ export class Sedentary {
 
     for(const k in options) if(! ["log", "sync"].includes(k)) throw new Error(`new Sedentary: 'options' argument: Unknown '${k}' option`);
 
-    this.log = createLogger(options.log);
-    if("sync" in options) this.sync = options.sync;
+    const { log, sync } = { sync: true, ...options };
 
+    if(log !== null && log !== undefined && ! (log instanceof Function)) throw new Error("new Sedentary: 'log' option: Wrong type, expected 'null' or 'Function'");
+    if(typeof sync !== "boolean") throw new Error("new Sedentary: 'sync' option: Wrong type, expected 'boolean'");
+
+    this.log = createLogger(log);
     this.db = new MiniDB(filename, this.log);
+    this.sync = sync;
   }
 
   DATETIME(): Type<Date, unknown> {
@@ -125,7 +130,7 @@ export class Sedentary {
       this.log("Connecting...");
       await this.db.connect();
       this.log("Connected, syncing...");
-      await this.db.sync();
+      await this.db.syncDataBase();
       this.log("Synced");
     } catch(e) {
       this.log("Connecting:", e.message);

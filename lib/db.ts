@@ -94,6 +94,7 @@ export abstract class DB {
   tables: Table[] = [];
 
   protected log: (...data: unknown[]) => void;
+  protected sync: boolean;
 
   abstract connect(): Promise<void>;
   abstract end(): Promise<void>;
@@ -115,8 +116,10 @@ export abstract class DB {
     return true;
   }
 
-  async sync(): Promise<void> {
+  async syncDataBase(): Promise<void> {
     for(const table of this.tables) {
+      this.sync = table.sync;
+
       await this.syncTable(table);
       const indexes = await this.dropConstraints(table);
       await this.dropIndexes(table, indexes);
@@ -126,6 +129,12 @@ export abstract class DB {
       await this.syncConstraints(table);
       await this.syncIndexes(table);
     }
+  }
+
+  protected syncLog(...data: unknown[]): void {
+    const args = this.sync ? data : ["NOT SYNCING:", ...data];
+
+    this.log(...args);
   }
 
   abstract dropConstraints(table: Table): Promise<number[]>;
