@@ -7,7 +7,7 @@ const { VERSION, npm_package_name } = process.env;
 
 const common: string[] = ["*.tgz", "coverage", "node_modules", "test.json", ""];
 const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "index.d.ts", "index.js", "lib/*.d.ts", "lib/*.js"];
-const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "test", "tsconfig.json", "utils.ts"];
+const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "sedentary-*", "test", "tsconfig.json", "utils.ts"];
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
@@ -121,7 +121,7 @@ function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unkno
       dependencies = { ...deps[npm_package_name], sedentary };
     } catch(e) {}
 
-    writeFile("package.json", JSON.stringify(sort({ ...packagejson, bugs, dependencies, description, homepage, name, repository, version }), null, 2), "utf-8");
+    await writeFile("package.json", JSON.stringify(sort({ ...packagejson, bugs, dependencies, description, homepage, name, repository, version }), null, 2), "utf-8");
   }
 
   if(process.argv[2] === "version") {
@@ -129,6 +129,6 @@ function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unkno
 
     pkg.version = VERSION;
 
-    writeFile("package.json", JSON.stringify(pkg, null, 2), "utf-8");
+    await writeFile("package.json", JSON.stringify(pkg, null, 2), "utf-8");
   }
 })();

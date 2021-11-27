@@ -56,5 +56,5 @@
     "version": "node -r ts-node/register utils.ts version"
   },
   "types": "index.d.ts",
-  "version": "0.0.15"
+  "version": "0.0.16"
 }

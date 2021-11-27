@@ -10,7 +10,12 @@ endif
 
 ifeq (${PACKAGE}, sedentary)
 
-doc:
+docs/build/.deps: requirements.txt
+	@mkdir -p docs/build
+	pip install --upgrade --upgrade-strategy eager -r requirements.txt
+	@touch $@
+
+doc: docs/build/.deps
 	cd docs ; sphinx-build . build
 
 else
@@ -121,6 +126,7 @@ ifeq (${PACKAGE}, sedentary)
 endif
 
 package.json: utils.ts
+	npm install --prune
 	npm run packagejson
 
 package-lock.json: package.json
