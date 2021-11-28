@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { helper } from "./helper";
 import { expected } from "./local";
 

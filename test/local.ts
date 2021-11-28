@@ -13,6 +13,63 @@ export async function clean(): Promise<void> {
   } catch(e) {}
 }
 
+export const dryrun = {
+  dryrun: [
+    "NOT SYNCING: 'test1': Removing unique constraint from field: 'c'\n",
+    "NOT SYNCING: 'test1': Removing index: 'a'\n",
+    "NOT SYNCING: 'test1': Removing field: 'c'\n",
+    "NOT SYNCING: 'test1': Changing field type: 'a' 'INT8' '8'\n",
+    "NOT SYNCING: 'test1': Setting default value '23' for field: 'a'\n",
+    "NOT SYNCING: 'test1': Setting not null for field: 'a'\n",
+    "NOT SYNCING: 'test1': Adding unique constraint on field: 'a'\n",
+    "NOT SYNCING: 'test1': Adding index: 'b' on ('b') type 'btree'\n",
+    "NOT SYNCING: Removing table: 'test2'\n",
+    "NOT SYNCING: 'test2': Removing foreign key: 'fkey_d_test1_b'\n",
+    "NOT SYNCING: 'test2': Removing field: 'd'\n",
+    "NOT SYNCING: 'test2': Adding field: 'id' 'INT' '4'\n",
+    "NOT SYNCING: 'test2': Changing field type: 'id' 'INT' '4'\n",
+    "NOT SYNCING: 'test2': Setting not null for field: 'id'\n",
+    "NOT SYNCING: 'test2': Adding field: 'g' 'INT' '4'\n",
+    "NOT SYNCING: 'test2': Changing field type: 'g' 'INT' '4'\n",
+    "NOT SYNCING: 'test2': Dropping default value for field: 'e'\n",
+    "NOT SYNCING: 'test2': Dropping not null for field: 'e'\n",
+    "NOT SYNCING: 'test2': Changing default value to '42' for field: 'f'\n",
+    "NOT SYNCING: 'test2': Adding unique constraint on field: 'id'\n",
+    "NOT SYNCING: 'test2': Adding foreign key 'fkey_g_test1_b' on field: 'g' references 'test1(b)'\n",
+    "NOT SYNCING: Adding table: 'test3'\n",
+    "NOT SYNCING: Setting auto increment: 'test3'\n",
+    "NOT SYNCING: 'test3': Adding field: 'id' 'INT' '4'\n",
+    "NOT SYNCING: 'test3': Changing field type: 'id' 'INT' '4'\n",
+    "NOT SYNCING: 'test3': Setting not null for field: 'id'\n",
+    "NOT SYNCING: 'test3': Adding unique constraint on field: 'id'\n",
+    "NOT SYNCING: Adding table: 'test4'\n",
+    "NOT SYNCING: Setting parent: 'test1' - to table: 'test4'\n"
+  ],
+  sync: [
+    "Adding table: 'test1'\n",
+    "Setting auto increment: 'test1'\n",
+    "'test1': Adding field: 'id' 'INT' '4'\n",
+    "'test1': Setting not null for field: 'id'\n",
+    "'test1': Adding field: 'a' 'INT' '4'\n",
+    "'test1': Adding field: 'b' 'INT' '4'\n",
+    "'test1': Adding field: 'c' 'INT' '4'\n",
+    "'test1': Adding unique constraint on field: 'id'\n",
+    "'test1': Adding unique constraint on field: 'b'\n",
+    "'test1': Adding unique constraint on field: 'c'\n",
+    "'test1': Adding index: 'a' on ('c') type 'btree'\n",
+    "Adding table: 'test2'\n",
+    "Setting parent: 'test1' - to table: 'test2'\n",
+    "'test2': Adding field: 'd' 'INT' '4'\n",
+    "'test2': Adding field: 'e' 'INT' '4'\n",
+    "'test2': Setting default value '23' for field: 'e'\n",
+    "'test2': Setting not null for field: 'e'\n",
+    "'test2': Adding field: 'f' 'INT' '4'\n",
+    "'test2': Setting default value '23' for field: 'f'\n",
+    "'test2': Setting not null for field: 'f'\n",
+    "'test2': Adding foreign key 'fkey_d_test1_b' on field: 'd' references 'test1(b)'\n"
+  ]
+};
+
 export const expected = {
   types_datetime: [
     "Adding table: 'test1'\n",

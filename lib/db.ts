@@ -53,7 +53,7 @@ export class Attribute<N extends Natural, E> extends Type<N, E> {
 function autoImplement<T>() {
   return class {
     constructor(defaults?: T) {
-      Object.assign(this, defaults || {});
+      Object.assign(this, defaults);
     }
   } as new (defaults?: T) => T;
 }
