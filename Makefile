@@ -16,7 +16,7 @@ docs/build/.deps: requirements.txt
 	@touch $@
 
 doc: docs/build/.deps
-	cd docs ; sphinx-build . build
+	cd docs ; PYTHONPATH="${PYTHONPATH}:." sphinx-build . build
 
 else
 

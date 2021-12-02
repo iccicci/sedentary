@@ -118,10 +118,6 @@ To work with the package under Windows, be sure to configure `bash.exe` as your 
 
 Do not hesitate to report any bug or inconsistency [@github](https://github.com/iccicci/sedentary/issues).
 
-# ChangeLog
-
-[ChangeLog](https://github.com/iccicci/sedentary/blob/master/CHANGELOG.md)
-
 # Donating
 
 If you find useful this package, please consider the opportunity to donate some satoshis to this bitcoin address:

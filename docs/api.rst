@@ -6,9 +6,9 @@ API
    :maxdepth: 2
    :caption: API
 
-   class_model
-   class_sedentary
-   interface_modeloptions
-   interface_sedentaryoptions
-   type_indexdefinition
-   type_methods
+   indexdefinition
+   methods
+   model
+   modeloptions
+   sedentary
+   sedentaryoptions

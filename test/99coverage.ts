@@ -10,7 +10,7 @@ describe("coverage", () => {
   it("Type", () => eq(new Type({ base: null, type: "" }) instanceof Type, true));
 
   describe("findTable", () => {
-    const att = new Attribute({ attributeName: "id", base: Number, fieldName: "id", notNull: true, size: 4, tableName: "test", type: "INT", unique: true });
+    const att = new Attribute({ attributeName: "id", base: Number, fieldName: "id", modelName: "test", notNull: true, size: 4, tableName: "test", type: "INT", unique: true });
     const db = new Sedentary(connection);
 
     before(async () => {

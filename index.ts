@@ -145,78 +145,78 @@ export class Sedentary {
   }
 
   model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: string } & ModelWithMetods<A, M>>(
-    name: string,
+    modelName: string,
     attributes: A,
     options?: BaseModelOptions<T> & { int8id: true; methods: M }
   ): Ancestor<A, string, T>;
   model<A extends AttributesDefinition, K extends keyof A, M extends Methods<T>, N extends K extends keyof A ? Native<A[K]> : never, T extends Entry & ModelWithMetods<A, M>>(
-    name: string,
+    modelName: string,
     attributes: A,
     options?: BaseModelOptions<T> & { methods: M; primaryKey: K }
   ): Ancestor<A, N, T>;
   model<A extends AttributesDefinition, M extends Methods<T>, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & ModelWithMetods<A, M>>(
-    name: string,
+    modelName: string,
     attributes: A,
     options?: BaseModelOptions<T> & { methods: M; parent: P }
   ): Ancestor<A, N, T>;
   model<A extends AttributesDefinition, M extends Methods<T>, T extends Entry & { id?: number } & ModelWithMetods<A, M>>(
-    name: string,
+    modelName: string,
     attributes: A,
     options?: BaseModelOptions<T> & { methods: M }
   ): Ancestor<A, number, T>;
-  model<A extends AttributesDefinition, T extends Entry & { id?: string } & Model<A>>(name: string, attributes: A, options?: BaseModelOptions<T> & { int8id: true }): Ancestor<A, string, T>;
+  model<A extends AttributesDefinition, T extends Entry & { id?: string } & Model<A>>(modelName: string, attributes: A, options?: BaseModelOptions<T> & { int8id: true }): Ancestor<A, string, T>;
   model<A extends AttributesDefinition, K extends keyof A, N extends K extends keyof A ? Native<A[K]> : never, T extends Entry & Model<A>>(
-    name: string,
+    modelName: string,
     attributes: A,
     options?: BaseModelOptions<T> & { primaryKey: K }
   ): Ancestor<A, N, T>;
   model<A extends AttributesDefinition, P extends Meta<Natural, Entry>, N extends P extends Meta<infer N, Entry> ? N : never, T extends Parent<P> & Model<A>>(
-    name: string,
+    modelName: string,
     attributes: A,
     options?: BaseModelOptions<T> & { parent: P }
   ): Ancestor<A, N, T>;
-  model<A extends AttributesDefinition, T extends Entry & { id?: number } & Model<A>>(name: string, attributes: A, options?: BaseModelOptions<T>): Ancestor<A, number, T>;
+  model<A extends AttributesDefinition, T extends Entry & { id?: number } & Model<A>>(modelName: string, attributes: A, options?: BaseModelOptions<T>): Ancestor<A, number, T>;
   model<A extends AttributesDefinition, K extends string, M extends Methods<T>, N extends Natural, P extends Meta<Natural, Entry>, T extends Entry &(Model<A> | ModelWithMetods<A, M>)>(
-    name: string,
+    modelName: string,
     attributes: A,
     options?: ModelOptions<K, M, P, T>
   ): Ancestor<A, N, T> {
-    if(typeof name !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
-    if(this.models[name]) throw new Error(`Sedentary.model: '${name}' model: Model already defined`);
+    if(typeof modelName !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
+    if(this.models[modelName]) throw new Error(`Sedentary.model: '${modelName}' model: Model already defined`);
     if(! attributes) attributes = {} as A;
-    if(! (attributes instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'attributes' argument: Wrong type, expected 'Object'`);
+    if(! (attributes instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'attributes' argument: Wrong type, expected 'Object'`);
     if(! options) options = {};
-    if(! (options instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'options' argument: Wrong type, expected 'Object'`);
+    if(! (options instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'options' argument: Wrong type, expected 'Object'`);
 
-    for(const k in options) if(! allowedOption.includes(k)) throw new Error(`Sedentary.model: '${name}' model: 'options' argument: Unknown '${k}' option`);
-    if(options.int8id && options.parent) throw new Error(`Sedentary.model: '${name}' model: 'int8id' and 'parent' options conflict each other`);
-    if(options.int8id && options.primaryKey) throw new Error(`Sedentary.model: '${name}' model: 'int8id' and 'primaryKey' options conflict each other`);
-    if(options.parent && options.primaryKey) throw new Error(`Sedentary.model: '${name}' model: 'parent' and 'primaryKey' options conflict each other`);
+    for(const k in options) if(! allowedOption.includes(k)) throw new Error(`Sedentary.model: '${modelName}' model: 'options' argument: Unknown '${k}' option`);
+    if(options.int8id && options.parent) throw new Error(`Sedentary.model: '${modelName}' model: 'int8id' and 'parent' options conflict each other`);
+    if(options.int8id && options.primaryKey) throw new Error(`Sedentary.model: '${modelName}' model: 'int8id' and 'primaryKey' options conflict each other`);
+    if(options.parent && options.primaryKey) throw new Error(`Sedentary.model: '${modelName}' model: 'parent' and 'primaryKey' options conflict each other`);
 
     let autoIncrement = true;
-    const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: name, ...options };
+    const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: modelName, ...options };
     let { methods } = options;
     let aarray: Attribute<Natural, unknown>[] = int8id
-      ? [new Attribute<string, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })]
-      : [new Attribute<number, unknown>({ ...this.INT(4), attributeName: "id", fieldName: "id", notNull: true, tableName, unique: true })];
+      ? [new Attribute<string, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })]
+      : [new Attribute<number, unknown>({ ...this.INT(4), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })];
     let constraints: Constraint[] = [{ attribute: aarray[0], constraintName: `${tableName}_id_unique`, type: "u" }];
     const iarray: Index[] = [];
     const pk = aarray[0];
 
-    if(methods && ! (methods instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'methods' option: Wrong type, expected 'Object'`);
+    if(methods && ! (methods instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'methods' option: Wrong type, expected 'Object'`);
 
     if(parent) {
-      methods = (methods ? { ...(parent.methods || {}), ...methods } : parent.methods) as never;
-
       try {
         if(! parent.isModel()) throw new Error();
       } catch(e) {
-        throw new Error(`Sedentary.model: '${name}' model: 'parent' option: Wrong type, expected 'Model'`);
+        throw new Error(`Sedentary.model: '${modelName}' model: 'parent' option: Wrong type, expected 'Model'`);
       }
+
+      methods = (methods ? { ...(parent.methods || {}), ...methods } : parent.methods) as never;
     }
 
-    if(primaryKey && typeof primaryKey !== "string") throw new Error(`Sedentary.model: '${name}' model: 'primaryKey' option: Wrong type, expected 'string'`);
-    if(primaryKey && ! Object.keys(attributes).includes(primaryKey)) throw new Error(`Sedentary.model: '${name}' model: 'primaryKey' option: Attribute '${primaryKey}' does not exists`);
+    if(primaryKey && typeof primaryKey !== "string") throw new Error(`Sedentary.model: '${modelName}' model: 'primaryKey' option: Wrong type, expected 'string'`);
+    if(primaryKey && ! Object.keys(attributes).includes(primaryKey)) throw new Error(`Sedentary.model: '${modelName}' model: 'primaryKey' option: Attribute '${primaryKey}' does not exists`);
 
     if(parent || primaryKey) {
       autoIncrement = false;
@@ -224,43 +224,43 @@ export class Sedentary {
       constraints = [];
     }
 
-    for(const attributeName in attributes) {
-      if(reservedNames.includes(attributeName)) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Reserved name`);
+    for(const attributeName of Object.keys(attributes).sort()) {
+      if(reservedNames.includes(attributeName)) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: Reserved name`);
 
       const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message1: string, message2: string) => {
         if(func === this.FKEY) throw new Error(`${message1} 'this.FKEY' can't be used directly`);
         if(func !== this.DATETIME && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(`${message1} ${message2}`);
 
-        return new Attribute({ attributeName, defaultValue, fieldName, notNull, tableName, unique, ...func() });
+        return new Attribute({ attributeName, defaultValue, fieldName, modelName, notNull, tableName, unique, ...func() });
       };
 
       const attributeDefinition = attributes[attributeName];
       let { base, defaultValue, fieldName, foreignKey, notNull, size, type, unique } = ((): Attribute<Natural, unknown> => {
         const ret = ((): Attribute<Natural, unknown> => {
-          if(attributeDefinition instanceof Type) return new Attribute({ attributeName, fieldName: attributeName, notNull: false, tableName, ...attributeDefinition });
-          if(attributeDefinition instanceof Function) return call(undefined, attributeName, false, false, attributeDefinition, `Sedentary.model: '${name}' model: '${attributeName}' attribute:`, "Wrong type, expected 'Attribute'");
-          if(! (attributeDefinition instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Wrong attribute type, expected 'Attribute'`);
+          if(attributeDefinition instanceof Type) return new Attribute({ attributeName, fieldName: attributeName, modelName, notNull: false, tableName, ...attributeDefinition });
+          if(attributeDefinition instanceof Function) return call(undefined, attributeName, false, false, attributeDefinition, `Sedentary.model: '${modelName}' model: '${attributeName}' attribute:`, "Wrong type, expected 'Attribute'");
+          if(! (attributeDefinition instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: Wrong attribute type, expected 'Attribute'`);
 
           const attributeDefaults = { defaultValue: undefined, fieldName: attributeName, notNull: false, unique: false, ...attributeDefinition } as AttributeOptions<Natural, unknown>;
           const { defaultValue, fieldName, notNull, unique, type } = attributeDefaults;
 
-          if(defaultValue === null) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'defaultValue' option: Does 'null' default value really makes sense?`);
-          if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'fieldName' option: Wrong type, expected 'string'`);
-          if(typeof notNull !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'notNull' option: Wrong type, expected 'boolean'`);
-          if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'unique' option: Wrong type, expected 'boolean'`);
-          if(type === undefined) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: Missing 'type' option`);
-          if(type instanceof Type) return new Attribute({ attributeName, defaultValue, fieldName, notNull, tableName, unique, ...type });
-          if(type instanceof Function) return call(defaultValue, fieldName, notNull, unique, type, `Sedentary.model: '${name}' model: '${attributeName}' attribute: 'type' option:`, "Wrong type, expected 'Type'");
+          if(defaultValue === null) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Does 'null' default value really makes sense?`);
+          if(typeof fieldName !== "string") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'fieldName' option: Wrong type, expected 'string'`);
+          if(typeof notNull !== "boolean") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'notNull' option: Wrong type, expected 'boolean'`);
+          if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'unique' option: Wrong type, expected 'boolean'`);
+          if(type === undefined) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: Missing 'type' option`);
+          if(type instanceof Type) return new Attribute({ attributeName, defaultValue, fieldName, modelName, notNull, tableName, unique, ...type });
+          if(type instanceof Function) return call(defaultValue, fieldName, notNull, unique, type, `Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'type' option:`, "Wrong type, expected 'Type'");
 
-          throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'type' option: Wrong type, expected 'Type'`);
+          throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'type' option: Wrong type, expected 'Type'`);
         })();
 
         const { base, defaultValue } = ret;
 
         if(defaultValue !== undefined) {
-          if(base === Date && ! (defaultValue instanceof Date)) throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'Date'`);
-          if(base === Number && typeof defaultValue !== "number") throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'number'`);
-          if(base === String && typeof defaultValue !== "string") throw new Error(`Sedentary.model: '${name}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'string'`);
+          if(base === Date && ! (defaultValue instanceof Date)) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'Date'`);
+          if(base === Number && typeof defaultValue !== "number") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'number'`);
+          if(base === String && typeof defaultValue !== "string") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'string'`);
         }
 
         return ret;
@@ -273,7 +273,7 @@ export class Sedentary {
 
       if(defaultValue) notNull = true;
 
-      const attribute = new Attribute({ attributeName, base, defaultValue, fieldName, foreignKey, notNull, size, tableName, type, unique });
+      const attribute = new Attribute({ attributeName, base, defaultValue, fieldName, foreignKey, modelName, notNull, size, tableName, type, unique });
 
       aarray.push(attribute);
       if(foreignKey) constraints.push({ attribute, constraintName: `fkey_${fieldName}_${foreignKey.tableName}_${foreignKey.fieldName}`, type: "f" });
@@ -283,15 +283,15 @@ export class Sedentary {
     if(indexes) {
       const flds = attributes;
 
-      if(! (indexes instanceof Object)) throw new Error(`Sedentary.model: '${name}' model: 'indexes' option: Wrong type, expected 'Object'`);
+      if(! (indexes instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'indexes' option: Wrong type, expected 'Object'`);
 
       for(const indexName in indexes) {
-        if(aarray.filter(({ fieldName, unique }) => unique && `${tableName}_${fieldName}_unique` === indexName).length !== 0) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: index name already inferred by the unique constraint on an attribute`);
+        if(aarray.filter(({ fieldName, unique }) => unique && `${tableName}_${fieldName}_unique` === indexName).length !== 0) throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: index name already inferred by the unique constraint on an attribute`);
 
         const idx = indexes[indexName];
         const checkAttribute = (attribute: string, l: number): void => {
-          if(typeof attribute !== "string") throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: #${l + 1} attribute: Wrong type, expected 'string'`);
-          if(! (attribute in flds)) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: #${l + 1} attribute: Unknown attribute '${attribute}'`);
+          if(typeof attribute !== "string") throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: #${l + 1} attribute: Wrong type, expected 'string'`);
+          if(! (attribute in flds)) throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: #${l + 1} attribute: Unknown attribute '${attribute}'`);
         };
 
         let attributes: IndexAttributes;
@@ -305,28 +305,28 @@ export class Sedentary {
           checkAttribute(idx, 0);
           attributes = [idx];
         } else if(idx instanceof Object) {
-          for(const k in idx) if(! ["attributes", "type", "unique"].includes(k)) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Unknown index option '${k}'`);
+          for(const k in idx) if(! ["attributes", "type", "unique"].includes(k)) throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: Unknown index option '${k}'`);
 
           ({ attributes, type, unique } = { type: "btree", unique: false, ...idx });
 
-          if(! attributes) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Missing 'attributes' option`);
+          if(! attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: Missing 'attributes' option`);
           if(attributes instanceof Array) attributes.forEach(checkAttribute);
           else if(typeof attributes === "string") {
             checkAttribute(attributes, 0);
             attributes = [attributes];
-          } else throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'attributes' option: Wrong type, expected 'FieldNames'`);
+          } else throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: 'attributes' option: Wrong type, expected 'FieldNames'`);
 
-          if(typeof type !== "string") throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'type' option: Wrong type, expected 'string'`);
-          if(! ["btree", "hash"].includes(type)) throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'type' option: Wrong value, expected 'btree' or 'hash'`);
-          if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: 'unique' option: Wrong type, expected 'boolean'`);
-        } else throw new Error(`Sedentary.model: '${name}' model: '${indexName}' index: Wrong type, expected 'Object'`);
+          if(typeof type !== "string") throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: 'type' option: Wrong type, expected 'string'`);
+          if(! ["btree", "hash"].includes(type)) throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: 'type' option: Wrong value, expected 'btree' or 'hash'`);
+          if(typeof unique !== "boolean") throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: 'unique' option: Wrong type, expected 'boolean'`);
+        } else throw new Error(`Sedentary.model: '${modelName}' model: '${indexName}' index: Wrong type, expected 'Object'`);
 
         iarray.push({ fields: attributes, indexName, type, unique });
       }
     }
 
     this.db.tables.push(new Table({ autoIncrement, constraints, attributes: aarray, indexes: iarray, parent, sync, tableName }));
-    this.models[name] = true;
+    this.models[modelName] = true;
 
     const init = parent
       ? options.init
@@ -349,7 +349,7 @@ export class Sedentary {
       save(): Promise<boolean> {
         return new Promise((resolve, reject) => {
           const save = (): void => reject(new Error("eh no"));
-          Object.defineProperty(save, "name", { value: name + ".save" });
+          Object.defineProperty(save, "name", { value: modelName + ".save" });
 
           setTimeout(save, 10);
         });
@@ -363,19 +363,19 @@ export class Sedentary {
           reject(new Error("boh"));
         }, 10)
       );
-    Object.defineProperty(load, "name", { value: name + ".load" });
+    Object.defineProperty(load, "name", { value: modelName + ".load" });
 
     const meta = { base: Number, type: "meta", tableName, primaryKey, init, methods };
 
     Object.defineProperty(Class, "isModel", { value: () => true });
     Object.defineProperty(Class, "load", { value: load });
     Object.defineProperty(Class, "meta", { value: new Meta<N, T>(meta) });
-    Object.defineProperty(Class, "name", { value: name });
-    Object.defineProperty(Class.prototype.save, "name", { value: name + ".save" });
+    Object.defineProperty(Class, "name", { value: modelName });
+    Object.defineProperty(Class.prototype.save, "name", { value: modelName + ".save" });
     Object.assign(Class, new Meta<N, T>(meta));
     Object.assign(Class.prototype, methods);
     for(const attribute of aarray) Object.defineProperty(Class, attribute.attributeName, { value: attribute });
-    for(const key of ["attributeName", "base", "fieldName", "size", "type", "unique"]) Object.defineProperty(Class, key, { value: pk[key] });
+    for(const key of ["attributeName", "base", "fieldName", "modelName", "size", "type", "unique"]) Object.defineProperty(Class, key, { value: pk[key] });
 
     return Class as Ancestor<A, N, T>;
   }
@@ -429,6 +429,7 @@ class Super extends db.model(
       this.num = 0;
       const a = this.nLoad ? await this.nLoad() : { prova: (): null => null };
       a.prova();
+      this.prova();
     }
   }
 ) {}

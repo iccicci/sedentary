@@ -16,7 +16,7 @@ interface ModelOptions
         tableName?: string;
     }
 
-Specifies the options for the :ref:`Model<class Model>`.
+Specifies the *options* for the :ref:`Model<class Model>`.
 
 .. _ModelOptions.indexes:
 

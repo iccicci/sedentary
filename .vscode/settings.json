@@ -14,5 +14,6 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "window.zoomLevel": 0,
   "[javascript]": { "editor.formatOnSave": false },
+  "[python]": { "editor.defaultFormatter": "ms-python.python" },
   "[typescript]": { "editor.formatOnSave": false }
 }

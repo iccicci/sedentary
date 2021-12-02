@@ -41,6 +41,7 @@ export class Attribute<N extends Natural, E> extends Type<N, E> {
   attributeName: string;
   defaultValue?: unknown;
   fieldName: string;
+  modelName: string;
   notNull: boolean;
   tableName: string;
   unique?: boolean;
