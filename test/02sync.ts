@@ -147,4 +147,38 @@ describe("sync", () => {
       });
     });
   });
+
+  describe("foreign keys 3", function() {
+    helper(expected.sync_foreign_keys_3, async db => {
+      class test1 extends db.model("test1", {}) {}
+      db.model("test2", {
+        a: db.FKEY(test1, { onDelete: "no action" }),
+        b: db.FKEY(test1, { onUpdate: "no action" }),
+        c: db.FKEY(test1),
+        d: db.FKEY(test1, { onDelete: "cascade" }),
+        e: db.FKEY(test1, { onUpdate: "restrict" }),
+        f: db.FKEY(test1, { onDelete: "set default", onUpdate: "set null" }),
+        g: db.FKEY(test1, { onDelete: "no action", onUpdate: "no action" }),
+        h: db.FKEY(test1, { onDelete: "cascade", onUpdate: "set null" })
+      });
+      await db.connect();
+    });
+
+    describe("foreign keys 4", function() {
+      helper(expected.sync_foreign_keys_4, true, async db => {
+        class test1 extends db.model("test1", {}) {}
+        db.model("test2", {
+          a: db.FKEY(test1, { onDelete: "cascade" }),
+          b: db.FKEY(test1, { onUpdate: "restrict" }),
+          c: db.FKEY(test1, { onDelete: "set default", onUpdate: "set null" }),
+          d: db.FKEY(test1, { onDelete: "no action" }),
+          e: db.FKEY(test1, { onUpdate: "no action" }),
+          f: db.FKEY(test1),
+          g: db.FKEY(test1),
+          h: db.FKEY(test1, { onDelete: "cascade", onUpdate: "set null" })
+        });
+        await db.connect();
+      });
+    });
+  });
 });

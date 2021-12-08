@@ -6,9 +6,12 @@ API
    :maxdepth: 2
    :caption: API
 
-   indexdefinition
+   attributesdefinition
+   foreignkeyoptions
+   indexesdefinition
    methods
    model
    modeloptions
    sedentary
    sedentaryoptions
+   typedefinition

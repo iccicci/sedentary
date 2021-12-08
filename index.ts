@@ -1,8 +1,8 @@
-import { Attribute, Constraint, DB, Entry, Index, Meta, Natural, Table, Type } from "./lib/db";
+import { Attribute, Constraint, DB, Entry, ForeignKeyOptions, Index, Meta, Natural, Table, Type } from "./lib/db";
 import { createLogger } from "./lib/log";
 import { MiniDB } from "./lib/minidb";
 
-export { Entry, Natural, Type } from "./lib/db";
+export { Entry, ForeignKeyActions, ForeignKeyOptions, Natural, Type } from "./lib/db";
 export type TypeDefinition<N extends Natural, E> = (() => Type<N, E>) | Type<N, E>;
 export interface AttributeOptions<N extends Natural, E> {
   defaultValue?: N;
@@ -97,10 +97,10 @@ export class Sedentary {
     return new Type({ base: Date, type: "DATETIME" });
   }
 
-  FKEY<N extends Natural, E extends Entry>(attribute: Type<N, E>): Type<N, E> {
+  FKEY<N extends Natural, E extends Entry>(attribute: Type<N, E>, options?: ForeignKeyOptions): Type<N, E> {
     const { attributeName, base, fieldName, size, tableName, type } = attribute as never;
 
-    return new Type({ base, foreignKey: { attributeName, fieldName, tableName }, size, type });
+    return new Type({ base, foreignKey: { attributeName, fieldName, options, tableName }, size, type });
   }
 
   INT(size?: number): Type<number, unknown> {
@@ -205,6 +205,8 @@ export class Sedentary {
 
     if(methods && ! (methods instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'methods' option: Wrong type, expected 'Object'`);
 
+    const originalMethods = methods;
+
     if(parent) {
       try {
         if(! parent.isModel()) throw new Error();
@@ -265,6 +267,20 @@ export class Sedentary {
 
         return ret;
       })();
+
+      if(foreignKey) {
+        if(! foreignKey.options) foreignKey.options = {};
+        if(! (foreignKey.options instanceof Object)) throw new Error(`Sedentary.FKEY: '${modelName}' model: '${attributeName}' attribute: Wrong options type, expected 'Object'`);
+        for(const k in foreignKey.options) if(! ["onDelete", "onUpdate"].includes(k)) throw new Error(`Sedentary.FKEY: '${modelName}' model: '${attributeName}' attribute: Unknown option '${k}'`);
+
+        for(const onChange of ["onDelete", "onUpdate"]) {
+          const actions = ["cascade", "no action", "restrict", "set default", "set null"];
+          let action = foreignKey.options[onChange];
+
+          if(! action) action = foreignKey.options[onChange] = "no action";
+          if(action && ! actions.includes(action)) throw new Error(`Sedentary.FKEY: '${modelName}' model: '${attributeName}' attribute: '${onChange}' option: Wrong value, expected ${actions.map(_ => `'${_}'`).join(" | ")}`);
+        }
+      }
 
       if(primaryKey === (attributeName as never)) {
         notNull = true;
@@ -337,10 +353,6 @@ export class Sedentary {
         : parent.init
       : options.init;
 
-    const flds: { [a in keyof A]?: Meta<Native<A[a]>, T> } = {};
-
-    for(const key in attributes) flds[key] = null;
-
     class Class {
       constructor() {
         if(init) init.call(this);
@@ -365,14 +377,59 @@ export class Sedentary {
       );
     Object.defineProperty(load, "name", { value: modelName + ".load" });
 
-    const meta = { base: Number, type: "meta", tableName, primaryKey, init, methods };
+    const metaAttributes: { [key: string]: Attribute<Natural, unknown> } = aarray.reduce((ret, curr) => {
+      ret[curr.attributeName] = curr;
+      return ret;
+    }, {});
+    const metaForeignKeys = aarray
+      .filter(_ => _.foreignKey)
+      .reduce((ret, curr) => {
+        ret[curr.attributeName] = curr;
+        return ret;
+      }, {});
+    const meta = new Meta<N, T>({ base: Number, attributes: metaAttributes, foreignKeys: metaForeignKeys, modelName, parent: parent as never, type: "meta", tableName, primaryKey, init, methods });
+
+    for(const foreignKey in metaForeignKeys) {
+      if(foreignKey + "Load" in metaAttributes) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with an attribute`);
+      if(originalMethods && foreignKey + "Load" in originalMethods) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method`);
+    }
+
+    if(originalMethods) for(const method in originalMethods) if(method in metaAttributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute`);
+
+    const checkParent = (parent: Meta<Natural, unknown>) => {
+      if(! parent) return;
+
+      for(const attribute in metaAttributes) {
+        if(attribute in parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${attribute}' attribute: conflicts with an attribute of '${parent.modelName}' model`);
+        if(parent.methods && attribute in parent.methods) throw new Error(`Sedentary.model: '${modelName}' model: '${attribute}' attribute: conflicts with a method of '${parent.modelName}' model`);
+
+        for(const foreignKey in parent.foreignKeys) if(attribute === foreignKey + "Load") throw new Error(`Sedentary.model: '${modelName}' model: '${attribute}' attribute: conflicts with an inferred methods of '${parent.modelName}' model`);
+      }
+
+      for(const foreignKey in metaForeignKeys) {
+        if(foreignKey + "Load" in parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with an attribute of '${parent.modelName}' model`);
+        if(parent.methods && foreignKey + "Load" in parent.methods) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method of '${parent.modelName}' model`);
+      }
+
+      if(originalMethods) {
+        for(const method in originalMethods) {
+          if(method in parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute of '${parent.modelName}' model`);
+          for(const foreignKey in parent.foreignKeys) if(foreignKey + "Load" === method) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an inferred methods of '${parent.modelName}' model`);
+          if(parent.methods && method in parent.methods) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with a method of '${parent.modelName}' model`);
+        }
+      }
+
+      checkParent(parent.parent);
+    };
+
+    checkParent(parent);
 
     Object.defineProperty(Class, "isModel", { value: () => true });
     Object.defineProperty(Class, "load", { value: load });
-    Object.defineProperty(Class, "meta", { value: new Meta<N, T>(meta) });
+    Object.defineProperty(Class, "meta", { value: meta });
     Object.defineProperty(Class, "name", { value: modelName });
     Object.defineProperty(Class.prototype.save, "name", { value: modelName + ".save" });
-    Object.assign(Class, new Meta<N, T>(meta));
+    Object.assign(Class, meta);
     Object.assign(Class.prototype, methods);
     for(const attribute of aarray) Object.defineProperty(Class, attribute.attributeName, { value: attribute });
     for(const key of ["attributeName", "base", "fieldName", "modelName", "size", "type", "unique"]) Object.defineProperty(Class, key, { value: pk[key] });
@@ -457,10 +514,10 @@ class Current extends db.model(
 
 class Last extends db.model(
   "Last",
-  { b: db.FKEY(Current.b) },
+  { c: db.FKEY(Current.b) },
   {
     init: function() {
-      this.b = 24;
+      this.c = 24;
     },
     parent: Next
   }
@@ -478,3 +535,30 @@ class Last extends db.model(
 
   return true;
 })();
+
+/*
+export let factory = () => {
+    class Foo {
+        a = 3;
+        b = 'bar'
+        c?: boolean
+    }
+    return Foo as (new () => { [key in keyof Foo]: Foo[key] })
+};
+
+export const FooConstr = factory()
+export type TypeExtractor<T> = T extends (new() => infer E) ? E : never;
+export type FooType = TypeExtractor<typeof FooConstr>;
+
+const foo = new FooConstr()
+
+function rino(a:FooType){
+    if(a instanceof FooConstr){console.log("sisi")}
+    if(a instanceof FooType){console.log("sisi")}
+}
+
+rino(foo);
+
+
+B.prototype instanceof A
+*/

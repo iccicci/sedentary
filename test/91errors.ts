@@ -152,4 +152,78 @@ describe("class Sedentary - errors", () => {
     errorHelper(db => db.model("test", { a: db.INT }, { indexes: { a: { attributes: "a", unique: 23 } } } as never))(
       "Sedentary.model: 'test' model: 'a' index: 'unique' option: Wrong type, expected 'boolean'"
     ));
+  describe("Sedentary.model() - conflict: attribute Vs method", () =>
+    errorHelper(db => db.model("test", { a: db.INT }, { methods: { a: () => {} } }))("Sedentary.model: 'test' model: 'a' method: conflicts with an attribute"));
+  describe("Sedentary.model() - conflict: attribute Vs foreignKey", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {});
+      db.model("test2", { aLoad: db.INT, a: db.FKEY(test1) });
+    })("Sedentary.model: 'test2' model: 'a' attribute: 'aLoad' inferred methods conflicts with an attribute"));
+  describe("Sedentary.model() - conflict: foreignKey Vs method", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {});
+      db.model("test2", { a: db.FKEY(test1) }, { methods: { aLoad: () => {} } });
+    })("Sedentary.model: 'test2' model: 'a' attribute: 'aLoad' inferred methods conflicts with a method"));
+  describe("Sedentary.model() - conflict: attribute Vs parent.attribute", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", { a: db.INT });
+      db.model("test2", { a: db.INT }, { parent: test1 });
+    })("Sedentary.model: 'test2' model: 'a' attribute: conflicts with an attribute of 'test1' model"));
+  describe("Sedentary.model() - conflict: attribute Vs parent.foreignKey", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {});
+      const test2 = db.model("test2", { a: db.FKEY(test1) });
+      db.model("test3", { aLoad: db.INT }, { parent: test2 });
+    })("Sedentary.model: 'test3' model: 'aLoad' attribute: conflicts with an inferred methods of 'test2' model"));
+  describe("Sedentary.model() - conflict: attribute Vs parent.method", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {}, { methods: { a: () => {} } });
+      db.model("test2", { a: db.INT }, { parent: test1 });
+    })("Sedentary.model: 'test2' model: 'a' attribute: conflicts with a method of 'test1' model"));
+  describe("Sedentary.model() - conflict: foreignKey Vs parent.attribute", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", { aLoad: db.INT });
+      db.model("test2", { a: db.FKEY(test1) }, { parent: test1 });
+    })("Sedentary.model: 'test2' model: 'a' attribute: 'aLoad' inferred methods conflicts with an attribute of 'test1' model"));
+  describe("Sedentary.model() - conflict: foreignKey Vs parent.method", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {}, { methods: { aLoad: () => {} } });
+      db.model("test2", { a: db.FKEY(test1) }, { parent: test1 });
+    })("Sedentary.model: 'test2' model: 'a' attribute: 'aLoad' inferred methods conflicts with a method of 'test1' model"));
+  describe("Sedentary.model() - conflict: method Vs parent.attribute", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", { a: db.INT });
+      db.model("test2", {}, { methods: { a: () => {} }, parent: test1 });
+    })("Sedentary.model: 'test2' model: 'a' method: conflicts with an attribute of 'test1' model"));
+  describe("Sedentary.model() - conflict: method Vs parent.foreignKey", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {});
+      const test2 = db.model("test2", { a: db.FKEY(test1) });
+      db.model("test3", {}, { methods: { aLoad: () => {} }, parent: test2 });
+    })("Sedentary.model: 'test3' model: 'aLoad' method: conflicts with an inferred methods of 'test2' model"));
+  describe("Sedentary.model() - conflict: method Vs parent.method", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {}, { methods: { a: () => {} } });
+      db.model("test2", {}, { methods: { a: () => {} }, parent: test1 });
+    })("Sedentary.model: 'test2' model: 'a' method: conflicts with a method of 'test1' model"));
+  describe("Sedentary.FKEY() - type", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {});
+      db.model("test2", { aLoad: db.INT, a: db.FKEY(test1, 1 as never) });
+    })("Sedentary.FKEY: 'test2' model: 'a' attribute: Wrong options type, expected 'Object'"));
+  describe("Sedentary.FKEY() - option", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {});
+      db.model("test2", { aLoad: db.INT, a: db.FKEY(test1, { test: 1 } as never) });
+    })("Sedentary.FKEY: 'test2' model: 'a' attribute: Unknown option 'test'"));
+  describe("Sedentary.FKEY(, { onDelete }) - value", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {});
+      db.model("test2", { aLoad: db.INT, a: db.FKEY(test1, { onDelete: 1 } as never) });
+    })("Sedentary.FKEY: 'test2' model: 'a' attribute: 'onDelete' option: Wrong value, expected 'cascade' | 'no action' | 'restrict' | 'set default' | 'set null'"));
+  describe("Sedentary.FKEY(, { onUpdate }) - value", () =>
+    errorHelper(db => {
+      const test1 = db.model("test1", {});
+      db.model("test2", { aLoad: db.INT, a: db.FKEY(test1, { onUpdate: 1 } as never) });
+    })("Sedentary.FKEY: 'test2' model: 'a' attribute: 'onUpdate' option: Wrong value, expected 'cascade' | 'no action' | 'restrict' | 'set default' | 'set null'"));
 });

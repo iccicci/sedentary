@@ -114,10 +114,20 @@ ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i diff ; done
 endif
 
-install: package-lock.json
+install: node_modules/.link
 ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i install ; done
 endif
+
+node_modules/.link: package-lock.json
+ifeq (${PACKAGE}, sedentary)
+	npm link
+else
+ifeq (${PARENT}, yes)
+	npm link sedentary
+endif
+endif
+	@touch $@
 
 outdated: setup
 	-npm outdated
@@ -132,13 +142,6 @@ package.json: utils.ts
 package-lock.json: package.json
 	npm install --prune
 	npm audit fix
-ifeq (${PACKAGE}, sedentary)
-	npm link
-else
-ifeq (${PARENT}, yes)
-	npm link sedentary
-endif
-endif
 	@touch $@
 
 pull: setup
@@ -162,7 +165,7 @@ endif
 rm: setup
 	rm -f index.d.ts index.js lib/*.d.ts lib/*.js
 
-setup: package-lock.json .gitignore .npmignore .travis.yml
+setup: node_modules/.link .gitignore .npmignore .travis.yml
 
 test: setup rm
 	npm test
@@ -174,7 +177,7 @@ version: setup
 	@if [ -z "${VERSION}" ] ; then echo "Missing VERSION!" ; exit 1 ; fi
 	npm run packagejson
 	npm run version
-	npm install --prune
+	make package-lock.json
 	make commit MESSAGE=${VERSION}
 	make push
 	git tag v${VERSION}
@@ -185,3 +188,4 @@ ifeq (${PACKAGE}, sedentary)
 	sleep 300
 	for i in ${EXTENSIONS} ; do make -C $$i version ; done
 endif
+	make node_modules/.link

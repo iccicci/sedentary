@@ -2,12 +2,15 @@
 Introduction
 ************
 
-This package is designed **to make easy the process of applying changes to the database after model definition
-changes**, more than offer a quick and easy database access interface. Applying changes to the database after releasing
-a new version of the application is often a frustrating problem, usually solved with migration systems. Applying
-changes to the database during the development stage, often results in a complex sequence of backward and forward steps
-through the migrations; this process is complicated more and more especially when working in team with concurrent
-changes to the models (or the database schema). This package tries to solve these problems all in once.
+.. role:: bolditalic
+    :class: bolditalic
+
+This package is designed **to make easy the process of applying changes to the** :bolditalic:`database` **after model
+definition changes**, more than offer a quick and easy *database* access interface. Applying changes to the *database*
+after releasing a new version of the application is often a frustrating problem, usually solved with migration systems.
+Applying changes to the *database* during the development stage, often results in a complex sequence of backward and
+forward steps through the migrations; this process is complicated more and more especially when working in team with
+concurrent changes to the models (or the *database* schema). This package tries to solve these problems all in once.
 
 .. _packages:
 
@@ -15,7 +18,7 @@ Packages
 ========
 
 The project is organized with a base package :ref:`package sedentary` itself plus a package specialized for each
-DataBase engine.
+*database* engine.
 
 Nowadays only the :ref:`PostgreSQL<package sedentary-pg>` specialization package is provided.
 

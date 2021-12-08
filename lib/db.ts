@@ -8,6 +8,13 @@ export class Entry {
   }
 }
 
+export type ForeignKeyActions = "cascade" | "no action" | "restrict" | "set default" | "set null";
+
+export interface ForeignKeyOptions {
+  onDelete?: ForeignKeyActions;
+  onUpdate?: ForeignKeyActions;
+}
+
 export class Type<N extends Natural, E> {
   base: unknown;
   entry?: E;
@@ -17,6 +24,7 @@ export class Type<N extends Natural, E> {
   foreignKey?: {
     attributeName: string;
     fieldName: string;
+    options?: ForeignKeyOptions;
     tableName: string;
   };
 
@@ -26,9 +34,13 @@ export class Type<N extends Natural, E> {
 }
 
 export class Meta<N extends Natural, E> extends Type<N, E> {
+  attributes: { [key: string]: unknown };
+  foreignKeys: { [key: string]: unknown };
   init: () => void;
   isModel?: () => boolean;
   methods: { [key: string]: () => unknown };
+  modelName: string;
+  parent?: Meta<Natural, E>;
   primaryKey: string;
   tableName: string;
 

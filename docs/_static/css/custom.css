@@ -1,5 +1,10 @@
 @import "theme.css";
 
+.bolditalic {
+  font-weight: bold;
+  font-style: italic;
+}
+
 .wy-menu-vertical {
   width: 350px;
 }

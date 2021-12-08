@@ -71,52 +71,6 @@ export const dryrun = {
 };
 
 export const expected = {
-  types_datetime: [
-    "Adding table: 'test1'\n",
-    "Setting auto increment: 'test1'\n",
-    "'test1': Adding field: 'id' 'INT' '4'\n",
-    "'test1': Setting not null for field: 'id'\n",
-    "'test1': Adding field: 'a' 'DATETIME' ''\n",
-    "'test1': Adding field: 'b' 'DATETIME' ''\n",
-    "'test1': Adding field: 'c' 'VARCHAR' ''\n",
-    "'test1': Adding field: 'd' 'DATETIME' ''\n",
-    "'test1': Adding field: 'e' 'INT' '4'\n",
-    "'test1': Adding field: 'f' 'DATETIME' ''\n",
-    "'test1': Setting default value '1976-01-23T14:00:00.000Z' for field: 'f'\n",
-    "'test1': Setting not null for field: 'f'\n",
-    "'test1': Adding unique constraint on field: 'id'\n"
-  ],
-  types_datetime_changes: [
-    "'test1': Removing field: 'f'\n",
-    "'test1': Changing field type: 'b' 'VARCHAR' ''\n",
-    "'test1': Changing field type: 'c' 'DATETIME' ''\n",
-    "'test1': Changing field type: 'd' 'INT8' '8'\n",
-    "'test1': Changing field type: 'e' 'DATETIME' ''\n"
-  ],
-  types_int: [
-    "Adding table: 'test1'\n",
-    "Setting auto increment: 'test1'\n",
-    "'test1': Adding field: 'id' 'INT' '4'\n",
-    "'test1': Setting not null for field: 'id'\n",
-    "'test1': Adding field: 'a' 'VARCHAR' '23'\n",
-    "'test1': Adding field: 'b' 'VARCHAR' '23'\n",
-    "'test1': Adding field: 'c' 'VARCHAR' ''\n",
-    "'test1': Adding field: 'd' 'VARCHAR' '23'\n",
-    "'test1': Adding field: 'e' 'VARCHAR' ''\n",
-    "'test1': Setting default value '23' for field: 'e'\n",
-    "'test1': Setting not null for field: 'e'\n",
-    "'test1': Adding field: 'f' 'VARCHAR' ''\n",
-    "'test1': Setting default value '23' for field: 'f'\n",
-    "'test1': Setting not null for field: 'f'\n",
-    "'test1': Adding unique constraint on field: 'id'\n"
-  ],
-  types_int_change: [
-    "'test1': Changing field type: 'a' 'INT' '4'\n",
-    "'test1': Changing field type: 'b' 'VARCHAR' ''\n",
-    "'test1': Changing field type: 'c' 'VARCHAR' '23'\n",
-    "'test1': Changing field type: 'd' 'VARCHAR' '42'\n",
-    "'test1': Changing default value to '42' for field: 'e'\n"
-  ],
   sync_create_table: [
     "Adding table: 'test1'\n",
     "Setting auto increment: 'test1'\n",
@@ -230,6 +184,48 @@ export const expected = {
     "'test2': Adding foreign key 'fkey_a_test1_a' on field: 'a' references 'test1(a)'\n",
     "'test2': Adding foreign key 'fkey_c_test3_b' on field: 'c' references 'test3(b)'\n"
   ],
+  sync_foreign_keys_3: [
+    "Adding table: 'test1'\n",
+    "Setting auto increment: 'test1'\n",
+    "'test1': Adding field: 'id' 'INT' '4'\n",
+    "'test1': Setting not null for field: 'id'\n",
+    "'test1': Adding unique constraint on field: 'id'\n",
+    "Adding table: 'test2'\n",
+    "Setting auto increment: 'test2'\n",
+    "'test2': Adding field: 'id' 'INT' '4'\n",
+    "'test2': Setting not null for field: 'id'\n",
+    "'test2': Adding field: 'a' 'INT' '4'\n",
+    "'test2': Adding field: 'b' 'INT' '4'\n",
+    "'test2': Adding field: 'c' 'INT' '4'\n",
+    "'test2': Adding field: 'd' 'INT' '4'\n",
+    "'test2': Adding field: 'e' 'INT' '4'\n",
+    "'test2': Adding field: 'f' 'INT' '4'\n",
+    "'test2': Adding field: 'g' 'INT' '4'\n",
+    "'test2': Adding field: 'h' 'INT' '4'\n",
+    "'test2': Adding unique constraint on field: 'id'\n",
+    "'test2': Adding foreign key 'fkey_a_test1_id' on field: 'a' references 'test1(id)'\n",
+    "'test2': Adding foreign key 'fkey_b_test1_id' on field: 'b' references 'test1(id)'\n",
+    "'test2': Adding foreign key 'fkey_c_test1_id' on field: 'c' references 'test1(id)'\n",
+    "'test2': Adding foreign key 'fkey_d_test1_id' on field: 'd' references 'test1(id)' on delete cascade\n",
+    "'test2': Adding foreign key 'fkey_e_test1_id' on field: 'e' references 'test1(id)' on update restrict\n",
+    "'test2': Adding foreign key 'fkey_f_test1_id' on field: 'f' references 'test1(id)' on delete set default on update set null\n",
+    "'test2': Adding foreign key 'fkey_g_test1_id' on field: 'g' references 'test1(id)'\n",
+    "'test2': Adding foreign key 'fkey_h_test1_id' on field: 'h' references 'test1(id)' on delete cascade on update set null\n"
+  ],
+  sync_foreign_keys_4: [
+    "'test2': Removing foreign key: 'fkey_a_test1_id'\n",
+    "'test2': Removing foreign key: 'fkey_b_test1_id'\n",
+    "'test2': Removing foreign key: 'fkey_c_test1_id'\n",
+    "'test2': Removing foreign key: 'fkey_d_test1_id'\n",
+    "'test2': Removing foreign key: 'fkey_e_test1_id'\n",
+    "'test2': Removing foreign key: 'fkey_f_test1_id'\n",
+    "'test2': Adding foreign key 'fkey_a_test1_id' on field: 'a' references 'test1(id)' on delete cascade\n",
+    "'test2': Adding foreign key 'fkey_b_test1_id' on field: 'b' references 'test1(id)' on update restrict\n",
+    "'test2': Adding foreign key 'fkey_c_test1_id' on field: 'c' references 'test1(id)' on delete set default on update set null\n",
+    "'test2': Adding foreign key 'fkey_d_test1_id' on field: 'd' references 'test1(id)'\n",
+    "'test2': Adding foreign key 'fkey_e_test1_id' on field: 'e' references 'test1(id)'\n",
+    "'test2': Adding foreign key 'fkey_f_test1_id' on field: 'f' references 'test1(id)'\n"
+  ],
   sync_index_1: [
     "Adding table: 'test1'\n",
     "Setting auto increment: 'test1'\n",
@@ -252,5 +248,51 @@ export const expected = {
     "'test1': Removing index: 'ib'\n",
     "'test1': Adding index: 'ia' on ('a', 'b') type 'btree'\n",
     "'test1': Adding index: 'ib' on ('b', 'a') type 'btree' unique\n"
+  ],
+  types_datetime: [
+    "Adding table: 'test1'\n",
+    "Setting auto increment: 'test1'\n",
+    "'test1': Adding field: 'id' 'INT' '4'\n",
+    "'test1': Setting not null for field: 'id'\n",
+    "'test1': Adding field: 'a' 'DATETIME' ''\n",
+    "'test1': Adding field: 'b' 'DATETIME' ''\n",
+    "'test1': Adding field: 'c' 'VARCHAR' ''\n",
+    "'test1': Adding field: 'd' 'DATETIME' ''\n",
+    "'test1': Adding field: 'e' 'INT' '4'\n",
+    "'test1': Adding field: 'f' 'DATETIME' ''\n",
+    "'test1': Setting default value '1976-01-23T14:00:00.000Z' for field: 'f'\n",
+    "'test1': Setting not null for field: 'f'\n",
+    "'test1': Adding unique constraint on field: 'id'\n"
+  ],
+  types_datetime_changes: [
+    "'test1': Removing field: 'f'\n",
+    "'test1': Changing field type: 'b' 'VARCHAR' ''\n",
+    "'test1': Changing field type: 'c' 'DATETIME' ''\n",
+    "'test1': Changing field type: 'd' 'INT8' '8'\n",
+    "'test1': Changing field type: 'e' 'DATETIME' ''\n"
+  ],
+  types_int: [
+    "Adding table: 'test1'\n",
+    "Setting auto increment: 'test1'\n",
+    "'test1': Adding field: 'id' 'INT' '4'\n",
+    "'test1': Setting not null for field: 'id'\n",
+    "'test1': Adding field: 'a' 'VARCHAR' '23'\n",
+    "'test1': Adding field: 'b' 'VARCHAR' '23'\n",
+    "'test1': Adding field: 'c' 'VARCHAR' ''\n",
+    "'test1': Adding field: 'd' 'VARCHAR' '23'\n",
+    "'test1': Adding field: 'e' 'VARCHAR' ''\n",
+    "'test1': Setting default value '23' for field: 'e'\n",
+    "'test1': Setting not null for field: 'e'\n",
+    "'test1': Adding field: 'f' 'VARCHAR' ''\n",
+    "'test1': Setting default value '23' for field: 'f'\n",
+    "'test1': Setting not null for field: 'f'\n",
+    "'test1': Adding unique constraint on field: 'id'\n"
+  ],
+  types_int_change: [
+    "'test1': Changing field type: 'a' 'INT' '4'\n",
+    "'test1': Changing field type: 'b' 'VARCHAR' ''\n",
+    "'test1': Changing field type: 'c' 'VARCHAR' '23'\n",
+    "'test1': Changing field type: 'd' 'VARCHAR' '42'\n",
+    "'test1': Changing default value to '42' for field: 'e'\n"
   ]
 };

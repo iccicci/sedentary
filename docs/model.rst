@@ -1,6 +1,6 @@
-.. _class Model:
+.. _Model:
 
-class Model
-===========
+Model
+=====
 
 **TODO**

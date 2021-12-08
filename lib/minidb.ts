@@ -29,7 +29,11 @@ export class MiniDB extends DB {
     const { constraints } = this.body.tables[table.tableName] || { constraints: { f: {}, u: {} } };
 
     for(const constraint of Object.keys(constraints.f).sort()) {
-      if(! table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "f").length) {
+      const arr = table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "f");
+      const dbOptions = arr.length ? arr[0].attribute.foreignKey.options : { onDelete: "delete", onUpdate: "delete" };
+      const inOptions = constraints.f[constraint].options;
+
+      if(dbOptions.onDelete !== inOptions.onDelete || dbOptions.onUpdate !== inOptions.onUpdate) {
         this.syncLog(`'${table.tableName}': Removing foreign key: '${constraint}'`);
         if(this.sync) delete constraints.f[constraint];
       }
@@ -37,7 +41,7 @@ export class MiniDB extends DB {
 
     for(const constraint of Object.keys(constraints.u).sort()) {
       if(! table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "u").length) {
-        this.syncLog(`'${table.tableName}': Removing unique constraint from field: '${constraints.u[constraint].fieldName}'`);
+        this.syncLog(`'${table.tableName}': Removing unique constraint from field: '${constraints.u[constraint].on}'`);
         if(this.sync) delete constraints.u[constraint];
       }
     }
@@ -86,19 +90,19 @@ export class MiniDB extends DB {
     const { constraints } = this.body.tables[table.tableName] || { constraints: { f: {}, u: {} } };
 
     for(const constraint of table.constraints) {
-      const { constraintName, type } = constraint;
-      const { fieldName, foreignKey } = constraint.attribute;
+      const { attribute, constraintName, type } = constraint;
 
       if(! constraints[type][constraintName]) {
-        switch(type) {
-        case "f":
-          this.syncLog(`'${table.tableName}': Adding foreign key '${constraint.constraintName}' on field: '${fieldName}' references '${foreignKey.tableName}(${foreignKey.fieldName})'`);
-          if(this.sync) constraints[type][constraintName] = { fieldName, toField: foreignKey.fieldName, toTable: foreignKey.tableName };
-          break;
-        case "u":
-          this.syncLog(`'${table.tableName}': Adding unique constraint on field: '${fieldName}'`);
-          if(this.sync) constraints[type][constraintName] = { fieldName };
-          break;
+        if(type === "f") {
+          const { fieldName, options, tableName } = attribute.foreignKey;
+          const onDelete = options.onDelete !== "no action" ? ` on delete ${options.onDelete}` : "";
+          const onUpdate = options.onUpdate !== "no action" ? ` on update ${options.onUpdate}` : "";
+
+          this.syncLog(`'${table.tableName}': Adding foreign key '${constraint.constraintName}' on field: '${attribute.fieldName}' references '${tableName}(${fieldName})'${onDelete}${onUpdate}`);
+          if(this.sync) constraints[type][constraintName] = { on: attribute.fieldName, options, fieldName, tableName };
+        } else {
+          this.syncLog(`'${table.tableName}': Adding unique constraint on field: '${attribute.fieldName}'`);
+          if(this.sync) constraints[type][constraintName] = { on: attribute.fieldName };
         }
       }
     }
