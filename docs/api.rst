@@ -4,7 +4,7 @@ API
 
 .. toctree::
    :maxdepth: 2
-   :caption: API
+   :caption: API documentation
 
    attributesdefinition
    foreignkeyoptions

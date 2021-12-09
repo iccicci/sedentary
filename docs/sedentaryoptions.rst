@@ -25,7 +25,7 @@ The :xref:`Function` which :ref:`Sedentary` will use to log its messages. If ``n
 log(message)
 ^^^^^^^^^^^^
 
-- ``message``: :xref:`string` - The message :ref:`Sedentary` needs to log.
+- ``message``: :xref:`string` - required - The message :ref:`Sedentary` needs to log.
 - returns :xref:`void`.
 
 .. _SedentaryOptions.serverless:
