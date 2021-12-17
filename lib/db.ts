@@ -1,8 +1,6 @@
 export type Natural = Date | Record<string, unknown> | boolean | number | string;
 
-export class Entry {
-  init(): void {}
-
+export class BaseEntry {
   async save(): Promise<boolean> {
     return false;
   }

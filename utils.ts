@@ -27,6 +27,7 @@ const packagejson = {
     prettier:                           "2.5.0",
     nyc:                                "15.1.0",
     "ts-node":                          "10.4.0",
+    tsd:                                "0.19.0",
     typescript:                         "4.5.2",
     yamljs:                             "0.3.0"
   },
@@ -53,6 +54,7 @@ const packagejson = {
     tsc:         "tsc --declaration",
     version:     "node -r ts-node/register utils.ts version"
   },
+  tsd:   { compilerOptions: { strict: false } },
   types: "index.d.ts"
 };
 
