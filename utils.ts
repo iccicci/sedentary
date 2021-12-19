@@ -11,24 +11,24 @@ const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/m
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
-const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.1", "@types/pg-format": "1.0.2", pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
+const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.2", "@types/pg-format": "1.0.2", pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
 
 const packagejson = {
   author:          "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
   dependencies:    {},
   devDependencies: {
     "@types/mocha":                     "9.0.0",
-    "@types/node":                      "16.11.10",
+    "@types/node":                      "17.0.0",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "5.4.0",
-    "@typescript-eslint/parser":        "5.4.0",
-    eslint:                             "8.3.0",
+    "@typescript-eslint/eslint-plugin": "5.7.0",
+    "@typescript-eslint/parser":        "5.7.0",
+    eslint:                             "8.5.0",
     mocha:                              "9.1.3",
-    prettier:                           "2.5.0",
+    prettier:                           "2.5.1",
     nyc:                                "15.1.0",
     "ts-node":                          "10.4.0",
     tsd:                                "0.19.0",
-    typescript:                         "4.5.2",
+    typescript:                         "4.5.4",
     yamljs:                             "0.3.0"
   },
   engines:  { node: ">=12.0" },

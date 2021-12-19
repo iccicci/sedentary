@@ -1,10 +1,16 @@
 export type Natural = Date | Record<string, unknown> | boolean | number | string;
 
-export class BaseEntry {
+/**/
+export class EntryBase {
   async save(): Promise<boolean> {
     return false;
   }
 }
+/*/
+export interface EntryBase {
+  save: () => Promise<boolean>;
+}
+/**/
 
 export type ForeignKeyActions = "cascade" | "no action" | "restrict" | "set default" | "set null";
 

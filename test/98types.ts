@@ -7,7 +7,7 @@ describe("types", () => {
 
   before(async function() {
     this.timeout(10000);
-    diagnostics = await tsd({ cwd: ".", testFiles: ["types/types.ts"], typingsFile: "index.ts" });
+    diagnostics = await tsd({ cwd: ".", testFiles: ["test/types/types.ts"], typingsFile: "index.ts" });
   });
 
   it("types", () => {

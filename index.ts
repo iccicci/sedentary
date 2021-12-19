@@ -1,8 +1,8 @@
-import { Attribute, BaseEntry, Constraint, DB, ForeignKeyOptions, Index, Meta, Natural, Table, Type } from "./lib/db";
+import { Attribute, Constraint, DB, EntryBase, ForeignKeyOptions, Index, Meta, Natural, Table, Type } from "./lib/db";
 import { createLogger } from "./lib/log";
 import { MiniDB } from "./lib/minidb";
 
-export { BaseEntry, ForeignKeyActions, ForeignKeyOptions, Natural, Type } from "./lib/db";
+export { EntryBase, ForeignKeyActions, ForeignKeyOptions, Natural, Type } from "./lib/db";
 export type TypeDefinition<N extends Natural, E> = (() => Type<N, E>) | Type<N, E>;
 export interface AttributeOptions<N extends Natural, E> {
   defaultValue?: N;
@@ -15,10 +15,10 @@ export interface AttributeOptions<N extends Natural, E> {
 export type AttributeDefinition<N extends Natural, E> = TypeDefinition<N, E> | AttributeOptions<N, E>;
 export type AttributesDefinition = { [key: string]: AttributeDefinition<Natural, unknown> };
 
-type KeysAttributes<T, k> = T extends AttributeDefinition<Natural, infer E> ? (E extends BaseEntry ? k : never) : never;
-type Keys<F extends AttributesDefinition> = { [f in keyof F]?: KeysAttributes<F[f], f> }[keyof F];
+type ForeignKeysAttributes<T, k> = T extends AttributeDefinition<Natural, infer E> ? (E extends EntryBase ? k : never) : never;
+type ForeignKeys<A extends AttributesDefinition> = { [a in keyof A]?: ForeignKeysAttributes<A[a], a> }[keyof A];
 
-type Methods<T> = { [key: string]: (this: T) => unknown };
+type Methods<E> = { [key: string]: (this: E) => unknown };
 
 type Native__<T> = T extends Type<infer N, unknown> ? N : never;
 type Native_<T> = T extends () => Type<infer N, infer E> ? Native__<Type<N, E>> : Native__<T>;
@@ -45,21 +45,42 @@ type BaseModelOptions<B extends boolean, T> = {
   tableName?: string;
 };
 
-export type ModelOptions<B extends boolean, K extends string, M extends Methods<T>, P extends Meta<Natural, BaseEntry>, T extends BaseEntry> = BaseModelOptions<B, T> & {
+export type ModelOptions<B extends boolean, K extends string, M extends Methods<T>, P extends Meta<Natural, EntryBase>, T extends EntryBase> = BaseModelOptions<B, T> & {
   methods?: M;
   parent?: P;
   primaryKey?: K;
 };
 
+type ModelBaseOptions = {
+  indexes?: IndexesDefinition;
+  sync?: boolean;
+  tableName?: string;
+};
+
+export type ModelOptions2 = ModelBaseOptions & {
+  int8id?: boolean;
+  parent?: Type<Natural, EntryBase>;
+  primaryKey?: string;
+};
+
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 type IsUnion<T> = [T] extends [UnionToIntersection<T>] ? false : true;
-export type EntryId<B extends boolean> = { id: IsUnion<B> extends true ? number : B extends true ? string : number };
+type EntryIdNatural<B extends boolean> = IsUnion<B> extends true ? number : B extends true ? string : number;
+export type EntryId<B extends boolean> = { id?: EntryIdNatural<B> };
 
-type ForeignKey<T> = T extends AttributeDefinition<Natural, infer E> ? () => Promise<E> : never;
-type ModelFKAttributes<A extends AttributesDefinition> = { [a in Keys<A> & string as `${a}Load`]?: ForeignKey<A[a]> };
+type ForeignKey<A> = A extends AttributeDefinition<Natural, infer E> ? () => Promise<E> : never;
+type ModelFKAttributes<A extends AttributesDefinition> = { [a in ForeignKeys<A> & string as `${a}Load`]?: ForeignKey<A[a]> };
 type ModelBaseAttributes<A extends AttributesDefinition> = { [a in keyof A]?: Native<A[a]> };
-type Model<A extends AttributesDefinition> = keyof ModelFKAttributes<A> extends never ? ModelBaseAttributes<A> : ModelBaseAttributes<A> & ModelFKAttributes<A>;
-type Ancestor<A, N extends Natural, T extends BaseEntry> = (new () => T) & { [a in keyof A]?: Meta<Native<A[a]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T> & { tmp: number };
+type ModelAttributes<A extends AttributesDefinition> = keyof ModelFKAttributes<A> extends never ? ModelBaseAttributes<A> : ModelBaseAttributes<A> & ModelFKAttributes<A>;
+type Ancestor<A, N extends Natural, T extends EntryBase> = (new () => T) & { [a in keyof A]?: Meta<Native<A[a]>, T> } & { load: (boh: boolean) => Promise<T[]> } & Meta<N, T> & { tmp: number };
+
+type EntryFKAttributes<A extends AttributesDefinition> = { [a in ForeignKeys<A> & string as `${a}Load`]?: ForeignKey<A[a]> };
+type EntryBaseAttributes<A extends AttributesDefinition> = { [a in keyof A]?: Native<A[a]> };
+type EntryFullAttributes<A extends AttributesDefinition> = keyof EntryFKAttributes<A> extends never ? EntryBaseAttributes<A> : EntryBaseAttributes<A> & EntryFKAttributes<A>;
+type EntryAttributes<A extends AttributesDefinition> = keyof A extends never ? EntryBase : EntryBase & EntryFullAttributes<A>;
+
+type ModelBase<E extends EntryBase> = new () => E;
+type Model<N extends Natural, E extends EntryBase> = ModelBase<E> & Type<N, E>;
 
 export type Entry<M> = M extends new () => infer E ? E : never;
 
@@ -104,7 +125,7 @@ export class Sedentary {
     return new Type({ base: Date, type: "DATETIME" });
   }
 
-  FKEY<N extends Natural, E extends BaseEntry>(attribute: Type<N, E>, options?: ForeignKeyOptions): Type<N, E> {
+  FKEY<N extends Natural, E extends EntryBase>(attribute: Type<N, E>, options?: ForeignKeyOptions): Type<N, E> {
     const { attributeName, base, fieldName, size, tableName, type } = attribute as never;
 
     return new Type({ base, foreignKey: { attributeName, fieldName, options, tableName }, size, type });
@@ -132,6 +153,15 @@ export class Sedentary {
     return new Type({ base: String, size, type: "VARCHAR" });
   }
 
+  checkSize(size: number, message: string): number {
+    const str = size.toString();
+    const parsed = parseInt(str, 10);
+
+    if(str !== parsed.toString()) throw new Error(message);
+
+    return parsed;
+  }
+
   async connect(): Promise<void> {
     try {
       this.log("Connecting...");
@@ -151,38 +181,85 @@ export class Sedentary {
     this.log("Connection closed");
   }
 
-  model<A extends AttributesDefinition, B extends boolean, T extends BaseEntry & EntryId<B> & Model<A>>(modelName: string, attributes: A, options?: BaseModelOptions<B, T>): Ancestor<A, string, T>;
-  model<
-    A extends AttributesDefinition,
-    B extends boolean,
-    K extends keyof A,
-    P extends Meta<Natural, BaseEntry>,
-    N extends P extends { tmp: number } ? (P extends Meta<infer N, BaseEntry> ? N : never) : Native<A[K]>,
-    T extends (P extends { tmp: number } ? Parent<P> : BaseEntry) & Model<A>
-  >(modelName: string, attributes: A, options?: BaseModelOptions<B, T> & { parent?: P; primaryKey?: K }): Ancestor<A, N, T>;
-  model<A extends AttributesDefinition, B extends boolean, M extends Methods<T>, T extends BaseEntry & EntryId<B> & Model<A> & M>(
+  model2<E extends EntryBase>(modelName: string): ModelBase<E>;
+  model2<E extends EntryBase, M extends Record<string, <S extends M>(this: E & S) => unknown>>(modelName: string, methods: M & Record<string, (this: E & M) => void>): ModelBase<E & M>;
+  model2<E extends EntryBase, M extends Record<string, <S extends M>(this: E & S) => unknown>>(modelName: string, methods?: M): ModelBase<E> {
+    const ret = function(this: EntryBase) {
+      this.save();
+    };
+
+    Object.defineProperty(ret, "name", { value: name });
+    if(methods) Object.assign(ret.prototype, methods);
+
+    return ret as unknown as ModelBase<E>;
+  }
+  /*
+  model2<A extends AttributesDefinition, E extends EntryAttributes<A> & { id?: number }>(modelName: string, attributes: A, options?: ModelBaseOptions): Model<number, E>;
+  model2<A extends AttributesDefinition, E extends EntryAttributes<A> & { id?: string }>(modelName: string, attributes: A, options: ModelBaseOptions & { int8id: true }): Model<string, E>;
+  model2<A extends AttributesDefinition, E extends EntryAttributes<A> & { id?: number }, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
     modelName: string,
     attributes: A,
-    options?: BaseModelOptions<B, T> & { methods: M }
-  ): Ancestor<A, string, T>;
+    options: ModelBaseOptions,
+    methods: M & Record<keyof M, (this: E & Partial<M>) => void>
+  ): Model<number, E & Partial<M>>;
+  model2<A extends AttributesDefinition, E extends EntryAttributes<A> & { id?: string }, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
+    modelName: string,
+    attributes: A,
+    options: ModelBaseOptions & { int8id: true },
+    methods: M & Record<keyof M, (this: E & Partial<M>) => void>
+  ): Model<string, E & Partial<M>>;
+  model2<A extends AttributesDefinition, E extends EntryAttributes<A>, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
+    modelName: string,
+    attributes: A,
+    options?: ModelBaseOptions & { int8id: true },
+    methods?: M & Record<string, (this: E & Partial<M>) => void>
+  ): Model<Natural, E> {
+    const ret = function(this: E) {};
+
+    Object.defineProperty(ret, "name", { value: modelName });
+    if(methods) Object.assign(ret.prototype, methods);
+
+    return ret as unknown as Model<Natural, E>;
+  }
+  */
+
+  model<A extends AttributesDefinition, B extends boolean, E extends EntryBase & EntryId<B> & ModelAttributes<A>>(
+    modelName: string,
+    attributes: A,
+    options?: BaseModelOptions<B, E>
+  ): Ancestor<A, string, E>;
   model<
     A extends AttributesDefinition,
     B extends boolean,
     K extends keyof A,
-    M extends Methods<T>,
-    P extends Meta<Natural, BaseEntry>,
-    N extends P extends { tmp: number } ? (P extends Meta<infer N, BaseEntry> ? N : never) : Native<A[K]>,
-    T extends (P extends { tmp: number } ? Parent<P> : BaseEntry) & Model<A> & M
-  >(modelName: string, attributes: A, options?: BaseModelOptions<B, T> & { methods: M; parent?: P; primaryKey?: K }): Ancestor<A, N, T>;
+    P extends Meta<Natural, EntryBase>,
+    N extends P extends { tmp: number } ? (P extends Meta<infer N, EntryBase> ? N : never) : Native<A[K]>,
+    E extends (P extends { tmp: number } ? Parent<P> : EntryBase) & ModelAttributes<A>
+  >(modelName: string, attributes: A, options?: BaseModelOptions<B, E> & { parent?: P; primaryKey?: K }): Ancestor<A, N, E>;
+  model<A extends AttributesDefinition, B extends boolean, E extends EntryBase & EntryId<B> & ModelAttributes<A>, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
+    modelName: string,
+    attributes: A,
+    options: BaseModelOptions<B, E>,
+    methods: M & Record<string, (this: E & M) => unknown>
+  ): Ancestor<A, string, E & M>;
+  model<
+    A extends AttributesDefinition,
+    B extends boolean,
+    K extends keyof A,
+    P extends Meta<Natural, EntryBase>,
+    N extends P extends { tmp: number } ? (P extends Meta<infer N, EntryBase> ? N : never) : Native<A[K]>,
+    E extends (P extends { tmp: number } ? Parent<P> : EntryBase) & ModelAttributes<A>,
+    M extends Record<string, <S extends M>(this: E & S) => unknown>
+  >(modelName: string, attributes: A, options: BaseModelOptions<B, E> & { parent?: P; primaryKey?: K }, methods: M & Record<string, (this: E & M) => unknown>): Ancestor<A, N, E & M>;
   model<
     A extends AttributesDefinition,
     B extends boolean,
     K extends string,
-    M extends Methods<T>,
     N extends Natural,
-    P extends Meta<Natural, BaseEntry>,
-    T extends BaseEntry &(Model<A> | (Model<A> & M))
-  >(modelName: string, attributes: A, options?: ModelOptions<B, K, M, P, T>): Ancestor<A, N, T> {
+    P extends Meta<Natural, EntryBase>,
+    E extends EntryBase & ModelAttributes<A>,
+    M extends Record<string, <S extends M>(this: E & S) => unknown>
+  >(modelName: string, attributes: A, options?: ModelOptions<B, K, M, P, E>, methods?: M & Record<string, (this: E & M) => unknown>): Ancestor<A, N, E & M> {
     if(typeof modelName !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
     if(this.models[modelName]) throw new Error(`Sedentary.model: '${modelName}' model: Model already defined`);
     if(! attributes) attributes = {} as A;
@@ -197,7 +274,6 @@ export class Sedentary {
 
     let autoIncrement = true;
     const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.sync, tableName: modelName, ...options };
-    let { methods } = options;
     let aarray: Attribute<Natural, unknown>[] = int8id
       ? [new Attribute<string, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })]
       : [new Attribute<number, unknown>({ ...this.INT(4), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })];
@@ -370,10 +446,10 @@ export class Sedentary {
       }
     }
 
-    const load: (boh: boolean) => Promise<T[]> = (boh: boolean) =>
+    const load: (boh: boolean) => Promise<(E & M)[]> = (boh: boolean) =>
       new Promise((resolve, reject) =>
         setTimeout(() => {
-          if(boh) return resolve([new Class() as T]);
+          if(boh) return resolve([new Class() as E & M]);
           reject(new Error("boh"));
         }, 10)
       );
@@ -389,7 +465,7 @@ export class Sedentary {
         ret[curr.attributeName] = curr;
         return ret;
       }, {});
-    const meta = new Meta<N, T>({ base: Number, attributes: metaAttributes, foreignKeys: metaForeignKeys, modelName, parent: parent as never, type: "meta", tableName, primaryKey, init, methods });
+    const meta = new Meta<N, E & M>({ base: Number, attributes: metaAttributes, foreignKeys: metaForeignKeys, modelName, parent: parent as never, type: "meta", tableName, primaryKey, init, methods });
 
     for(const foreignKey in metaForeignKeys) {
       if(foreignKey + "Load" in metaAttributes) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with an attribute`);
@@ -436,16 +512,7 @@ export class Sedentary {
     for(const attribute of aarray) Object.defineProperty(Class, attribute.attributeName, { value: attribute });
     for(const key of ["attributeName", "base", "fieldName", "modelName", "size", "type", "unique"]) Object.defineProperty(Class, key, { value: pk[key] });
 
-    return Class as Ancestor<A, N, T>;
-  }
-
-  checkSize(size: number, message: string): number {
-    const str = size.toString();
-    const parsed = parseInt(str, 10);
-
-    if(str !== parsed.toString()) throw new Error(message);
-
-    return parsed;
+    return Class as Ancestor<A, N, E & M>;
   }
 }
 
@@ -570,7 +637,7 @@ B.prototype instanceof A
 */
 
 /*
-interface BaseEntry {
+interface EntryBase {
   save: () => Promise<boolean>;
 }
 
@@ -589,15 +656,15 @@ type Methods2<E> = Record<string, (this: E) => unknown>;
 
 type Model2<E> = new () => E;
 
-function model<A extends AttributesDefinition, E extends BaseEntry>(modelName: string, attributes: A, options?: ModelOptions2): Model2<E>;
-function model<A extends AttributesDefinition, E extends BaseEntry, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
+function model<A extends AttributesDefinition, E extends EntryBase>(modelName: string, attributes: A, options?: ModelOptions2): Model2<E>;
+function model<A extends AttributesDefinition, E extends EntryBase, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
   modelName: string,
   attributes: A,
   options: ModelOptions2,
   methods: M,
   useless: (this: E & M) => void
 ): Model2<E & M>;
-function model<A extends AttributesDefinition, E extends BaseEntry, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
+function model<A extends AttributesDefinition, E extends EntryBase, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
   modelName: string,
   attributes: A,
   options?: ModelOptions2,
@@ -639,33 +706,31 @@ interface BaseId<B extends boolean> {
   id?: B extends true ? string : number;
 }
 
-type ModelAttributes<A extends AttributesDefinition> = { [a in keyof A]?: Native<A[a]> };
-
 type Model2<E> = new () => E;
 
-function model<A extends AttributesDefinition, B extends boolean, E extends BaseEntry & BaseId<false> & ModelAttributes<A>>(
+function model<A extends AttributesDefinition, B extends boolean, E extends EntryBase & BaseId<false> & ModelAttributes<A>>(
   modelName: string,
   attributes: A,
   options?: BaseModelOptions<B, E>
 ): Model2<E> & Type<number, E>;
-function model<A extends AttributesDefinition, B extends boolean, E extends BaseEntry & BaseId<true> & ModelAttributes<A>>(
+function model<A extends AttributesDefinition, B extends boolean, E extends EntryBase & BaseId<true> & ModelAttributes<A>>(
   modelName: string,
   attributes: A,
   options?: BaseModelOptions<B, E> & { int8id: true }
 ): Model2<E> & Type<string, E>;
-function model<A extends AttributesDefinition, B extends boolean, E extends BaseEntry & BaseId<false> & ModelAttributes<A>, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
+function model<A extends AttributesDefinition, B extends boolean, E extends EntryBase & BaseId<false> & ModelAttributes<A>, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
   modelName: string,
   attributes: A,
   options: BaseModelOptions<B, E>,
   methods: M & Record<string, (this: E & M) => unknown>
 ): Model2<E & M> & Type<number, E>;
-function model<A extends AttributesDefinition, B extends boolean, E extends BaseEntry & BaseId<true> & ModelAttributes<A>, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
+function model<A extends AttributesDefinition, B extends boolean, E extends EntryBase & BaseId<true> & ModelAttributes<A>, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
   modelName: string,
   attributes: A,
   options: BaseModelOptions<B, E> & { int8id: true },
   methods: M & Record<string, (this: E & M) => unknown>
 ): Model2<E & M> & Type<string, E>;
-function model<A extends AttributesDefinition, B extends boolean, E extends BaseEntry, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
+function model<A extends AttributesDefinition, B extends boolean, E extends EntryBase, M extends Record<string, <S extends M>(this: E & S) => unknown>>(
   modelName: string,
   attributes: A,
   options?: BaseModelOptions<B, E> & { int8id?: boolean },
@@ -702,3 +767,27 @@ const t2 = new T2();
 //t2.id = "0";
 const tt2 = (t: ET2) => console.log(t, t.test(), t.a, t.b);
 tt2(t2);
+
+export class Sedentary2 {
+  model<E extends EntryBase>(modelName: string): ModelBase<E>;
+  model<E extends EntryBase, M extends Record<string, <S extends M>(this: E & S) => unknown>>(modelName: string, methods: M & Record<string, (this: E & M) => void>): ModelBase<E & M>;
+  model<E extends EntryBase, M extends Record<string, <S extends M>(this: E & S) => unknown>>(modelName: string, methods?: M): ModelBase<E> {
+    const ret = function(this: EntryBase) {};
+
+    Object.defineProperty(ret, "name", { value: modelName });
+    if(methods) Object.assign(ret.prototype, methods);
+    ret.prototype.save = () => new Promise(resolve => resolve(false));
+
+    return ret as unknown as ModelBase<E>;
+  }
+}
+
+const db2 = new Sedentary2();
+
+const T22 = db2.model("T2", {
+  c: function() {
+    this.id = "0";
+    this.c();
+    return 0;
+  }
+});

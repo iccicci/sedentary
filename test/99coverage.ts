@@ -1,13 +1,13 @@
 import { deepStrictEqual as de, strictEqual as eq } from "assert";
 
-import { BaseEntry, Type } from "..";
+import { EntryBase, Type } from "..";
 import { Attribute, DB, Table } from "../lib/db";
 import { Sedentary } from "./helper";
 import { connection } from "./local";
 
 describe("coverage", () => {
-  it("BaseEntry", () => eq(new BaseEntry() instanceof BaseEntry, true));
-  it("BaseEntry.save", async () => eq(await new BaseEntry().save(), false));
+  it("EntryBase", () => eq(new EntryBase() instanceof EntryBase, true));
+  it("EntryBase.save", async () => eq(await new EntryBase().save(), false));
   it("Type", () => eq(new Type({ base: null, type: "" }) instanceof Type, true));
 
   describe("findTable", () => {
