@@ -1,11 +1,18 @@
 {
   "compilerOptions": {
+    "alwaysStrict": true,
     "esModuleInterop": true,
     "declaration": true,
     "module": "commonjs",
     "noImplicitAny": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "target": "es2017"
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "target": "es2017",
+    "strict": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true
   },
-  "include": ["index.ts", "src/*.ts"]
+  "include": ["*.ts", "lib/*.ts", "test/*.ts"]
 }

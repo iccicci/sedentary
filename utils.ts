@@ -3,7 +3,7 @@ import { promises } from "fs";
 
 const { readFile, writeFile } = promises;
 
-const { VERSION, npm_package_name } = process.env;
+const { VERSION, npm_package_name } = process.env as { VERSION: string; npm_package_name: "sedentary" | "sedentary-pg" };
 
 const common: string[] = ["*.tgz", "coverage", "node_modules", "test.json", ""];
 const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "docs/__pycache__", "index.d.ts", "index.js", "lib/*.d.ts", "lib/*.js"];
@@ -11,17 +11,17 @@ const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/m
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
-const deps = { "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.2", "@types/pg-format": "1.0.2", pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
+const deps = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.3", "@types/pg-format": "1.0.2", pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
 
 const packagejson = {
   author:          "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
   dependencies:    {},
   devDependencies: {
     "@types/mocha":                     "9.0.0",
-    "@types/node":                      "17.0.0",
+    "@types/node":                      "17.0.4",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "5.7.0",
-    "@typescript-eslint/parser":        "5.7.0",
+    "@typescript-eslint/eslint-plugin": "5.8.0",
+    "@typescript-eslint/parser":        "5.8.0",
     eslint:                             "8.5.0",
     mocha:                              "9.1.3",
     prettier:                           "2.5.1",
@@ -54,7 +54,7 @@ const packagejson = {
     tsc:         "tsc --declaration",
     version:     "node -r ts-node/register utils.ts version"
   },
-  tsd:   { compilerOptions: { strict: false } },
+  tsd:   { compilerOptions: {} },
   types: "index.d.ts"
 };
 
@@ -90,7 +90,7 @@ const travis = {
 };
 
 function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unknown } | unknown {
-  const ret = {};
+  const ret: Record<string, unknown> = {};
 
   if(obj instanceof Array || ! (obj instanceof Object)) return obj;
 
@@ -112,7 +112,9 @@ function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unkno
     const homepage = `https://github.com/iccicci/sedentary${urls[npm_package_name]}#readme`;
     const repository = `https://github.com/iccicci/sedentary${urls[npm_package_name]}`;
     const pkg = JSON.parse(await readFile("package.json", "utf-8"));
+    const { compilerOptions } = JSON.parse(await readFile("tsconfig.json", "utf-8"));
     const { name, version } = pkg;
+    const tsd = { compilerOptions };
     let { dependencies } = pkg;
     let { sedentary } = dependencies;
 
@@ -123,7 +125,7 @@ function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unkno
       dependencies = { ...deps[npm_package_name], sedentary };
     } catch(e) {}
 
-    await writeFile("package.json", JSON.stringify(sort({ ...packagejson, bugs, dependencies, description, homepage, name, repository, version }), null, 2), "utf-8");
+    await writeFile("package.json", JSON.stringify(sort({ ...packagejson, bugs, dependencies, description, homepage, name, repository, tsd, version }), null, 2), "utf-8");
   }
 
   if(process.argv[2] === "version") {

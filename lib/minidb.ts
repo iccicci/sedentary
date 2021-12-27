@@ -21,7 +21,8 @@ export class MiniDB extends DB {
     try {
       this.body = JSON.parse((await readFile(this.file)).toString());
     } catch(e) {
-      if(e.code !== "ENOENT") throw e;
+      const err = e as NodeJS.ErrnoException;
+      if(err.code !== "ENOENT") throw e;
     }
   }
 
@@ -29,7 +30,7 @@ export class MiniDB extends DB {
     const { constraints } = this.body.tables[table.tableName] || { constraints: { f: {}, u: {} } };
 
     for(const constraint of Object.keys(constraints.f).sort()) {
-      const arr = table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "f");
+      const arr = table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "f") as { attribute: { foreignKey: { options: any } } }[];
       const dbOptions = arr.length ? arr[0].attribute.foreignKey.options : { onDelete: "delete", onUpdate: "delete" };
       const inOptions = constraints.f[constraint].options;
 
@@ -94,7 +95,7 @@ export class MiniDB extends DB {
 
       if(! constraints[type][constraintName]) {
         if(type === "f") {
-          const { fieldName, options, tableName } = attribute.foreignKey;
+          const { fieldName, options, tableName } = attribute.foreignKey as { attributeName: string; fieldName: string; options: any; tableName: string };
           const onDelete = options.onDelete !== "no action" ? ` on delete ${options.onDelete}` : "";
           const onUpdate = options.onUpdate !== "no action" ? ` on update ${options.onUpdate}` : "";
 

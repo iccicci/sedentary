@@ -135,7 +135,7 @@ ifeq (${PACKAGE}, sedentary)
 	for i in ${EXTENSIONS} ; do make -C $$i outdated ; done
 endif
 
-package.json: utils.ts
+package.json: tsconfig.json utils.ts
 	npm install --prune
 	npm run packagejson
 

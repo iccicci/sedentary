@@ -1,16 +1,15 @@
 export type Natural = Date | Record<string, unknown> | boolean | number | string;
 
-/**/
 export class EntryBase {
+  construct() {}
+  postLoad() {}
+  preLoad() {}
+  preSave() {}
+
   async save(): Promise<boolean> {
     return false;
   }
 }
-/*/
-export interface EntryBase {
-  save: () => Promise<boolean>;
-}
-/**/
 
 export type ForeignKeyActions = "cascade" | "no action" | "restrict" | "set default" | "set null";
 
@@ -19,7 +18,7 @@ export interface ForeignKeyOptions {
   onUpdate?: ForeignKeyActions;
 }
 
-export class Type<N extends Natural, E> {
+export interface Type<N extends Natural, E> {
   base: unknown;
   entry?: E;
   native?: N;
@@ -31,29 +30,15 @@ export class Type<N extends Natural, E> {
     options?: ForeignKeyOptions;
     tableName: string;
   };
+}
 
+export class Type<N extends Natural, E> {
   constructor(from: Type<N, E>) {
     Object.assign(this, from);
   }
 }
 
-export class Meta<N extends Natural, E> extends Type<N, E> {
-  attributes: { [key: string]: unknown };
-  foreignKeys: { [key: string]: unknown };
-  init: () => void;
-  isModel?: () => boolean;
-  methods: { [key: string]: () => unknown };
-  modelName: string;
-  parent?: Meta<Natural, E>;
-  primaryKey: string;
-  tableName: string;
-
-  constructor(from: Meta<N, E>) {
-    super(from);
-  }
-}
-
-export class Attribute<N extends Natural, E> extends Type<N, E> {
+export interface Attribute<N extends Natural, E> extends Type<N, E> {
   attributeName: string;
   defaultValue?: unknown;
   fieldName: string;
@@ -61,7 +46,9 @@ export class Attribute<N extends Natural, E> extends Type<N, E> {
   notNull: boolean;
   tableName: string;
   unique?: boolean;
+}
 
+export class Attribute<N extends Natural, E> extends Type<N, E> {
   constructor(from: Attribute<N, E>) {
     super(from);
   }
@@ -93,7 +80,8 @@ interface ITable {
   autoIncrement: boolean;
   constraints: Constraint[];
   indexes: Index[];
-  parent: Meta<Natural, unknown>;
+  parent: any;
+  //parent: Meta<Natural, unknown>;
   sync: boolean;
   tableName: string;
 }
@@ -110,8 +98,8 @@ export class Table extends autoImplement<ITable>() {
 export abstract class DB {
   tables: Table[] = [];
 
-  protected log: (...data: unknown[]) => void;
-  protected sync: boolean;
+  protected log: (message: string) => void;
+  protected sync = true;
 
   abstract connect(): Promise<void>;
   abstract end(): Promise<void>;
@@ -148,10 +136,8 @@ export abstract class DB {
     }
   }
 
-  protected syncLog(...data: unknown[]): void {
-    const args = this.sync ? data : ["NOT SYNCING:", ...data];
-
-    this.log(...args);
+  protected syncLog(message: string): void {
+    this.log(this.sync ? message : "NOT SYNCING: " + message);
   }
 
   abstract dropConstraints(table: Table): Promise<number[]>;
