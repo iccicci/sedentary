@@ -6,8 +6,8 @@ const { readFile, writeFile } = promises;
 const { VERSION, npm_package_name } = process.env as { VERSION: string; npm_package_name: "sedentary" | "sedentary-pg" };
 
 const common: string[] = ["*.tgz", "coverage", "node_modules", "test.json", ""];
-const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "docs/__pycache__", "index.d.ts", "index.js", "lib/*.d.ts", "lib/*.js"];
-const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "sedentary-*", "test", "tsconfig.json", "utils.ts"];
+const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "docs/__pycache__", "**/*.d.ts", "**/*.js"];
+const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "requirements.txt", "sedentary-*", "test", "tsconfig.json", "utils.*"];
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };

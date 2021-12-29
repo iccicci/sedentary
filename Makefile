@@ -30,7 +30,7 @@ PARENT=$(shell if [ -f ../Makefile ] ; then echo yes ; else echo no ; fi)
 
 ifeq (${PARENT}, yes)
 
-TESTS=$(shell cd .. ; ls test/0* test/helper.ts)
+TESTS=$(shell cd .. ; ls test/0*.ts test/helper.ts | grep -v .d.ts)
 VSCODE=$(shell cd .. ; ls .vscode/*)
 
 test/%.ts: ../test/%.ts
@@ -163,7 +163,7 @@ ifeq (${PACKAGE}, sedentary)
 endif
 
 rm: setup
-	rm -f index.d.ts index.js lib/*.d.ts lib/*.js
+	rm -f index.d.ts index.js lib/*.d.ts lib/*.js test/*.d.ts test/*.js
 
 setup: node_modules/.link .gitignore .npmignore .travis.yml
 
