@@ -1,6 +1,6 @@
 import { expectAssignable, expectNotAssignable, expectType } from "tsd";
 
-import { EntryBase, Entry, Sedentary, Type } from "..";
+import { EntryBase, Entry, Sedentary, Type, Where } from "..";
 
 const db = new Sedentary("test.json");
 
@@ -97,7 +97,7 @@ expectType<number | undefined>(t4.a);
 expectType<string | undefined>(t4.b);
 expectType<number | undefined>(t4.c);
 expectType<string | undefined>(t4.d);
-expectType<EntryBase & { a?: number; b?: string; c?: number; d?: string } & { id?: number } & { m: (a: number) => string; n: (a: number) => number }>(t4);
+expectType<EntryBase & { a?: number; b?: string; c?: number; d?: string; id?: number } & { m: (a: number) => string; n: (a: number) => number }>(t4);
 expectAssignable<Partial<ET4>>({ m: (t1: number) => t1.toString() });
 expectNotAssignable<Partial<ET4>>({ m: (t1: number, t2: number) => t1.toString() + t2.toString() });
 expectNotAssignable<Partial<ET4>>({ o: () => "" });
@@ -144,7 +144,7 @@ const t9 = new T9({ a: new Date(), b: "0" });
 expectAssignable<Type<Date, EntryBase>>(T9);
 expectNotAssignable<Type<string, EntryBase>>(T9);
 expectType<ET9>(t9);
-expectType<EntryBase & { a?: Date } & { b?: string }>(t9);
+expectType<EntryBase & { a?: Date; b?: string }>(t9);
 
 const T10 = db.model("T10", {}, { parent: T6 }, { m: (i?: string) => (i ? i.length : 0) });
 type ET10 = Entry<typeof T10>;
@@ -160,7 +160,7 @@ const t11 = new T11();
 expectAssignable<Type<Date, EntryBase>>(T11);
 expectNotAssignable<Type<string, EntryBase>>(T11);
 expectType<ET11>(t11);
-expectType<EntryBase & { a?: Date } & { b?: string } & { m: (i?: string) => number }>(t11);
+expectType<EntryBase & { a?: Date; b?: string } & { m: (i?: string) => number }>(t11);
 
 type t12_1 = (a?: Date) => void;
 const T12 = db.model(
@@ -183,6 +183,7 @@ const T12 = db.model(
   }
 );
 type ET12 = Entry<typeof T12>;
+type WT12 = Where<typeof T12>;
 const t12 = new T12();
 expectAssignable<Type<number, EntryBase>>(T12);
 expectNotAssignable<Type<string, EntryBase>>(T12);
@@ -192,7 +193,7 @@ expectType<string | undefined>(t12.b);
 expectType<number | undefined>(t12.c);
 expectType<string | undefined>(t12.d);
 expectType<Date | undefined>(t12.e);
-expectType<EntryBase & { a?: number; b?: string; c?: number; d?: string } & { id?: number } & { m: (a: number) => string; n: (a: number) => number } & { e?: Date } & { o: (a?: Date) => void }>(t12);
+expectType<EntryBase & { a?: number; b?: string; c?: number; d?: string; e?: Date; id?: number } & { m: (a: number) => string; n: (a: number) => number } & { o: (a?: Date) => void }>(t12);
 expectAssignable<Partial<ET12>>({ m: (t1: number) => t1.toString() });
 expectNotAssignable<Partial<ET12>>({ m: (t1: number, t2: number) => t1.toString() + t2.toString() });
 expectAssignable<Partial<ET12>>({ o: function() {} });
@@ -200,4 +201,26 @@ expectNotAssignable<Partial<ET12>>({ p: () => "" });
 expectAssignable<Partial<ET12>>({ a: 0, b: "", c: 0, d: "", e: new Date() });
 expectNotAssignable<Partial<ET12>>({ e: "" });
 expectNotAssignable<Partial<ET12>>({ f: 0 });
-new T12({ a: 0, b: "", id: 0 });
+type t12_2 = typeof T12 extends new (from: infer T) => EntryBase ? Exclude<T, undefined> : never;
+expectType<{ a?: number; b?: string; c?: number; d?: string; e?: Date; id?: number }>({} as t12_2);
+expectAssignable<WT12>(["AND", ["NOT", { a: 0, b: [">", "test"] }], { c: ["IN", 2, 3, 4] }, "plain condition"]);
+
+const T13 = db.model("T13", { a: db.FKEY(T6) });
+type ET13 = Entry<typeof T13>;
+const t13 = new T13();
+expectAssignable<Type<number, EntryBase>>(T13);
+expectNotAssignable<Type<string, EntryBase>>(T13);
+expectType<ET13>(t13);
+expectType<EntryBase & { a?: Date; id?: number } & { aLoad: () => Promise<ET6> }>(t13);
+type t13_1 = typeof T13 extends new (from: infer T) => EntryBase ? Exclude<T, undefined> : never;
+expectType<{ a?: Date; id?: number }>({} as t13_1);
+
+const T14 = db.model("T14", { a: db.FKEY(T6.a) });
+type ET14 = Entry<typeof T14>;
+const t14 = new T14();
+expectAssignable<Type<number, EntryBase>>(T14);
+expectNotAssignable<Type<string, EntryBase>>(T14);
+expectType<ET14>(t14);
+expectType<EntryBase & { a?: Date; id?: number } & { aLoad: () => Promise<ET6> }>(t14);
+type t14_1 = typeof T14 extends new (from: infer T) => EntryBase ? Exclude<T, undefined> : never;
+expectType<{ a?: Date; id?: number }>({} as t14_1);
