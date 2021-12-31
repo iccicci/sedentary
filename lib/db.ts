@@ -1,8 +1,17 @@
 export type Natural = Date | Record<string, unknown> | boolean | number | string;
 
 export class EntryBase {
+  constructor(from?: Partial<EntryBase> | "load") {
+    if(from === "load") this.preLoad();
+    else {
+      if(from) Object.assign(this, from);
+      this.construct();
+    }
+  }
+
   construct() {}
   postLoad() {}
+  postSave() {}
   preLoad() {}
   preSave() {}
 

@@ -1,6 +1,10 @@
 {
   "author": "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
   "bugs": "https://github.com/iccicci/sedentary/issues",
+  "contributors": [
+    "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
+    "yossarian <sergiybiluk@gmail.com> (https://github.com/captain-yossarian)"
+  ],
   "dependencies": {},
   "description": "The ORM which never needs to migrate",
   "devDependencies": {
@@ -74,5 +78,5 @@
     }
   },
   "types": "index.d.ts",
-  "version": "0.0.21"
+  "version": "0.0.22"
 }

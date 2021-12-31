@@ -81,10 +81,9 @@ $ npm install --save sedentary
 
 # Disclaimer
 
-**Do not use this package itself in production! This package uses a simple self made JSON-DB engine just for testing
-purposes.**
+**Do not use this package itself! It does not support any DB engine.**
 
-For a real environment a _DB engine dedicated extension_ must be used:
+A _DB engine dedicated extension_ must be used:
 
 - MySQL: planned
 - PostgreSQL: [sedentary-pg](https://github.com/iccicci/sedentary-pg#readme)

@@ -196,7 +196,7 @@ export class Sedentary {
   model<A extends AttributesDefinition, P extends ModelStd, M extends Record<string,() => void>>(
     modelName: string,
     attributes: A,
-    options?: ModelOptions & { parent?: P },
+    options?: ModelOptions & { parent?: P & (new () => EntryBase) },
     methods?: M
   ): Model<Natural, A, EntryBase> {
     if(typeof modelName !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
@@ -220,13 +220,10 @@ export class Sedentary {
     const iarray: Index[] = [];
     const pk = aarray[0];
 
-    if(methods && ! (methods instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'methods' option: Wrong type, expected 'Object'`);
-
-    const originalMethods = methods;
+    if(! methods) methods = {} as M;
+    if(! (methods instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'methods' option: Wrong type, expected 'Object'`);
 
     if(parent) if(! parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: 'parent' option: Wrong type, expected 'Model'`);
-
-    //methods = (methods ? { ...(parent.methods || {}), ...methods } : parent.methods) as never;
 
     if(primaryKey && typeof primaryKey !== "string") throw new Error(`Sedentary.model: '${modelName}' model: 'primaryKey' option: Wrong type, expected 'string'`);
     if(primaryKey && ! Object.keys(attributes).includes(primaryKey)) throw new Error(`Sedentary.model: '${modelName}' model: 'primaryKey' option: Attribute '${primaryKey}' does not exists`);
@@ -367,10 +364,10 @@ export class Sedentary {
 
     for(const foreignKey in foreignKeys) {
       if(foreignKey + "Load" in attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with an attribute`);
-      if(originalMethods && foreignKey + "Load" in originalMethods) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method`);
+      if(foreignKey + "Load" in methods) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method`);
     }
 
-    if(originalMethods) for(const method in originalMethods) if(method in attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute`);
+    for(const method in methods) if(method in attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute`);
 
     const checkParent = (parent?: ModelStd) => {
       if(! parent) return;
@@ -387,12 +384,10 @@ export class Sedentary {
         if(foreignKey + "Load" in parent.methods) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method of '${parent.modelName}' model`);
       }
 
-      if(originalMethods) {
-        for(const method in originalMethods) {
-          if(method in parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute of '${parent.modelName}' model`);
-          for(const foreignKey in parent.foreignKeys) if(foreignKey + "Load" === method) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an inferred methods of '${parent.modelName}' model`);
-          if(method in parent.methods) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with a method of '${parent.modelName}' model`);
-        }
+      for(const method in methods) {
+        if(method in parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute of '${parent.modelName}' model`);
+        for(const foreignKey in parent.foreignKeys) if(foreignKey + "Load" === method) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an inferred methods of '${parent.modelName}' model`);
+        if(method in parent.methods) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with a method of '${parent.modelName}' model`);
       }
 
       checkParent(parent.parent);
@@ -400,7 +395,7 @@ export class Sedentary {
 
     checkParent(parent);
 
-    const ret = function() {} as unknown as Model<Natural, A, EntryBase>;
+    const ret = class extends (parent || EntryBase) {} as unknown as Model<Natural, A, EntryBase>;
 
     const load: (boh: boolean) => Promise<EntryBase[]> = (boh: boolean) =>
       new Promise((resolve, reject) =>
@@ -415,8 +410,9 @@ export class Sedentary {
     Object.defineProperty(ret, "load", { value: load });
     Object.defineProperty(ret, "attributes", { value: attributes });
     Object.defineProperty(ret, "foreignKeys", { value: foreignKeys });
-    Object.defineProperty(ret, "methods", { value: methods || {} });
-    if(methods) Object.assign(ret.prototype, methods);
+    Object.defineProperty(ret, "methods", { value: methods });
+    Object.assign(ret.prototype, methods);
+
     ret.prototype.save = function() {
       return Promise.resolve(false);
     };

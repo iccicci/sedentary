@@ -7,9 +7,7 @@ ModelOptions
 
     interface ModelOptions {
         indexes?: IndexesDefinition;
-        init?: () => void;
         int8id?: boolean;
-        methods?: Methods;
         parent?: Model;
         primaryKey?: string;
         sync?: boolean;
@@ -27,21 +25,6 @@ ModelOptions.indexes
 
 Defines the *indexes* of the :ref:`Model`. See :ref:`IndexesDefinition` for details.
 
-.. _ModelOptions.init:
-
-ModelOptions.init
------------------
-
-- default: ``undefined``
-
-If provided, it works as the *constructor* :xref:`Function` does. It will be called when a ``new Model()`` is created.
-
-.. warning::
-    Do not use :xref:`Arrow Functions` to not override the **this** argument provided by the scope.
-
-.. note::
-    **TODO** It is not called for loaded Entries.
-
 .. _ModelOptions.int8id:
 
 ModelOptions.int8id
@@ -54,15 +37,6 @@ details.
 
 .. note::
     This option conflicts with :ref:`ModelOptions.parent` and :ref:`ModelOptions.primaryKey` ones.
-
-.. _ModelOptions.methods:
-
-ModelOptions.methods
---------------------
-
-- default: ``{}``
-
-Defines the *methods* of the :ref:`Model`. See :ref:`Methods` for details.
 
 .. _ModelOptions.parent:
 

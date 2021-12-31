@@ -27,8 +27,7 @@ Nowadays only the :ref:`PostgreSQL<package sedentary-pg>` specialization package
 sedentary
 ---------
 
-The base package. **It should not be used directly**: it uses a simple self made JSON DB engine just for testing
-purposes.
+The base package. **It must not be used directly**: it des not support any DB engine.
 
 * NPM `sedentary package <https://www.npmjs.com/package/sedentary>`_
 * GitHub `sedentary repository <https://github.com/iccicci/sedentary#readme>`_

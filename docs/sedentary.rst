@@ -54,12 +54,13 @@ Closes the connection with the *database*.
 
 .. _sedentary.model:
 
-sedentary.model(name, fields[, options])
+sedentary.model(name, fields[, options [, methods]])
 ----------------------------------------
 
 - ``name``: :xref:`string` - required - The name of the model.
 - ``fields``: :ref:`AttributesDefinition` - required - The object with the fileds definitions.
 - ``options?``: :ref:`ModelOptions` - default ``{}`` - The options of the model.
+- ``methods?``: :ref:`Methods` - default ``{}`` - The **JavaScript** level *methods* of the model.
 - returns a new :ref:`class Model<Model>` to interact with the TABLE.
 
 Defines one model. Should be called once for each model/TABLE to be configured.

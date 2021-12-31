@@ -13,9 +13,11 @@ const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
 const deps = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
 const devd = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.3", "@types/pg-format": "1.0.2" }, "sedentary-sqlite": {} };
+const author = "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)";
 
 const packagejson = {
-  author:          "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)",
+  author,
+  contributors:    [author, "yossarian <sergiybiluk@gmail.com> (https://github.com/captain-yossarian)"],
   dependencies:    {},
   devDependencies: {
     "@types/mocha":                     "9.0.0",
