@@ -5,7 +5,7 @@ import { connection, wrongConnection, wrongConnectionError } from "./local";
 
 describe("class Sedentary", () => {
   describe("new Sedentary()", () => {
-    it("constructor", () => ok(new Package(connection) instanceof Package));
+    it("constructor", () => ok(new Sedentary(connection) instanceof Package));
   });
 
   describe("connect", () => {
@@ -17,7 +17,7 @@ describe("class Sedentary", () => {
     });
 
     it("ok", () => ok(true));
-    it("log", () => de(db.logs, ["Connecting...", "Connected, syncing...", "Synced", "Closing connection...", "Connection closed"]));
+    it("log", () => de(db.logs, ["Connecting...", "Connected", "Syncing...", "Synced", "Closing connection...", "Connection closed"]));
   });
 
   describe("connect error", () => {
@@ -34,6 +34,17 @@ describe("class Sedentary", () => {
 
     it("error", () => eq(err.message, wrongConnectionError));
     it("log", () => de(db.logs, ["Connecting...", `Connecting: ${wrongConnectionError}`]));
+  });
+
+  describe("autoSync false", () => {
+    const db = new Sedentary(connection, { autoSync: false });
+
+    before(async () => {
+      await db.connect();
+      await db.end();
+    });
+
+    it("log", () => de(db.logs, ["Connecting...", "Connected", "Closing connection...", "Connection closed"]));
   });
 
   describe("null logger", function() {

@@ -9,19 +9,19 @@ describe("class Sedentary - errors", () => {
   describe("new Sedentary(filename)", () => {
     before(async () => {
       try {
-        new Sedentary([] as never);
+        await new Sedentary({ log: null }).connect();
       } catch(e) {
         if(e instanceof Error) err = e;
       }
     });
 
-    it("message", () => eq(err.message, "new Sedentary: 'filename' argument: Wrong type, expected 'string'"));
+    it("message", () => eq(err.message, "Package sedentary can't be used directly. Please check: https://www.npmjs.com/package/sedentary#disclaimer"));
   });
 
-  describe("new Sedentary(, options) - type", () => {
+  describe("new Sedentary(options) - type", () => {
     before(async () => {
       try {
-        new Sedentary("", "test" as never);
+        new Sedentary("test" as never);
       } catch(e) {
         if(e instanceof Error) err = e;
       }
@@ -30,10 +30,10 @@ describe("class Sedentary - errors", () => {
     it("message", () => eq(err.message, "new Sedentary: 'options' argument: Wrong type, expected 'Object'"));
   });
 
-  describe("new Sedentary(, options) - option", () => {
+  describe("new Sedentary(options) - option", () => {
     before(async () => {
       try {
-        new Sedentary("", { test: "test" } as never);
+        new Sedentary({ test: "test" } as never);
       } catch(e) {
         if(e instanceof Error) err = e;
       }
@@ -42,10 +42,22 @@ describe("class Sedentary - errors", () => {
     it("message", () => eq(err.message, "new Sedentary: 'options' argument: Unknown 'test' option"));
   });
 
+  describe("new Sedentary(, { autoSync }) - type", () => {
+    before(async () => {
+      try {
+        new Sedentary({ autoSync: "test" } as never);
+      } catch(e) {
+        if(e instanceof Error) err = e;
+      }
+    });
+
+    it("message", () => eq(err.message, "new Sedentary: 'autoSync' option: Wrong type, expected 'boolean'"));
+  });
+
   describe("new Sedentary(, { log }) - type", () => {
     before(async () => {
       try {
-        new Sedentary("", { log: "test" } as never);
+        new Sedentary({ log: "test" } as never);
       } catch(e) {
         if(e instanceof Error) err = e;
       }
@@ -57,7 +69,7 @@ describe("class Sedentary - errors", () => {
   describe("new Sedentary(, { sync }) - type", () => {
     before(async () => {
       try {
-        new Sedentary("", { sync: "test" } as never);
+        new Sedentary({ sync: "test" } as never);
       } catch(e) {
         if(e instanceof Error) err = e;
       }

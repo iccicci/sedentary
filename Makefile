@@ -163,7 +163,7 @@ ifeq (${PACKAGE}, sedentary)
 endif
 
 rm: setup
-	rm -f index.d.ts index.js lib/*.d.ts lib/*.js test/*.d.ts test/*.js
+	rm -f *.d.ts *.js test/*.d.ts test/*.js
 
 setup: node_modules/.link .gitignore .npmignore .travis.yml
 

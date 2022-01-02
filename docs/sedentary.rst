@@ -9,12 +9,14 @@ The base ORM class.
 
 .. _new Sedentary:
 
-new Sedentary(filename[, options])
-----------------------------------
+new Sedentary([options])
+------------------------
 
-- ``filename``: :xref:`string` - required - The name of the JSON-DB file.
 - ``options?``: :ref:`SedentaryOptions` - default ``{}`` - The global options.
 - returns the :ref:`Sedentary` object to interact with the *database*.
+
+.. warning::
+    Do not use this constructor directly.
 
 .. _new SedentaryPG:
 
@@ -30,12 +32,15 @@ new SedentaryPG(config[, options])
 
 .. _sedentary.connect:
 
-sedentary.connect()
--------------------
+sedentary.connect([sync])
+-------------------------
 
+- ``sync``: :xref:`boolean` - default ``false`` - Specifies whether to execute the **sync process** or not.
 - returns a :xref:`Promise` which resolves with :xref:`void`.
 
-Connects to the *database* and syncs the schema.
+Connects to the *database* and eventually syncs the schema. The value of the ``sync`` argument is ignored unless the
+:ref:`autoSync<SedentaryOptions.autoSync>` option was set to ``false`` when :ref:`new Sedentary<new Sedentary>` was
+called.
 
 .. note::
     Must be called only once.
@@ -55,7 +60,7 @@ Closes the connection with the *database*.
 .. _sedentary.model:
 
 sedentary.model(name, fields[, options [, methods]])
-----------------------------------------
+----------------------------------------------------
 
 - ``name``: :xref:`string` - required - The name of the model.
 - ``fields``: :ref:`AttributesDefinition` - required - The object with the fileds definitions.

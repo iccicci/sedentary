@@ -1,9 +1,21 @@
 import { deepStrictEqual as de, strictEqual as eq } from "assert";
 
 import { EntryBase, Type } from "..";
-import { Attribute, DB, Table } from "../lib/db";
+import { Attribute, DB, Table } from "../db";
 import { Sedentary } from "./helper";
 import { connection } from "./local";
+
+class SedentaryTest extends Sedentary {
+  constructor() {
+    super(connection);
+
+    this.db = {
+      connect: () => {
+        throw { code: "test", message: "test" };
+      }
+    } as unknown as DB;
+  }
+}
 
 describe("coverage", () => {
   it("EntryBase", () => eq(new EntryBase() instanceof EntryBase, true));
@@ -31,5 +43,18 @@ describe("coverage", () => {
           tableName:     "test"
         })
       ));
+  });
+
+  describe("connect error type any", () => {
+    let db: Sedentary;
+
+    before(async () => {
+      try {
+        db = new SedentaryTest();
+        await db.connect();
+      } catch(e) {}
+    });
+
+    it("logs", () => de(db.logs, ["Connecting...", 'Connecting: {"code":"test","message":"test"}']));
   });
 });

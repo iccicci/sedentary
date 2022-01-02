@@ -1,7 +1,6 @@
-import { Attribute, Constraint, DB, EntryBase, ForeignKeyOptions, Index, Natural, Table, Type } from "./lib/db";
-import { MiniDB } from "./lib/minidb";
+import { Attribute, Constraint, DB, EntryBase, ForeignKeyOptions, Index, Natural, Table, Type } from "./db";
 
-export { EntryBase, ForeignKeyActions, ForeignKeyOptions, Natural, Type } from "./lib/db";
+export { EntryBase, ForeignKeyActions, ForeignKeyOptions, Natural, Type } from "./db";
 export type TypeDefinition<N extends Natural, E> = (() => Type<N, E>) | Type<N, E>;
 export interface AttributeOptions<N extends Natural, E> {
   defaultValue?: N;
@@ -40,11 +39,11 @@ interface BaseModelOptions {
 
 export interface ModelOptions extends BaseModelOptions {
   int8id?: boolean;
-  parent?: Type<Natural, EntryBase>;
+  parent?: Attribute<Natural, EntryBase>;
   primaryKey?: string;
 }
 
-type ConditionAttribute<N extends Natural> = N | [">" | "<" | ">=" | "<=" | "<>", N] | ["LIKE", string] | ["IN", ...N[]];
+type ConditionAttribute<N extends Natural> = N | [">" | "<" | ">=" | "<=" | "<>", N] | ["IN", ...N[]] | ["IS NULL"] | ["LIKE", string];
 type ConditionBase<A extends AttributesDefinition> = string | { [a in keyof A]?: ConditionAttribute<Native<A[a]>> };
 type Condition<A extends AttributesDefinition> = ConditionBase<A> | ["NOT", Condition<A>] | ["AND", ...Condition<A>[]] | ["OR", ...Condition<A>[]];
 
@@ -76,39 +75,41 @@ export type Entry<M> = M extends new () => infer E ? E : never;
 export type Where<M> = M extends { load: (where: infer T) => void } ? Exclude<T, undefined> : never;
 
 export interface SedentaryOptions {
+  autoSync?: boolean;
   log?: ((message: string) => void) | null;
-  serverless?: boolean;
   sync?: boolean;
 }
 
 const allowedOption = ["indexes", "int8id", "parent", "primaryKey", "sync", "tableName"];
 const reservedNames = [
   ...["attributeName", "attributes", "base", "class", "construct", "constructor", "defaultValue", "entry", "fieldName", "foreignKeys", "load"],
-  ...["methods", "name", "postLoad", "postSave", "preLoad", "preSave", "primaryKey", "prototype", "save", "size", "tableName", "type"]
+  ...["loaded", "methods", "name", "postLoad", "postSave", "preLoad", "preSave", "primaryKey", "prototype", "save", "size", "tableName", "tx", "type"]
 ];
 
 export class Sedentary {
+  protected autoSync: boolean;
   protected db: DB;
   protected log: (...data: unknown[]) => void;
   protected sync = true;
 
   private models: { [key: string]: boolean } = {};
 
-  constructor(filename: string, options?: SedentaryOptions) {
-    if(typeof filename !== "string") throw new Error("new Sedentary: 'filename' argument: Wrong type, expected 'string'");
+  constructor(options?: SedentaryOptions) {
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error("new Sedentary: 'options' argument: Wrong type, expected 'Object'");
 
-    for(const k in options) if(! ["log", "sync"].includes(k)) throw new Error(`new Sedentary: 'options' argument: Unknown '${k}' option`);
+    for(const k in options) if(! ["autoSync", "log", "sync"].includes(k)) throw new Error(`new Sedentary: 'options' argument: Unknown '${k}' option`);
 
-    const { log, sync } = { sync: true, ...options };
+    const { autoSync, log, sync } = { autoSync: true, sync: true, ...options };
 
+    if(typeof autoSync !== "boolean") throw new Error("new Sedentary: 'autoSync' option: Wrong type, expected 'boolean'");
     if(log !== null && log !== undefined && ! (log instanceof Function)) throw new Error("new Sedentary: 'log' option: Wrong type, expected 'null' or 'Function'");
     if(typeof sync !== "boolean") throw new Error("new Sedentary: 'sync' option: Wrong type, expected 'boolean'");
 
+    this.autoSync = autoSync;
+    this.db = null as unknown as DB;
     // eslint-disable-next-line no-console
     this.log = log ? log : log === null ? () => {} : console.log;
-    this.db = new MiniDB(filename, this.log);
     this.sync = sync;
   }
 
@@ -144,6 +145,10 @@ export class Sedentary {
     return new Type({ base: String, size, type: "VARCHAR" });
   }
 
+  checkDB() {
+    if(! this.db) throw new Error("Package sedentary can't be used directly. Please check: https://www.npmjs.com/package/sedentary#disclaimer");
+  }
+
   checkSize(size: number, message: string): number {
     const str = size.toString();
     const parsed = parseInt(str, 10);
@@ -153,13 +158,19 @@ export class Sedentary {
     return parsed;
   }
 
-  async connect(): Promise<void> {
+  async connect(sync?: boolean): Promise<void> {
     try {
+      this.checkDB();
+
       this.log("Connecting...");
       await this.db.connect();
-      this.log("Connected, syncing...");
-      await this.db.syncDataBase();
-      this.log("Synced");
+      this.log("Connected");
+
+      if(this.autoSync || sync) {
+        this.log("Syncing...");
+        await this.db.syncDataBase();
+        this.log("Synced");
+      }
     } catch(e) {
       this.log("Connecting: " + (e instanceof Error ? e.message : JSON.stringify(e)));
       throw e;
@@ -170,6 +181,10 @@ export class Sedentary {
     this.log("Closing connection...");
     await this.db.end();
     this.log("Connection closed");
+  }
+
+  escape(value: Natural): string {
+    return this.db.escape(value);
   }
 
   model<A extends AttributesDefinition, B extends boolean, K extends string, P extends ModelStd, EM extends EntryMethods<A, P>>(
@@ -199,6 +214,8 @@ export class Sedentary {
     options?: ModelOptions & { parent?: P & (new () => EntryBase) },
     methods?: M
   ): Model<Natural, A, EntryBase> {
+    this.checkDB();
+
     if(typeof modelName !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
     if(this.models[modelName]) throw new Error(`Sedentary.model: '${modelName}' model: Model already defined`);
     if(! attributes) attributes = {} as A;
@@ -237,7 +254,7 @@ export class Sedentary {
     for(const attributeName of Object.keys(attributes).sort()) {
       if(reservedNames.includes(attributeName)) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: Reserved name`);
 
-      const call = (defaultValue: unknown, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message1: string, message2: string) => {
+      const call = (defaultValue: Natural | undefined, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message1: string, message2: string) => {
         if(func === this.FKEY) throw new Error(`${message1} 'this.FKEY' can't be used directly`);
         if(func !== this.DATETIME && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(`${message1} ${message2}`);
 
@@ -413,9 +430,8 @@ export class Sedentary {
     Object.defineProperty(ret, "methods", { value: methods });
     Object.assign(ret.prototype, methods);
 
-    ret.prototype.save = function() {
-      return Promise.resolve(false);
-    };
+    ret.prototype.save = this.db.save(tableName, aarray);
+    Object.defineProperty(ret.prototype.save, "name", { value: modelName + ".save" });
 
     for(const attribute of aarray) Object.defineProperty(ret, attribute.attributeName, { value: attribute });
     for(const key of ["attributeName", "base", "fieldName", "modelName", "size", "tableName", "type", "unique"] as const) Object.defineProperty(ret, key, { value: pk[key] });
@@ -423,5 +439,3 @@ export class Sedentary {
     return ret;
   }
 }
-
-export const Package = Sedentary;

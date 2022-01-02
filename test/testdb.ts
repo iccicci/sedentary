@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { DB, Table } from "./db";
+import { Attribute, DB, Natural, Table } from "../db";
 import { promises } from "fs";
 
 const { readFile, writeFile } = promises;
 
-export class MiniDB extends DB {
+export class TestDB extends DB {
   private body: any;
   private file: string;
 
@@ -24,6 +24,49 @@ export class MiniDB extends DB {
       const err = e as NodeJS.ErrnoException;
       if(err.code !== "ENOENT") throw e;
     }
+  }
+
+  async end(): Promise<void> {}
+
+  async write(): Promise<void> {
+    await writeFile(this.file, JSON.stringify(this.body));
+  }
+
+  escape(value: Natural): string {
+    return typeof value === "string" ? value : value.toString();
+  }
+
+  save(tableName: string, attributes: Attribute<Natural, unknown>[]): (this: Record<string, unknown>) => Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+
+    return async function() {
+      if(! this.loaded) {
+        self.log(`Insert into ${tableName} ${JSON.stringify(this)}`);
+
+        const table = self.body.tables[tableName];
+
+        for(const attribute of attributes) if(! (attribute.attributeName in this)) this[attribute.attributeName] = attribute.defaultValue || null;
+
+        if(table.autoIncrement) this.id = table.autoIncrement++;
+        table.records.push(this);
+
+        await self.write();
+
+        return true;
+      }
+
+      let changed = false;
+      const { loaded } = this as { loaded: Record<string, unknown> };
+
+      for(const key in this) {
+        if(typeof this[key] === "object") {
+          if(JSON.stringify(this[key]) !== JSON.stringify(loaded[key])) changed = true;
+        } else if(this[key] !== loaded[key]) changed = true;
+      }
+
+      return Promise.resolve(changed);
+    };
   }
 
   async dropConstraints(table: Table): Promise<number[]> {
@@ -47,7 +90,7 @@ export class MiniDB extends DB {
       }
     }
 
-    await this.save();
+    await this.write();
 
     return [];
   }
@@ -62,7 +105,7 @@ export class MiniDB extends DB {
       }
     }
 
-    await this.save();
+    await this.write();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -78,13 +121,7 @@ export class MiniDB extends DB {
       }
     }
 
-    await this.save();
-  }
-
-  async end(): Promise<void> {}
-
-  async save(): Promise<void> {
-    await writeFile(this.file, JSON.stringify(this.body));
+    await this.write();
   }
 
   async syncConstraints(table: Table): Promise<void> {
@@ -108,7 +145,7 @@ export class MiniDB extends DB {
       }
     }
 
-    await this.save();
+    await this.write();
   }
 
   async syncIndexes(table: Table): Promise<void> {
@@ -123,7 +160,7 @@ export class MiniDB extends DB {
       }
     }
 
-    await this.save();
+    await this.write();
   }
 
   async syncFields(table: Table): Promise<void> {
@@ -147,7 +184,7 @@ export class MiniDB extends DB {
         if(! defaultValue) {
           this.syncLog(`'${table.tableName}': Dropping default value for field: '${fieldName}'`);
           if(this.sync) delete field.default;
-        } else if(field.default !== defaultValue) {
+        } else if(field.default !== (defaultValue instanceof Date ? defaultValue.toISOString() : defaultValue)) {
           this.syncLog(`'${table.tableName}': Changing default value to '${defaultValue}' for field: '${fieldName}'`);
           if(this.sync) field.default = defaultValue;
         }
@@ -167,7 +204,7 @@ export class MiniDB extends DB {
       }
     }
 
-    await this.save();
+    await this.write();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -187,7 +224,7 @@ export class MiniDB extends DB {
 
     if(! this.body.tables[table.tableName]) {
       this.syncLog(`Adding table: '${table.tableName}'`);
-      if(this.sync) this.body.tables[table.tableName] = { constraints: { f: {}, u: {} }, fields: {}, indexes: {} };
+      if(this.sync) this.body.tables[table.tableName] = { constraints: { f: {}, u: {} }, fields: {}, indexes: {}, records: [] };
 
       if(table.parent) {
         this.syncLog(`Setting parent: '${table.parent.tableName}' - to table: '${table.tableName}'`);
@@ -196,10 +233,10 @@ export class MiniDB extends DB {
 
       if(table.autoIncrement && ! this.body.next[table.tableName]) {
         this.syncLog(`Setting auto increment: '${table.tableName}'`);
-        if(this.sync) this.body.next[table.tableName] = 1;
+        if(this.sync) this.body.tables[table.tableName].autoIncrement = 1;
       }
     }
 
-    await this.save();
+    await this.write();
   }
 }

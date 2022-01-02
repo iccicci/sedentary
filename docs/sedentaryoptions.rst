@@ -6,12 +6,23 @@ SedentaryOptions
 .. code-block:: TypeScript
 
     interface SedentaryOptions {
+        autoSync?: boolean;
         log?: ((message: string) => void) | null;
-        serverless?: boolean;
         sync?: boolean;
     }
 
 Specifies the options for the :ref:`Sedentary` object.
+
+.. _SedentaryOptions.autoSync:
+
+SedentaryOptions.autoSync
+-------------------------
+
+- default: ``true``
+
+If ``false``, the :ref:`sedentary.connect<sedentary.connect>` method does not perform the **sync process** by default.
+This is usefull for distributed environments where we probably don't want to run the **sync process** at each
+:ref:`sedentary.connect<sedentary.connect>` call, but we want to run it only once.
 
 .. _SedentaryOptions.log:
 
@@ -27,15 +38,6 @@ log(message)
 
 - ``message``: :xref:`string` - required - The message :ref:`Sedentary` needs to log.
 - returns :xref:`void`.
-
-.. _SedentaryOptions.serverless:
-
-SedentaryOptions.serverless
----------------------------
-
-- default: ``false``
-
-**TODO**. If ``true``, the *serverless* support will be enabled.
 
 .. _SedentaryOptions.sync:
 

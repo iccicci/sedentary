@@ -260,7 +260,6 @@ export const expected = {
     "'test1': Adding unique constraint on field: 'id'"
   ],
   types_datetime_changes: [
-    "'test1': Removing field: 'f'",
     "'test1': Changing field type: 'b' 'VARCHAR' ''",
     "'test1': Changing field type: 'c' 'DATETIME' ''",
     "'test1': Changing field type: 'd' 'INT8' '8'",
@@ -289,5 +288,21 @@ export const expected = {
     "'test1': Changing field type: 'c' 'VARCHAR' '23'",
     "'test1': Changing field type: 'd' 'VARCHAR' '42'",
     "'test1': Changing default value to '42' for field: 'e'"
+  ]
+};
+
+export const models = {
+  insert: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'INT' '4'",
+    "'test1': Adding field: 'b' 'VARCHAR' ''",
+    "'test1': Setting default value 'test' for field: 'b'",
+    "'test1': Setting not null for field: 'b'",
+    "'test1': Adding unique constraint on field: 'id'",
+    'Insert into test1 {"a":23,"b":"ok"}',
+    "Insert into test1 {}"
   ]
 };

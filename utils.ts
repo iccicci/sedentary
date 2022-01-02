@@ -7,7 +7,7 @@ const { VERSION, npm_package_name } = process.env as { VERSION: string; npm_pack
 
 const common: string[] = ["*.tgz", "coverage", "node_modules", "test.json", ""];
 const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "docs/__pycache__", "**/*.d.ts", "**/*.js"];
-const npm: string[] = [".*", "Makefile", "docs", "index.ts", "lib/db.ts", "lib/minidb.ts", "lib/transaction.ts", "requirements.txt", "sedentary-*", "test", "tsconfig.json", "utils.*"];
+const npm: string[] = [".*", "Makefile", "adsrc.ts", "db.ts", "docs", "index.ts", "pgdb.ts", "requirements.txt", "sedentary-*", "test", "transaction.ts", "tsconfig.json", "utils.*"];
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };

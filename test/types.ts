@@ -1,6 +1,7 @@
 import { expectAssignable, expectNotAssignable, expectType } from "tsd";
 
-import { EntryBase, Entry, Sedentary, Type, Where } from "..";
+import { EntryBase, Entry, Type, Where } from "..";
+import { Sedentary } from "./package";
 
 const db = new Sedentary("test.json");
 

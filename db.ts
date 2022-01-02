@@ -49,7 +49,7 @@ export class Type<N extends Natural, E> {
 
 export interface Attribute<N extends Natural, E> extends Type<N, E> {
   attributeName: string;
-  defaultValue?: unknown;
+  defaultValue?: Natural;
   fieldName: string;
   modelName: string;
   notNull: boolean;
@@ -89,8 +89,7 @@ interface ITable {
   autoIncrement: boolean;
   constraints: Constraint[];
   indexes: Index[];
-  parent: any;
-  //parent: Meta<Natural, unknown>;
+  parent?: Attribute<Natural, unknown>;
   sync: boolean;
   tableName: string;
 }
@@ -149,6 +148,9 @@ export abstract class DB {
     this.log(this.sync ? message : "NOT SYNCING: " + message);
   }
 
+  abstract escape(value: Natural): string;
+  abstract save(tableName: string, attributes: Attribute<Natural, unknown>[]): (this: Record<string, Natural>) => Promise<boolean>;
+
   abstract dropConstraints(table: Table): Promise<number[]>;
   abstract dropFields(table: Table): Promise<void>;
   abstract dropIndexes(table: Table, constraintIndexes: number[]): Promise<void>;
@@ -158,3 +160,5 @@ export abstract class DB {
   abstract syncSequence(table: Table): Promise<void>;
   abstract syncTable(table: Table): Promise<void>;
 }
+
+export class Transaction {}

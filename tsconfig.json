@@ -14,5 +14,5 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true
   },
-  "include": ["*.ts", "lib/*.ts", "test/*.ts"]
+  "include": ["*.ts", "test/*.ts"]
 }
