@@ -11,8 +11,8 @@ const npm: string[] = [".*", "Makefile", "adsrc.ts", "db.ts", "docs", "index.ts"
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
-const deps = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
-const devd = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.3", "@types/pg-format": "1.0.2" }, "sedentary-sqlite": {} };
+const deps = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.3", pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
+const devd = { sedentary: { tsd: "0.19.1" }, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg-format": "1.0.2" }, "sedentary-sqlite": {} };
 const author = "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)";
 
 const packagejson = {
@@ -21,16 +21,15 @@ const packagejson = {
   dependencies:    {},
   devDependencies: {
     "@types/mocha":                     "9.0.0",
-    "@types/node":                      "17.0.5",
+    "@types/node":                      "17.0.8",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "5.8.1",
-    "@typescript-eslint/parser":        "5.8.1",
-    eslint:                             "8.5.0",
+    "@typescript-eslint/eslint-plugin": "5.9.0",
+    "@typescript-eslint/parser":        "5.9.0",
+    eslint:                             "8.6.0",
     mocha:                              "9.1.3",
     prettier:                           "2.5.1",
     nyc:                                "15.1.0",
     "ts-node":                          "10.4.0",
-    tsd:                                "0.19.0",
     typescript:                         "4.5.4",
     yamljs:                             "0.3.0"
   },
@@ -104,7 +103,7 @@ function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unkno
   return ret;
 }
 
-(async function() {
+(async () => {
   if(process.argv[2] === "gitignore") writeFile(".gitignore", [...git, ...common].join("\n"), "utf-8");
   if(process.argv[2] === "npmignore") writeFile(".npmignore", [...npm, ...common].join("\n"), "utf-8");
   if(process.argv[2] === "travis") writeFile(".travis.yml", YAML.stringify(sort({ ...travis.common, ...travis[npm_package_name] }), 4, 2), "utf-8");
@@ -118,13 +117,15 @@ function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unkno
     const { compilerOptions } = JSON.parse(await readFile("tsconfig.json", "utf-8"));
     const { name, version } = pkg;
     const tsd = { compilerOptions };
-    let { dependencies, devDependencies } = pkg;
+    let { dependencies, devDependencies } = packagejson;
+
+    dependencies = deps[npm_package_name];
+    devDependencies = { ...devDependencies, ...devd[npm_package_name] };
 
     try {
       const { version } = JSON.parse(await readFile("../package.json", "utf-8"));
 
       dependencies = { ...deps[npm_package_name], sedentary: version };
-      devDependencies = { ...devDependencies, ...devd[npm_package_name] };
     } catch(e) {}
 
     await writeFile("package.json", JSON.stringify(sort({ ...packagejson, bugs, dependencies, devDependencies, description, homepage, name, repository, tsd, version }), null, 2), "utf-8");

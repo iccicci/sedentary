@@ -2,6 +2,7 @@ import { promises } from "fs";
 
 const { unlink } = promises;
 
+export const checkDB = false;
 export const connection = "test.json";
 
 export const wrongConnection = "test";
@@ -12,6 +13,26 @@ export async function clean(): Promise<void> {
     await unlink("test.json");
   } catch(e) {}
 }
+
+export const coverage = {
+  first: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding unique constraint on field: 'id'",
+    "Adding table: 'test2'",
+    "Setting auto increment: 'test2'",
+    "'test2': Adding field: 'id' 'INT' '4'",
+    "'test2': Setting not null for field: 'id'",
+    "'test2': Adding field: 'a' 'INT' '4'",
+    "'test2': Adding unique constraint on field: 'id'",
+    "'test2': Adding foreign key 'fkey_a_test1_id' on field: 'a' references 'test1(id)'",
+    "Adding table: 'test3'",
+    "Setting parent: 'test2' - to table: 'test3'",
+    "'test3': Adding field: 'b' 'INT' '4'"
+  ]
+};
 
 export const dryrun = {
   dryrun: [
@@ -292,7 +313,7 @@ export const expected = {
 };
 
 export const models = {
-  insert: [
+  base: [
     "Adding table: 'test1'",
     "Setting auto increment: 'test1'",
     "'test1': Adding field: 'id' 'INT' '4'",
@@ -302,7 +323,50 @@ export const models = {
     "'test1': Setting default value 'test' for field: 'b'",
     "'test1': Setting not null for field: 'b'",
     "'test1': Adding unique constraint on field: 'id'",
-    'Insert into test1 {"a":23,"b":"ok"}',
-    "Insert into test1 {}"
+    'Save to test1 {"a":23,"b":"ok"}',
+    "Save to test1 {}",
+    `Load from test1 where: "b = 'ok'"`,
+    'Load from test1 where: "a IS NULL"',
+    'Load from test1 where: "id < 23" order by: id',
+    'Load from test1 where: "" order by: -id',
+    `Load from test1 where: "b = 'ok'"`,
+    'Save to test1 {"id":1,"a":23,"b":"test"}',
+    'Save to test1 {"id":1,"a":23,"b":"test"}',
+    `Load from test1 where: "b IN ('a', 'b', 'test')" order by: id`
+  ],
+  inheritance: [""]
+};
+
+export const wheres = {
+  empty: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding unique constraint on field: 'id'",
+    'Load from test1 where: ""'
+  ],
+  order: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'INT' '4'",
+    "'test1': Adding field: 'b' 'VARCHAR' ''",
+    "'test1': Adding unique constraint on field: 'id'",
+    'Load from test1 where: "" order by: a, -b'
+  ],
+  where: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'INT' '4'",
+    "'test1': Adding field: 'b' 'VARCHAR' ''",
+    "'test1': Adding field: 'c' 'INT' '4'",
+    "'test1': Adding field: 'd' 'INT' '4'",
+    "'test1': Adding field: 'e' 'INT' '4'",
+    "'test1': Adding unique constraint on field: 'id'",
+    'Load from test1 where: "(fixed) AND NOT (a = 23 AND b IS NULL AND NOT c AND d > 23 AND e IN (23, 42)) OR (fixed)"'
   ]
 };

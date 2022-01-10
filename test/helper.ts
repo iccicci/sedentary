@@ -70,7 +70,7 @@ export function errorHelper(test: (db: Sedentary) => void): (message: string) =>
 
   before(async function() {
     try {
-      test(new Sedentary(connection));
+      await test(new Sedentary(connection));
     } catch(e) {
       if(e instanceof Error) err = e;
     }

@@ -1,7 +1,7 @@
-export type Natural = Date | Record<string, unknown> | boolean | number | string;
+export type Natural = Date | Record<string, unknown> | boolean | number | string | null;
 
 export class EntryBase {
-  constructor(from?: Partial<EntryBase> | "load") {
+  constructor(from?: Partial<EntryBase>) {
     if(from === "load") this.preLoad();
     else {
       if(from) Object.assign(this, from);
@@ -89,7 +89,10 @@ interface ITable {
   autoIncrement: boolean;
   constraints: Constraint[];
   indexes: Index[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  model: { load: (where: any, order?: string[], tx?: Transaction) => Promise<EntryBase[]> };
   parent?: Attribute<Natural, unknown>;
+  pk: Attribute<Natural, unknown>;
   sync: boolean;
   tableName: string;
 }
@@ -148,8 +151,19 @@ export abstract class DB {
     this.log(this.sync ? message : "NOT SYNCING: " + message);
   }
 
+  async begin() {
+    return new Transaction();
+  }
+
   abstract escape(value: Natural): string;
-  abstract save(tableName: string, attributes: Attribute<Natural, unknown>[]): (this: Record<string, Natural>) => Promise<boolean>;
+  abstract load(
+    tableName: string,
+    attributes: Record<string, string>,
+    pk: Attribute<Natural, unknown>,
+    model: new () => EntryBase,
+    table: Table
+  ): (where: string, order?: string[], tx?: Transaction) => Promise<EntryBase[]>;
+  abstract save(tableName: string, attributes: Record<string, string>, pk: Attribute<Natural, unknown>): (this: EntryBase & Record<string, Natural>) => Promise<boolean>;
 
   abstract dropConstraints(table: Table): Promise<number[]>;
   abstract dropFields(table: Table): Promise<void>;
@@ -161,4 +175,25 @@ export abstract class DB {
   abstract syncTable(table: Table): Promise<void>;
 }
 
-export class Transaction {}
+export class Transaction {
+  private entries: (EntryBase & { tx?: Transaction })[] = [];
+
+  addEntry(entry: EntryBase) {
+    this.entries.push(entry);
+  }
+
+  clean() {
+    const { entries } = this;
+
+    for(const entry of entries) delete entry.tx;
+    this.entries = [];
+  }
+
+  async commit() {
+    this.clean();
+  }
+
+  async rollback() {
+    this.clean();
+  }
+}

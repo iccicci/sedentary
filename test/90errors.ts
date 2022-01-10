@@ -213,11 +213,6 @@ describe("class Sedentary - errors", () => {
       const test2 = db.model("test2", { a: db.FKEY(test1) });
       db.model("test3", {}, { parent: test2 }, { aLoad: () => {} });
     })("Sedentary.model: 'test3' model: 'aLoad' method: conflicts with an inferred methods of 'test2' model"));
-  describe("Sedentary.model() - conflict: method Vs parent.method", () =>
-    errorHelper(db => {
-      const test1 = db.model("test1", {}, {}, { a: () => {} });
-      db.model("test2", {}, { parent: test1 }, { a: () => {} });
-    })("Sedentary.model: 'test2' model: 'a' method: conflicts with a method of 'test1' model"));
   describe("Sedentary.INT(size) - type", () => errorHelper(db => db.model("test", { test: db.INT(2.5) }))("Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4"));
   describe("Sedentary.INT(size) - value", () => errorHelper(db => db.model("test", { test: db.INT(5) }))("Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4"));
   describe("Sedentary.FKEY() - type", () =>
@@ -240,4 +235,35 @@ describe("class Sedentary - errors", () => {
       const test1 = db.model("test1", {});
       db.model("test2", { aLoad: db.INT, a: db.FKEY(test1, { onUpdate: 1 } as never) });
     })("Sedentary.FKEY: 'test2' model: 'a' attribute: 'onUpdate' option: Wrong value, expected 'cascade' | 'no action' | 'restrict' | 'set default' | 'set null'"));
+  describe("Sedentary.load(where) - type 1", () =>
+    errorHelper(async db => await db.model("test1", {}).load(0 as never))("test1.load: 'where' argument: Wrong type, expected 'Array', 'Object' or 'string'"));
+  describe("Sedentary.load(where) - type2", () =>
+    errorHelper(async db => await db.model("test1", { a: db.INT }).load({ a: ["IN", "test"] } as never))("test1.load: 'where' argument: 'IN' right operand: Wrong type, expected Array"));
+  describe("Sedentary.load(where) - value 1", () => errorHelper(async db => await db.model("test1", {}).load([] as never))("test1.load: 'where' argument: Empty Array"));
+  describe("Sedentary.load(where) - value 2", () =>
+    errorHelper(async db => await db.model("test1", {}).load(["test"] as never))("test1.load: 'where' argument: Wrong logical operator, expected 'AND', 'OR' or 'NOT'"));
+  describe("Sedentary.load(where) - value 3", () =>
+    errorHelper(async db => await db.model("test1", {}).load(["NOT", "test", "test"] as never))("test1.load: 'where' argument: 'NOT' operator is unary"));
+  describe("Sedentary.load(where) - value 4", () => errorHelper(async db => await db.model("test1", {}).load({ test: null } as never))("test1.load: 'where' argument: Unknown 'test' attribute"));
+  describe("Sedentary.load(where) - value 5", () =>
+    errorHelper(async db => await db.model("test1", { a: db.INT }).load({ a: [] } as never))(
+      "test1.load: 'where' argument: Missing arithmetic operator, expected one of: '=', '>', '<', '>=', '<=', '<>', 'IN', 'IS NULL', 'LIKE', 'NOT'"
+    ));
+  describe("Sedentary.load(where) - value 6", () =>
+    errorHelper(async db => await db.model("test1", { a: db.INT }).load({ a: ["test"] } as never))(
+      "test1.load: 'where' argument: Wrong arithmetic operator, expected one of: '=', '>', '<', '>=', '<=', '<>', 'IN', 'IS NULL', 'LIKE', 'NOT'"
+    ));
+  describe("Sedentary.load(where) - value 7", () =>
+    errorHelper(async db => await db.model("test1", { a: db.INT }).load({ a: ["IS NULL", "test"] } as never))("test1.load: 'where' argument: 'IS NULL' operator is unary"));
+  describe("Sedentary.load(where) - value 8", () =>
+    errorHelper(async db => await db.model("test1", { a: db.INT }).load({ a: ["NOT", "test"] } as never))("test1.load: 'where' argument: 'NOT' operator is unary"));
+  describe("Sedentary.load(where) - value 9", () =>
+    errorHelper(async db => await db.model("test1", { a: db.INT }).load({ a: ["=", "test", "test"] } as never))("test1.load: 'where' argument: '=' operator is binary"));
+  describe("Sedentary.load(, order) - type 1", () => errorHelper(async db => await db.model("test1", {}).load({}, {} as never))("test1.load: 'order' argument: Wrong type, expected 'string[]'"));
+  describe("Sedentary.load(, order) - type 2", () => errorHelper(async db => await db.model("test1", {}).load({}, [{}] as never))("test1.load: 'order' argument: Wrong type, expected 'string[]'"));
+  describe("Sedentary.load(, order) - value 1", () =>
+    errorHelper(async db => await db.model("test1", {}).load({}, ["test"] as never))("test1.load: 'order' argument: 'test' is not an attribute name"));
+  describe("Sedentary.load(, order) - value 2", () =>
+    errorHelper(async db => await db.model("test1", {}).load({}, ["-test"] as never))("test1.load: 'order' argument: 'test' is not an attribute name"));
+  describe("Sedentary.load(, order) - value 3", () => errorHelper(async db => await db.model("test1", { a: db.INT }).load({}, ["-a", "a"]))("test1.load: 'order' argument: Reused 'a' attribute"));
 });

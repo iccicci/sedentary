@@ -2,6 +2,7 @@
 
 import { Attribute, DB, Natural, Table } from "../db";
 import { promises } from "fs";
+import { EntryBase } from "..";
 
 const { readFile, writeFile } = promises;
 
@@ -33,39 +34,59 @@ export class TestDB extends DB {
   }
 
   escape(value: Natural): string {
-    return typeof value === "string" ? value : value.toString();
+    return typeof value === "number" ? value.toString() : `'${value}'`;
   }
 
-  save(tableName: string, attributes: Attribute<Natural, unknown>[]): (this: Record<string, unknown>) => Promise<boolean> {
+  load(tableName: string, attributes: Record<string, string>, pk: Attribute<Natural, unknown>, model: new (from: "load") => EntryBase): (where: string, order?: string[]) => Promise<EntryBase[]> {
+    const loads: Record<string, Natural>[][] = [
+      [{ id: 1, a: 23, b: "ok" }],
+      [{ id: 2, a: null, b: "test" }],
+      [
+        { id: 1, a: 23, b: "ok" },
+        { id: 2, a: null, b: "test" }
+      ],
+      [
+        { id: 2, a: null, b: "test" },
+        { id: 1, a: 23, b: "ok" }
+      ],
+      [{ id: 1, a: 23, b: "ok" }],
+      [
+        { id: 1, a: 23, b: "test" },
+        { id: 2, a: null, b: "test" }
+      ]
+    ];
+
+    return async (where: string, order?: string[]) => {
+      this.log(`Load from ${tableName} where: "${where}"${order ? ` order by: ${order.join(", ")}` : ""}`);
+
+      return (loads.shift() || []).map(_ => {
+        const ret = new model("load");
+
+        Object.assign(ret, _);
+
+        return ret;
+      });
+    };
+  }
+
+  save(tableName: string): (this: Record<string, Natural>) => Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
+    const saves: [boolean, Record<string, Natural>][] = [
+      [true, { id: 1, a: 23, b: "ok" }],
+      [true, { id: 2, a: null, b: "test" }],
+      [true, { id: 1, a: 23, b: "test" }],
+      [false, { id: 1, a: 23, b: "test" }]
+    ];
 
     return async function() {
-      if(! this.loaded) {
-        self.log(`Insert into ${tableName} ${JSON.stringify(this)}`);
+      self.log(`Save to ${tableName} ${JSON.stringify(this)}`);
 
-        const table = self.body.tables[tableName];
+      const [changed, obj] = saves.shift() || [false, {}];
 
-        for(const attribute of attributes) if(! (attribute.attributeName in this)) this[attribute.attributeName] = attribute.defaultValue || null;
+      Object.assign(this, obj);
 
-        if(table.autoIncrement) this.id = table.autoIncrement++;
-        table.records.push(this);
-
-        await self.write();
-
-        return true;
-      }
-
-      let changed = false;
-      const { loaded } = this as { loaded: Record<string, unknown> };
-
-      for(const key in this) {
-        if(typeof this[key] === "object") {
-          if(JSON.stringify(this[key]) !== JSON.stringify(loaded[key])) changed = true;
-        } else if(this[key] !== loaded[key]) changed = true;
-      }
-
-      return Promise.resolve(changed);
+      return changed;
     };
   }
 
@@ -108,8 +129,7 @@ export class TestDB extends DB {
     await this.write();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async dropIndexes(table: Table, constraintIndexes: number[]): Promise<void> {
+  async dropIndexes(table: Table): Promise<void> {
     const { indexes } = this.body.tables[table.tableName] || { indexes: {} };
 
     for(const name of Object.keys(indexes).sort()) {
@@ -207,8 +227,7 @@ export class TestDB extends DB {
     await this.write();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async syncSequence(table: Table): Promise<void> {}
+  async syncSequence(): Promise<void> {}
 
   async syncTable(table: Table): Promise<void> {
     if(this.body.tables[table.tableName]) {
