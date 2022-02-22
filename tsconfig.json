@@ -14,5 +14,6 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true
   },
+  "exclude": ["*.d.ts"],
   "include": ["*.ts", "test/*.ts"]
 }

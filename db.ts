@@ -106,7 +106,7 @@ export class Table extends autoImplement<ITable>() {
   }
 }
 
-export abstract class DB {
+export abstract class DB<T extends Transaction> {
   tables: Table[] = [];
 
   protected log: (message: string) => void;
@@ -151,9 +151,7 @@ export abstract class DB {
     this.log(this.sync ? message : "NOT SYNCING: " + message);
   }
 
-  async begin() {
-    return new Transaction();
-  }
+  abstract begin(): Promise<T>;
 
   abstract escape(value: Natural): string;
   abstract load(

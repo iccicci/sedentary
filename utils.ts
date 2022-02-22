@@ -11,7 +11,7 @@ const npm: string[] = [".*", "Makefile", "adsrc.ts", "db.ts", "docs", "index.ts"
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
-const deps = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.3", pg: "8.7.1", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
+const deps = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.4", pg: "8.7.3", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
 const devd = { sedentary: { tsd: "0.19.1" }, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg-format": "1.0.2" }, "sedentary-sqlite": {} };
 const author = "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)";
 
@@ -20,17 +20,17 @@ const packagejson = {
   contributors:    [author, "yossarian <sergiybiluk@gmail.com> (https://github.com/captain-yossarian)"],
   dependencies:    {},
   devDependencies: {
-    "@types/mocha":                     "9.0.0",
-    "@types/node":                      "17.0.8",
+    "@types/mocha":                     "9.1.0",
+    "@types/node":                      "17.0.19",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "5.9.0",
-    "@typescript-eslint/parser":        "5.9.0",
-    eslint:                             "8.6.0",
-    mocha:                              "9.1.3",
+    "@typescript-eslint/eslint-plugin": "5.12.1",
+    "@typescript-eslint/parser":        "5.12.1",
+    eslint:                             "8.9.0",
+    mocha:                              "9.2.1",
     prettier:                           "2.5.1",
     nyc:                                "15.1.0",
-    "ts-node":                          "10.4.0",
-    typescript:                         "4.5.4",
+    "ts-node":                          "10.5.0",
+    typescript:                         "4.5.5",
     yamljs:                             "0.3.0"
   },
   engines:  { node: ">=12.0" },

@@ -1,9 +1,10 @@
 import { deepStrictEqual as de, strictEqual as eq } from "assert";
 
 import { EntryBase, Type } from "..";
-import { Attribute, DB, Table } from "../db";
+import { Attribute, DB, Table, Transaction } from "../db";
 import { Sedentary, helper } from "./helper";
 import { connection, coverage } from "./local";
+import { TestDB } from "./testdb";
 
 class SedentaryTest extends Sedentary {
   constructor() {
@@ -13,7 +14,7 @@ class SedentaryTest extends Sedentary {
       connect: () => {
         throw { code: "test", message: "test" };
       }
-    } as unknown as DB;
+    } as unknown as TestDB;
   }
 }
 
@@ -34,7 +35,7 @@ describe("coverage", () => {
 
     it("ok", () =>
       de(
-        (db as unknown as { db: DB }).db.findTable("test"),
+        (db as unknown as { db: DB<Transaction> }).db.findTable("test"),
         new Table({
           attributes:    [att],
           autoIncrement: true,

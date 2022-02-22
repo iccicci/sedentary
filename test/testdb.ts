@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Attribute, DB, Natural, Table } from "../db";
+import { Attribute, DB, Natural, Table, Transaction } from "../db";
 import { promises } from "fs";
 import { EntryBase } from "..";
 
 const { readFile, writeFile } = promises;
 
-export class TestDB extends DB {
+export class TestDB extends DB<Transaction> {
   private body: any;
   private file: string;
 
@@ -14,6 +14,10 @@ export class TestDB extends DB {
     super(log);
 
     this.file = filename;
+  }
+
+  async begin() {
+    return new Transaction();
   }
 
   async connect(): Promise<void> {

@@ -95,9 +95,9 @@ const reservedNames = [
   ...["loaded", "methods", "name", "postLoad", "postSave", "preLoad", "preSave", "primaryKey", "prototype", "save", "size", "tableName", "tx", "type"]
 ];
 
-export class Sedentary {
+export class Sedentary<D extends DB<T>, T extends Transaction> {
   protected autoSync: boolean;
-  protected db: DB;
+  protected db: D;
   protected doSync = true;
   protected log: (...data: unknown[]) => void;
 
@@ -116,7 +116,7 @@ export class Sedentary {
     if(typeof sync !== "boolean") throw new Error("new Sedentary: 'sync' option: Wrong type, expected 'boolean'");
 
     this.autoSync = autoSync;
-    this.db = null as unknown as DB;
+    this.db = null as unknown as D;
     // eslint-disable-next-line no-console
     this.log = log ? log : log === null ? () => {} : console.log;
     this.doSync = sync;
@@ -285,7 +285,7 @@ export class Sedentary {
     this.log("Connection closed");
   }
 
-  public async begin(): Promise<Transaction> {
+  public async begin(): Promise<T> {
     return this.db.begin();
   }
 

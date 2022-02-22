@@ -1,7 +1,7 @@
-import { Sedentary as SedentaryBase, SedentaryOptions } from "..";
+import { Sedentary as SedentaryBase, SedentaryOptions, Transaction } from "..";
 import { TestDB } from "./testdb";
 
-export class Sedentary extends SedentaryBase {
+export class Sedentary extends SedentaryBase<TestDB, Transaction> {
   constructor(filename: string, options?: SedentaryOptions) {
     super(options);
 
