@@ -74,9 +74,10 @@
       "strictBindCallApply": true,
       "strictFunctionTypes": true,
       "strictNullChecks": true,
-      "strictPropertyInitialization": true
+      "strictPropertyInitialization": true,
+      "target": "esnext"
     }
   },
   "types": "./dist/types/index.d.ts",
-  "version": "0.0.28"
+  "version": "0.0.29"
 }

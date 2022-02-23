@@ -97,7 +97,9 @@ endif
 commit:
 	@if [ -z "${MESSAGE}" ] ; then echo "Missing MESSAGE!" ; exit 1 ; fi
 ifeq (${PACKAGE}, sedentary)
+ifneq (${NO_RECURSE}, yes)
 	for i in ${EXTENSIONS} ; do make -C $$i commit ; done
+endif
 endif
 	git add .
 	-git commit -m "${MESSAGE}"
@@ -178,7 +180,7 @@ version: setup
 	npm run packagejson
 	npm run version
 	make package-lock.json
-	make commit MESSAGE=${VERSION}
+	make commit MESSAGE=${VERSION} NO_RECURSE=yes
 	make push
 	git tag v${VERSION}
 	git push --tags
