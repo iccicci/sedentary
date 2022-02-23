@@ -184,6 +184,7 @@ version: setup
 	git push --tags
 	npm run tsc
 	npm publish
+	make rm
 ifeq (${PACKAGE}, sedentary)
 	sleep 300
 	for i in ${EXTENSIONS} ; do make -C $$i version ; done

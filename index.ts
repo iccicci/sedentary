@@ -1,6 +1,6 @@
 import { Attribute, Constraint, DB, EntryBase, ForeignKeyOptions, Index, Natural, Table, Transaction, Type } from "./db";
 
-export { EntryBase, ForeignKeyActions, ForeignKeyOptions, Natural, Transaction, Type } from "./db";
+export { Attribute, DB, EntryBase, ForeignKeyActions, ForeignKeyOptions, Index, Natural, Table, Transaction, Type } from "./db";
 export type TypeDefinition<N extends Natural, E> = (() => Type<N, E>) | Type<N, E>;
 export interface AttributeOptions<N extends Natural, E> {
   defaultValue?: N;
