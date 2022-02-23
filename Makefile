@@ -54,7 +54,7 @@ LICENSE: ../LICENSE
 Makefile: ../Makefile
 	cp $< $@
 
-setup: .codeclimate.yml .eslintrc.js .gitattributes LICENSE tsconfig.json utils.ts ${TESTS} ${VSCODE}
+setup: .codeclimate.yml .eslintrc.js .gitattributes LICENSE tsconfig.json tsconfig.build.json tsconfig.cjs.json tsconfig.es.json tsconfig.types.json utils.ts ${TESTS} ${VSCODE}
 
 clean: Makefile
 
@@ -66,7 +66,7 @@ package.json: Makefile setup
 
 pull: Makefile
 
-tsconfig.json: ../tsconfig.json
+tsconf%.json: ../tsconf%.json
 	cp $< $@
 
 utils.ts: ../utils.ts
@@ -163,7 +163,7 @@ ifeq (${PACKAGE}, sedentary)
 endif
 
 rm: setup
-	rm -f *.d.ts *.js test/*.d.ts test/*.js
+	rm -rf dist
 
 setup: node_modules/.link .gitignore .npmignore .travis.yml
 

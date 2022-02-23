@@ -2,12 +2,9 @@
   "compilerOptions": {
     "alwaysStrict": true,
     "esModuleInterop": true,
-    "declaration": true,
-    "module": "commonjs",
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
-    "target": "es2017",
     "strict": true,
     "strictBindCallApply": true,
     "strictFunctionTypes": true,

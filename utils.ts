@@ -6,8 +6,8 @@ const { readFile, writeFile } = promises;
 const { VERSION, npm_package_name } = process.env as { VERSION: string; npm_package_name: "sedentary" | "sedentary-pg" };
 
 const common: string[] = ["*.tgz", "coverage", "node_modules", "test.json", ""];
-const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "docs/build", "docs/__pycache__", "**/*.d.ts", "**/*.js"];
-const npm: string[] = [".*", "Makefile", "adsrc.ts", "db.ts", "docs", "index.ts", "pgdb.ts", "requirements.txt", "sedentary-*", "test", "transaction.ts", "tsconfig.json", "utils.*"];
+const git: string[] = [".gitignore", ".npmignore", ".nyc_output", "dist", "docs/build", "docs/__pycache__"];
+const npm: string[] = [".*", "*.ts", "!*.d.ts", "Makefile", "docs", "requirements.txt", "sedentary-*", "test", "tsconfig.*"];
 
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
@@ -37,6 +37,8 @@ const packagejson = {
   funding:  { url: "https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB" },
   keywords: ["DB", "ORM", "database", "migration", "mysql", "postgresql", "sqlite"],
   license:  "MIT",
+  main:     "./dist/cjs/index.js",
+  module:   "./dist/es/index.js",
   prettier: {
     arrowParens:        "avoid",
     endOfLine:          "lf",
@@ -53,11 +55,11 @@ const packagejson = {
     packagejson: "node -r ts-node/register utils.ts packagejson",
     test:        "mocha -r ts-node/register test/*ts",
     travis:      "node -r ts-node/register utils.ts travis",
-    tsc:         "tsc --declaration",
+    tsc:         "tsc -p tsconfig.cjs.json && tsc -p tsconfig.es.json && tsc -p tsconfig.types.json",
     version:     "node -r ts-node/register utils.ts version"
   },
   tsd:   { compilerOptions: {} },
-  types: "index.d.ts"
+  types: "./dist/types/index.d.ts"
 };
 
 const before_script_common = [
@@ -128,7 +130,7 @@ function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unkno
       dependencies = { ...deps[npm_package_name], sedentary: version };
     } catch(e) {}
 
-    await writeFile("package.json", JSON.stringify(sort({ ...packagejson, bugs, dependencies, devDependencies, description, homepage, name, repository, tsd, version }), null, 2), "utf-8");
+    await writeFile("package.json", JSON.stringify(sort({ ...packagejson, bugs, dependencies, devDependencies, description, homepage, name, repository, tsd, version }), null, 2) + "\n", "utf-8");
   }
 
   if(process.argv[2] === "version") {
