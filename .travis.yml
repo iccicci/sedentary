@@ -11,6 +11,5 @@ language: node_js
 node_js:
   - '16'
   - '14'
-  - '12'
 script: 'npm run coverage'
 sudo: required

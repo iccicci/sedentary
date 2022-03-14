@@ -70,8 +70,8 @@ type ModelAttributes<A extends AttributesDefinition, B extends boolean, K extend
 
 interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> {
   attributes: A;
-  load(where: Condition<A>, order?: Order<A>, tx?: Transaction): Promise<E[]>;
-  load(where: Condition<A>, tx: Transaction): Promise<E[]>;
+  load(where: Condition<A>, order?: Order<A>, tx?: Transaction, lock?: boolean): Promise<E[]>;
+  load(where: Condition<A>, tx: Transaction, lock?: boolean): Promise<E[]>;
 }
 
 type ModelBase<N extends Natural, A extends AttributesDefinition, EA extends Record<string, Natural | undefined>, EM extends EntryBase, E extends EntryBase> = (new (from?: EA) => E) &

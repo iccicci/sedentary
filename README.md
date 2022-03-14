@@ -97,8 +97,8 @@ The full documentation is on [sedentary.readthedocs.io](https://sedentary.readth
 
 Requires:
 
-- Node.js: **v12**
-- TypeScript: **v4.1** (or none if used in a JavaScript project).
+- Node.js: **v14**
+- TypeScript: **v4.6** (or none if used in a JavaScript project).
 
 The package is tested under [all Node.js versions](https://app.travis-ci.com/github/iccicci/sedentary)
 currently supported accordingly to [Node.js Release](https://github.com/nodejs/Release#readme).
