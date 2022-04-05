@@ -2,8 +2,9 @@ import { promises } from "fs";
 
 const { unlink } = promises;
 
-export const checkDB = false;
 export const connection = "test.json";
+
+export const packageName = "sedentary";
 
 export const wrongConnection = "test";
 export const wrongConnectionError = "EISDIR: illegal operation on a directory, read";
@@ -368,5 +369,37 @@ export const wheres = {
     "'test1': Adding field: 'e' 'INT' '4'",
     "'test1': Adding unique constraint on field: 'id'",
     'Load from test1 where: "(fixed) AND NOT (a = 23 AND b IS NULL AND NOT c AND d > 23 AND e IN (23, 42)) OR (fixed)"'
+  ]
+};
+
+export const transactions = {
+  commit: [
+    "Adding table: 'test2'",
+    "Setting auto increment: 'test2'",
+    "'test2': Adding field: 'id' 'INT' '4'",
+    "'test2': Setting not null for field: 'id'",
+    "'test2': Adding field: 'a' 'INT' '4'",
+    "'test2': Adding field: 'b' 'VARCHAR' ''",
+    "'test2': Adding unique constraint on field: 'id'",
+    'Save to test2 {"a":1,"b":"1"}',
+    'Load from test2 where: ""',
+    'Save to test2 {"id":1,"a":11,"b":"11"}',
+    'Save to test2 {"a":2,"b":"2"}',
+    'Load from test2 where: "" order by: id'
+  ],
+  locks:    [],
+  rollback: [
+    "Adding table: 'test3'",
+    "Setting auto increment: 'test3'",
+    "'test3': Adding field: 'id' 'INT' '4'",
+    "'test3': Setting not null for field: 'id'",
+    "'test3': Adding field: 'a' 'INT' '4'",
+    "'test3': Adding field: 'b' 'VARCHAR' ''",
+    "'test3': Adding unique constraint on field: 'id'",
+    'Save to test3 {"a":1,"b":"1"}',
+    'Load from test3 where: ""',
+    'Save to test3 {"id":1,"a":11,"b":"11"}',
+    'Save to test3 {"a":2,"b":"2"}',
+    'Load from test3 where: "" order by: id'
   ]
 };

@@ -3,9 +3,9 @@ import { deepStrictEqual as de, strictEqual as eq } from "assert";
 import { EntryBase } from "..";
 
 import { helper } from "./helper";
-import { checkDB, models } from "./local";
+import { models, packageName } from "./local";
 
-const desc = checkDB ? describe : xdescribe;
+const desc = packageName === "sedentary" ? xdescribe : describe;
 
 describe("models", () => {
   describe("base models", function() {
@@ -171,6 +171,10 @@ describe("models", () => {
 
       const t31 = new test3({ e: 23, f: "test" });
       await t31.save();
+
+      const t23 = new test2({ a: 42, b: "no", d: new Date("1976-01-23T14:00:00.000Z") });
+      await t23.save();
+
       const t32 = await test1.load({}, ["id"]);
 
       for(const t of t32) {
@@ -210,10 +214,17 @@ describe("models", () => {
         "test1.postSave 3",
         "test2.postSave 3",
         "test3.postSave 3",
+        "test1.construct",
+        "test2.construct",
+        "test1.preSave",
+        "test1.postSave 4",
+        "test2.postSave 4",
         "test1.preLoad",
         "test1.postLoad 1",
         "test2.preLoad",
         "test1.postLoad 2",
+        "test2.preLoad",
+        "test1.postLoad 4",
         "test2.preLoad",
         "test3.preLoad",
         'test3.postLoad {"id":3,"a":23,"b":"test","c":23,"d":null,"e":23,"f":"test"}',
@@ -231,7 +242,11 @@ describe("models", () => {
         "test3.preSave 3",
         "test1.postSave 3",
         "test2.postSave 3",
-        "test3.postSave 3"
+        "test3.postSave 3",
+        "test2.reset 4",
+        "test1.preSave 4",
+        "test1.postSave 4",
+        "test2.postSave 4"
       ]));
   });
 });

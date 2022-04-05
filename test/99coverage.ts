@@ -1,7 +1,6 @@
 import { deepStrictEqual as de, strictEqual as eq } from "assert";
 
-import { EntryBase, Type } from "..";
-import { Attribute, DB, Table, Transaction } from "../db";
+import { Attribute, DB, EntryBase, Table, Transaction, Type } from "..";
 import { Sedentary, helper } from "./helper";
 import { connection, coverage } from "./local";
 import { TestDB } from "./testdb";
@@ -69,5 +68,48 @@ describe("coverage", () => {
       db.model("test3", { b: db.INT }, { parent: db.model("test2", { a: db.FKEY(test1) }) }, { c: () => {} });
       await db.connect();
     });
+  });
+
+  describe("DB", () => {
+    class TestDB extends DB<Transaction> {
+      async connect() {}
+      async end() {}
+      async dropFields() {}
+      async dropIndexes() {}
+      async syncConstraints() {}
+      async syncFields() {}
+      async syncIndexes() {}
+      async syncSequence() {}
+      async syncTable() {}
+
+      async begin() {
+        // eslint-disable-next-line no-console
+        return new Transaction(console.log);
+      }
+
+      escape() {
+        return "";
+      }
+
+      load() {
+        return async () => [];
+      }
+
+      save() {
+        return async () => false;
+      }
+
+      async dropConstraints() {
+        return [];
+      }
+    }
+
+    // eslint-disable-next-line no-console
+    it("DB", () => eq(new TestDB(console.log) instanceof DB, true));
+  });
+
+  describe("Transaction", () => {
+    // eslint-disable-next-line no-console
+    it("Transaction", () => eq(new Transaction(console.log) instanceof Transaction, true));
   });
 });

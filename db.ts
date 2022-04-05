@@ -160,7 +160,7 @@ export abstract class DB<T extends Transaction> {
     pk: Attribute<Natural, unknown>,
     model: new () => EntryBase,
     table: Table
-  ): (where: string, order?: string[], tx?: Transaction) => Promise<EntryBase[]>;
+  ): (where: string, order?: string[], tx?: Transaction, lock?: boolean) => Promise<EntryBase[]>;
   abstract save(tableName: string, attributes: Record<string, string>, pk: Attribute<Natural, unknown>): (this: EntryBase & Record<string, Natural>) => Promise<boolean>;
 
   abstract dropConstraints(table: Table): Promise<number[]>;
@@ -175,15 +175,21 @@ export abstract class DB<T extends Transaction> {
 
 export class Transaction {
   private entries: (EntryBase & { tx?: Transaction })[] = [];
+  protected log: (message: string) => void;
+
+  constructor(log: (message: string) => void) {
+    this.log = log;
+  }
 
   addEntry(entry: EntryBase) {
+    Object.defineProperty(entry, "tx", { configurable: true, value: this });
     this.entries.push(entry);
   }
 
   clean() {
     const { entries } = this;
 
-    for(const entry of entries) delete entry.tx;
+    for(const entry of entries) Object.defineProperty(entry, "tx", { configurable: true, value: null });
     this.entries = [];
   }
 

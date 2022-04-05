@@ -17,7 +17,7 @@ export class TestDB extends DB<Transaction> {
   }
 
   async begin() {
-    return new Transaction();
+    return new Transaction(this.log);
   }
 
   async connect(): Promise<void> {
@@ -42,31 +42,42 @@ export class TestDB extends DB<Transaction> {
   }
 
   load(tableName: string, attributes: Record<string, string>, pk: Attribute<Natural, unknown>, model: new (from: "load") => EntryBase): (where: string, order?: string[]) => Promise<EntryBase[]> {
-    const loads: Record<string, Natural>[][] = [
-      [{ id: 1, a: 23, b: "ok" }],
-      [{ id: 2, a: null, b: "test" }],
-      [
-        { id: 1, a: 23, b: "ok" },
-        { id: 2, a: null, b: "test" }
+    const loads: Record<string, Record<string, Natural>[][]> = {
+      test1: [
+        [{ id: 1, a: 23, b: "ok" }],
+        [{ id: 2, a: null, b: "test" }],
+        [
+          { id: 1, a: 23, b: "ok" },
+          { id: 2, a: null, b: "test" }
+        ],
+        [
+          { id: 2, a: null, b: "test" },
+          { id: 1, a: 23, b: "ok" }
+        ],
+        [{ id: 1, a: 23, b: "ok" }],
+        [
+          { id: 1, a: 23, b: "test" },
+          { id: 2, a: null, b: "test" }
+        ]
       ],
-      [
-        { id: 2, a: null, b: "test" },
-        { id: 1, a: 23, b: "ok" }
+      test2: [
+        [{ id: 1, a: 1, b: "1" }],
+        [
+          { id: 1, a: 11, b: "11" },
+          { id: 2, a: 2, b: "2" }
+        ]
       ],
-      [{ id: 1, a: 23, b: "ok" }],
-      [
-        { id: 1, a: 23, b: "test" },
-        { id: 2, a: null, b: "test" }
-      ]
-    ];
+      test3: [[{ id: 1, a: 1, b: "1" }], [{ id: 1, a: 1, b: "1" }]]
+    };
 
     return async (where: string, order?: string[]) => {
       this.log(`Load from ${tableName} where: "${where}"${order ? ` order by: ${order.join(", ")}` : ""}`);
 
-      return (loads.shift() || []).map(_ => {
+      return (loads[tableName].shift() || []).map(_ => {
         const ret = new model("load");
 
         Object.assign(ret, _);
+        ret.postLoad();
 
         return ret;
       });

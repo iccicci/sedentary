@@ -74,7 +74,10 @@ interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> {
   load(where: Condition<A>, tx: Transaction, lock?: boolean): Promise<E[]>;
 }
 
-type ModelBase<N extends Natural, A extends AttributesDefinition, EA extends Record<string, Natural | undefined>, EM extends EntryBase, E extends EntryBase> = (new (from?: EA) => E) &
+type ModelBase<N extends Natural, A extends AttributesDefinition, EA extends Record<string, Natural | undefined>, EM extends EntryBase, E extends EntryBase> = (new (
+  from?: EA,
+  tx?: Transaction
+) => E) &
   Attribute<N, E> & { foreignKeys: Record<string, boolean>; methods: EM; parent?: ModelStd; tableName: string } & { [a in keyof A]: Attribute<Native<A[a]>, E> } & ModelLoad<A, E>;
 type Model<N extends Natural, A extends AttributesDefinition, EM extends EntryBase> = ModelBase<N, A, EntryBaseAttributes<A>, EM, EntryBaseAttributes<A> & EM>;
 type ModelStd = Attribute<Natural, EntryBase> & { attributes: AttributesDefinition; foreignKeys: Record<string, boolean>; methods: EntryBase; parent?: ModelStd };
@@ -99,7 +102,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   protected autoSync: boolean;
   protected db: D;
   protected doSync = true;
-  protected log: (...data: unknown[]) => void;
+  protected log: (message: string) => void;
 
   private models: { [key: string]: boolean } = {};
 
@@ -521,14 +524,20 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
     checkParent(parent);
 
-    const ret = class extends (parent || EntryBase) {} as unknown as Model<Natural, A, EntryBase>;
+    const ret = class extends (parent || EntryBase) {
+      constructor(from?: EntryBase, tx?: Transaction) {
+        super(from);
+        if(tx) tx.addEntry(this);
+      }
+    } as unknown as Model<Natural, A, EntryBase>;
     const table = new Table({ autoIncrement, constraints, attributes: aarray, indexes: iarray, model: ret, parent, pk, sync, tableName });
 
     this.db.tables.push(table);
 
     const load_ = this.db.load(tableName, attr2field, pk, ret, table);
-    const load = async (where: unknown, order?: string[], tx?: Transaction) => {
+    const load = async (where: unknown, order?: string[], tx?: Transaction, lock?: boolean) => {
       if(order instanceof Transaction) {
+        if(typeof tx === "boolean" && tx) lock = true;
         tx = order;
         order = undefined;
       }
@@ -536,7 +545,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
       if(! this.checkOrderBy(order, attr2field, modelName)) throw new Error(`${modelName}.load: 'order' argument: Wrong type, expected 'string[]'`);
 
       const [str] = this.createWhere(modelName, attr2field, where);
-      const ret = await load_(str, order, tx);
+      const ret = await load_(str, order, tx, lock);
 
       return ret;
     };
