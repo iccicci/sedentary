@@ -68,7 +68,7 @@ type ModelAttributes<A extends AttributesDefinition, B extends boolean, K extend
   ? A
   : ModelAttributesIf<A, P extends new () => EntryBase ? P["attributes"] : { id: Type<BaseKeyType<B>, unknown> }>;
 
-interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> {
+export interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> {
   attributes: A;
   load(where: Condition<A>, order?: Order<A>, tx?: Transaction, lock?: boolean): Promise<E[]>;
   load(where: Condition<A>, tx: Transaction, lock?: boolean): Promise<E[]>;
