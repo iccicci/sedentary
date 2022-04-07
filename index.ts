@@ -559,6 +559,20 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     Object.defineProperty(ret, "methods", { value: methods });
     Object.assign(ret.prototype, methods);
 
+    const remove = this.db.remove(tableName, pk);
+    ret.prototype.remove = async function(this: EntryBase & Record<string, Natural>) {
+      if(! this.loaded) throw new Error(`${modelName}.remove: Can't remove a never saved Entry`);
+
+      this.preRemove();
+
+      const ret = await remove.call(this);
+
+      if(ret) this.postRemove();
+
+      return ret;
+    };
+    Object.defineProperty(ret.prototype.remove, "name", { value: modelName + ".remove" });
+
     const save = this.db.save(tableName, attr2field, pk);
     ret.prototype.save = async function(this: EntryBase & Record<string, Natural>) {
       this.preSave();

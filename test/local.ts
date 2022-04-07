@@ -333,7 +333,9 @@ export const models = {
     `Load from test1 where: "b = 'ok'"`,
     'Save to test1 {"id":1,"a":23,"b":"test"}',
     'Save to test1 {"id":1,"a":23,"b":"test"}',
-    `Load from test1 where: "b IN ('a', 'b', 'test')" order by: id`
+    `Load from test1 where: "b IN ('a', 'b', 'test')" order by: id`,
+    "Delete from test1 1",
+    "Delete from test1 1"
   ],
   inheritance: [""]
 };
@@ -382,9 +384,11 @@ export const transactions = {
     "'test2': Adding field: 'b' 'VARCHAR' ''",
     "'test2': Adding unique constraint on field: 'id'",
     'Save to test2 {"a":1,"b":"1"}',
+    'Save to test2 {"a":2,"b":"2"}',
     'Load from test2 where: ""',
     'Save to test2 {"id":1,"a":11,"b":"11"}',
-    'Save to test2 {"a":2,"b":"2"}',
+    "Delete from test2 2",
+    'Save to test2 {"a":3,"b":"3"}',
     'Load from test2 where: "" order by: id'
   ],
   locks:    [],
@@ -397,9 +401,11 @@ export const transactions = {
     "'test3': Adding field: 'b' 'VARCHAR' ''",
     "'test3': Adding unique constraint on field: 'id'",
     'Save to test3 {"a":1,"b":"1"}',
+    'Save to test3 {"a":2,"b":"2"}',
     'Load from test3 where: ""',
     'Save to test3 {"id":1,"a":11,"b":"11"}',
-    'Save to test3 {"a":2,"b":"2"}',
+    "Delete from test3 2",
+    'Save to test3 {"a":3,"b":"3"}',
     'Load from test3 where: "" order by: id'
   ]
 };

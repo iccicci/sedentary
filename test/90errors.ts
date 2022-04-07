@@ -266,4 +266,5 @@ describe("class Sedentary - errors", () => {
   describe("Sedentary.load(, order) - value 2", () =>
     errorHelper(async db => await db.model("test1", {}).load({}, ["-test"] as never))("test1.load: 'order' argument: 'test' is not an attribute name"));
   describe("Sedentary.load(, order) - value 3", () => errorHelper(async db => await db.model("test1", { a: db.INT }).load({}, ["-a", "a"]))("test1.load: 'order' argument: Reused 'a' attribute"));
+  describe("Sedentary.remove()", () => errorHelper(async db => await new (db.model("test1", { a: db.INT }))().remove())("test1.remove: Can't remove a never saved Entry"));
 });

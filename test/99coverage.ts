@@ -19,6 +19,7 @@ class SedentaryTest extends Sedentary {
 
 describe("coverage", () => {
   it("EntryBase", () => eq(new EntryBase() instanceof EntryBase, true));
+  it("EntryBase.remove", async () => eq(await new EntryBase().remove(), false));
   it("EntryBase.save", async () => eq(await new EntryBase().save(), false));
   it("Type", () => eq(new Type({ base: null, type: "" }) instanceof Type, true));
 
@@ -93,6 +94,10 @@ describe("coverage", () => {
 
       load() {
         return async () => [];
+      }
+
+      remove() {
+        return async () => false;
       }
 
       save() {

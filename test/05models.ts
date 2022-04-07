@@ -20,6 +20,8 @@ describe("models", () => {
     let l4: any;
     let l5: any;
     let l6: any;
+    let r1: any;
+    let r2: any;
     let saveA = false;
     let saveB = false;
     let saveC = false;
@@ -44,6 +46,8 @@ describe("models", () => {
       saveC = await l5.save();
       saveD = await l5.save();
       l6 = await test1.load({ b: ["IN", ["a", "b", "test"]] }, ["id"]);
+      r1 = await l6[0].remove();
+      r2 = await l6[0].remove();
     });
 
     it("save a", () => eq(saveA, true));
@@ -57,6 +61,8 @@ describe("models", () => {
     it("load 3", () => de(l3, [dbA, dbB]));
     it("load 4", () => de(l4, [dbB, dbA]));
     it("load 6", () => de(l6, [dbC, dbB]));
+    it("remove 1", () => de(r1, true));
+    it("remove 2", () => de(r2, false));
   });
 
   desc("inheritance & methods", function() {
@@ -79,6 +85,12 @@ describe("models", () => {
           },
           postLoad: function() {
             log(`test1.postLoad ${this.id}`);
+          },
+          preRemove: function() {
+            log(`test1.preRemove ${this.id}`);
+          },
+          postRemove: function() {
+            log(`test1.postRemove ${this.id}`);
           },
           preSave: function() {
             log(`test1.preSave${this.id ? " " + this.id : ""}`);
@@ -104,6 +116,13 @@ describe("models", () => {
           },
           preLoad: function() {
             log("test2.preLoad");
+          },
+          preRemove: function() {
+            log(`test2.preRemove ${this.id}`);
+          },
+          postRemove: function() {
+            test1.prototype.postRemove.call(this);
+            log(`test2.postRemove ${this.id}`);
           },
           postSave: function() {
             test1.prototype.postSave.call(this);
@@ -132,6 +151,14 @@ describe("models", () => {
           },
           postLoad: function() {
             log(`test3.postLoad ${JSON.stringify(this)}`);
+          },
+          preRemove: function() {
+            test2.prototype.preRemove.call(this);
+            log(`test3.preRemove ${this.id}`);
+          },
+          postRemove: function() {
+            test2.prototype.postRemove.call(this);
+            log(`test3.postRemove ${this.id}`);
           },
           preSave: function() {
             test1.prototype.preSave.call(this);
@@ -181,6 +208,8 @@ describe("models", () => {
         t.reset();
         await t.save();
       }
+
+      await t32[2].remove();
     });
 
     it("methods", () =>
@@ -246,7 +275,12 @@ describe("models", () => {
         "test2.reset 4",
         "test1.preSave 4",
         "test1.postSave 4",
-        "test2.postSave 4"
+        "test2.postSave 4",
+        "test2.preRemove 3",
+        "test3.preRemove 3",
+        "test1.postRemove 3",
+        "test2.postRemove 3",
+        "test3.postRemove 3"
       ]));
   });
 });

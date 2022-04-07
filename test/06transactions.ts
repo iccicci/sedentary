@@ -14,16 +14,19 @@ describe("transactions", () => {
       await db.connect();
       const r1 = new test2({ a: 1, b: "1" });
       await r1.save();
+      const r2 = new test2({ a: 2, b: "2" });
+      await r2.save();
       const tx = await db.begin();
-      const r2 = new test2({ a: 2, b: "2" }, tx);
+      const r3 = new test2({ a: 3, b: "3" }, tx);
       const l1 = await test2.load({}, tx);
       l1[0].a = 11;
       l1[0].b = "11";
       await l1[0].save();
-      await r2.save();
+      await l1[1].remove();
+      await r3.save();
       await tx.commit();
       l2 = await test2.load({}, ["id"]);
-      result = [new test2({ id: 1, a: 11, b: "11" }), new test2({ id: 2, a: 2, b: "2" })];
+      result = [new test2({ id: 1, a: 11, b: "11" }), new test2({ id: 3, a: 3, b: "3" })];
     });
 
     it("commit", () => de(l2, result));
@@ -38,16 +41,19 @@ describe("transactions", () => {
       await db.connect();
       const r1 = new test3({ a: 1, b: "1" });
       await r1.save();
+      const r2 = new test3({ a: 2, b: "2" });
+      await r2.save();
       const tx = await db.begin();
-      const r2 = new test3({ a: 2, b: "2" }, tx);
+      const r3 = new test3({ a: 3, b: "3" }, tx);
       const l1 = await test3.load({}, tx, true);
       l1[0].a = 11;
       l1[0].b = "11";
       await l1[0].save();
-      await r2.save();
+      await l1[1].remove();
+      await r3.save();
       await tx.rollback();
       l2 = await test3.load({}, ["id"]);
-      result = [new test3({ id: 1, a: 1, b: "1" })];
+      result = [new test3({ id: 1, a: 1, b: "1" }), new test3({ id: 2, a: 2, b: "2" })];
     });
 
     it("rollback", () => de(l2, result));

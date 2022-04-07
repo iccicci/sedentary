@@ -61,13 +61,25 @@ export class TestDB extends DB<Transaction> {
         ]
       ],
       test2: [
-        [{ id: 1, a: 1, b: "1" }],
+        [
+          { id: 1, a: 1, b: "1" },
+          { id: 2, a: 2, b: "2" }
+        ],
         [
           { id: 1, a: 11, b: "11" },
-          { id: 2, a: 2, b: "2" }
+          { id: 3, a: 3, b: "3" }
         ]
       ],
-      test3: [[{ id: 1, a: 1, b: "1" }], [{ id: 1, a: 1, b: "1" }]]
+      test3: [
+        [
+          { id: 1, a: 1, b: "1" },
+          { id: 2, a: 2, b: "2" }
+        ],
+        [
+          { id: 1, a: 1, b: "1" },
+          { id: 2, a: 2, b: "2" }
+        ]
+      ]
     };
 
     return async (where: string, order?: string[]) => {
@@ -77,10 +89,26 @@ export class TestDB extends DB<Transaction> {
         const ret = new model("load");
 
         Object.assign(ret, _);
+        Object.defineProperty(ret, "loaded", { configurable: true, value: true });
         ret.postLoad();
 
         return ret;
       });
+    };
+  }
+
+  remove(tableName: string): (this: EntryBase & Record<string, Natural>) => Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    let value = true;
+
+    return async function() {
+      const ret = value;
+
+      self.log(`Delete from ${tableName} ${this.id}`);
+      value = false;
+
+      return ret;
     };
   }
 
