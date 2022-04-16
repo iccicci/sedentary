@@ -108,8 +108,12 @@ describe("class Sedentary - errors", () => {
       "Sedentary.model: 'test' model: 'test' attribute: 'defaultValue' option: Wrong type, expected 'number'"
     ));
   describe("Sedentary.model(, { [key]: defaultValue }) - string", () =>
-    errorHelper(db => db.model("test", { test: { defaultValue: 23, type: Sedentary.prototype.INT8 } }))(
+    errorHelper(db => db.model("test", { test: { defaultValue: 23, type: Sedentary.prototype.VARCHAR } }))(
       "Sedentary.model: 'test' model: 'test' attribute: 'defaultValue' option: Wrong type, expected 'string'"
+    ));
+  describe("Sedentary.model(, { [key]: defaultValue }) - string", () =>
+    errorHelper(db => db.model("test", { test: { defaultValue: 23, type: Sedentary.prototype.INT8 } }))(
+      "Sedentary.model: 'test' model: 'test' attribute: 'defaultValue' option: Wrong type, expected 'BigInt'"
     ));
   describe("Sedentary.model(, { [key]: defaultValue }) - Date", () =>
     errorHelper(db => db.model("test", { test: { defaultValue: 23, type: Sedentary.prototype.DATETIME } }))(

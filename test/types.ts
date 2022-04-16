@@ -1,6 +1,6 @@
 import { expectAssignable, expectNotAssignable, expectType } from "tsd";
 
-import { EntryBase, Entry, OrderBy, Transaction, Type, Where } from "..";
+import { EntryBase, Entry, OrderBy, Type, Where } from "..";
 import { Sedentary } from "./package";
 
 const db = new Sedentary("test.json");
@@ -141,11 +141,11 @@ expectType<EntryBase & { a?: Date | null }>(t8);
 
 const T9 = db.model("T9", { b: db.INT8 }, { parent: T6 });
 type ET9 = Entry<typeof T9>;
-const t9 = new T9({ a: new Date(), b: "0" });
+const t9 = new T9({ a: new Date(), b: 0n });
 expectAssignable<Type<Date | null, EntryBase>>(T9);
 expectNotAssignable<Type<string, EntryBase>>(T9);
 expectType<ET9>(t9);
-expectType<EntryBase & { a?: Date | null; b?: string | null }>(t9);
+expectType<EntryBase & { a?: Date | null; b?: BigInt | null }>(t9);
 
 const T10 = db.model("T10", {}, { parent: T6 }, { m: (i?: string) => (i ? i.length : 0) });
 type ET10 = Entry<typeof T10>;
@@ -161,7 +161,7 @@ const t11 = new T11();
 expectAssignable<Type<Date | null, EntryBase>>(T11);
 expectNotAssignable<Type<string, EntryBase>>(T11);
 expectType<ET11>(t11);
-expectType<EntryBase & { a?: Date | null; b?: string | null } & { m: (i?: string) => number }>(t11);
+expectType<EntryBase & { a?: Date | null; b?: BigInt | null } & { m: (i?: string) => number }>(t11);
 
 type t12_1 = (a?: Date) => void;
 const T12 = db.model(

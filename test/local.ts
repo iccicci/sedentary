@@ -337,7 +337,8 @@ export const models = {
     "Delete from test1 1",
     "Delete from test1 1"
   ],
-  inheritance: [""]
+  inheritance: [""],
+  types:       [""]
 };
 
 export const wheres = {

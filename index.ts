@@ -145,8 +145,8 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     return new Type({ base: Number, size, type: "INT" });
   }
 
-  public INT8(): Type<string, unknown> {
-    return new Type({ base: String, size: 8, type: "INT8" });
+  public INT8(): Type<BigInt, unknown> {
+    return new Type({ base: BigInt, size: 8, type: "INT8" });
   }
 
   public VARCHAR(size?: number): Type<string, unknown> {
@@ -340,7 +340,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     let autoIncrement = true;
     const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.doSync, tableName: modelName, ...options };
     let aarray: Attribute<Natural, unknown>[] = int8id
-      ? [new Attribute<string, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })]
+      ? [new Attribute<BigInt, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })]
       : [new Attribute<number, unknown>({ ...this.INT(4), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })];
     let constraints: Constraint[] = [{ attribute: aarray[0], constraintName: `${tableName}_id_unique`, type: "u" }];
     const iarray: Index[] = [];
@@ -397,6 +397,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
         const { base, defaultValue } = ret;
 
         if(defaultValue !== undefined) {
+          if(base === BigInt && typeof defaultValue !== "bigint") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'BigInt'`);
           if(base === Date && ! (defaultValue instanceof Date)) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'Date'`);
           if(base === Number && typeof defaultValue !== "number") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'number'`);
           if(base === String && typeof defaultValue !== "string") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'string'`);

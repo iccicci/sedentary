@@ -11,7 +11,7 @@ describe("dry run", () => {
 
     describe("dry run", function() {
       helper(dryrun.dryrun, true, { sync: false }, async db => {
-        const test1 = db.model("test1", { a: { defaultValue: "23", type: db.INT8, unique: true }, b: { type: db.INT, unique: true } }, { indexes: { b: "b" } });
+        const test1 = db.model("test1", { a: { defaultValue: 23n, type: db.INT8, unique: true }, b: { type: db.INT, unique: true } }, { indexes: { b: "b" } });
         db.model("test2", { g: db.FKEY(test1.b), e: db.INT, f: { defaultValue: 42, type: db.INT } });
         db.model("test3", {});
         db.model("test4", {}, { parent: test1 });

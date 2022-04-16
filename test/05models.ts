@@ -283,4 +283,19 @@ describe("models", () => {
         "test3.postRemove 3"
       ]));
   });
+
+  desc("data types", function() {
+    let a: EntryBase;
+    let b: EntryBase;
+
+    helper(models.types, async db => {
+      const test1 = db.model("test1", { a: db.INT, b: db.VARCHAR, c: db.DATETIME, d: db.INT8 });
+      await db.connect();
+      a = new test1({ a: 23, b: "ok", c: new Date("1976-01-23"), d: 23n });
+      await a.save();
+      b = (await test1.load({}))[0];
+    });
+
+    it("data types", () => de(a, b));
+  });
 });

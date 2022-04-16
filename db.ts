@@ -1,4 +1,4 @@
-export type Natural = Date | Record<string, unknown> | boolean | number | string | null;
+export type Natural = BigInt | Date | Record<string, unknown> | boolean | number | string | null;
 
 export class EntryBase {
   constructor(from?: Partial<EntryBase>) {

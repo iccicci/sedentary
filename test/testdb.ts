@@ -6,6 +6,14 @@ import { EntryBase } from "..";
 
 const { readFile, writeFile } = promises;
 
+function stringifyer(key: string, value: unknown) {
+  return typeof value === "bigint" ? value.toString() : value;
+}
+
+function stringify(value: unknown) {
+  return JSON.stringify(value, stringifyer);
+}
+
 export class TestDB extends DB<Transaction> {
   private body: any;
   private file: string;
@@ -34,7 +42,7 @@ export class TestDB extends DB<Transaction> {
   async end(): Promise<void> {}
 
   async write(): Promise<void> {
-    await writeFile(this.file, JSON.stringify(this.body));
+    await writeFile(this.file, stringify(this.body));
   }
 
   escape(value: Natural): string {
@@ -123,7 +131,7 @@ export class TestDB extends DB<Transaction> {
     ];
 
     return async function() {
-      self.log(`Save to ${tableName} ${JSON.stringify(this)}`);
+      self.log(`Save to ${tableName} ${stringify(this)}`);
 
       const [changed, obj] = saves.shift() || [false, {}];
 
