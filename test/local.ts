@@ -266,7 +266,18 @@ export const expected = {
     "'test1': Adding index: 'ia' on ('a', 'b') type 'btree'",
     "'test1': Adding index: 'ib' on ('b', 'a') type 'btree' unique"
   ],
-  types_datetime: [
+  types_boolean: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'BOOLEAN' ''",
+    "'test1': Adding field: 'b' 'BOOLEAN' ''",
+    "'test1': Adding field: 'c' 'VARCHAR' ''",
+    "'test1': Adding unique constraint on field: 'id'"
+  ],
+  types_boolean_changes: ["'test1': Changing field type: 'b' 'VARCHAR' ''", "'test1': Changing field type: 'c' 'BOOLEAN' ''"],
+  types_datetime:        [
     "Adding table: 'test1'",
     "Setting auto increment: 'test1'",
     "'test1': Adding field: 'id' 'INT' '4'",

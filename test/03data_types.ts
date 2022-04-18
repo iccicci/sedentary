@@ -81,4 +81,26 @@ describe("data types", () => {
       });
     });
   });
+
+  describe("BOOLEAN", function() {
+    helper(expected.types_boolean, async db => {
+      db.model("test1", {
+        a: db.BOOLEAN,
+        b: db.BOOLEAN,
+        c: db.VARCHAR
+      });
+      await db.connect();
+    });
+
+    describe("BOOLEAN changes", function() {
+      helper(expected.types_boolean_changes, true, async db => {
+        db.model("test1", {
+          a: db.BOOLEAN,
+          b: db.VARCHAR,
+          c: db.BOOLEAN
+        });
+        await db.connect();
+      });
+    });
+  });
 });

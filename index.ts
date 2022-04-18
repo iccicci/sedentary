@@ -125,6 +125,10 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     this.doSync = sync;
   }
 
+  public BOOLEAN(): Type<boolean, unknown> {
+    return new Type({ base: Boolean, type: "BOOLEAN" });
+  }
+
   public DATETIME(): Type<Date, unknown> {
     return new Type({ base: Date, type: "DATETIME" });
   }
@@ -372,7 +376,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
       const call = (defaultValue: Natural | undefined, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message1: string, message2: string) => {
         if(func === this.FKEY) throw new Error(`${message1} 'this.FKEY' can't be used directly`);
-        if(! ([this.DATETIME, this.NUMBER, this.INT, this.INT8, this.VARCHAR] as unknown[]).includes(func as unknown)) throw new Error(`${message1} ${message2}`);
+        if(! ([this.BOOLEAN, this.DATETIME, this.NUMBER, this.INT, this.INT8, this.VARCHAR] as unknown[]).includes(func as unknown)) throw new Error(`${message1} ${message2}`);
 
         return new Attribute({ attributeName, defaultValue, fieldName, modelName, notNull, tableName, unique, ...func() });
       };
