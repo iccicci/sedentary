@@ -66,7 +66,7 @@
     "compilerOptions": {
       "alwaysStrict": true,
       "esModuleInterop": true,
-      "moduleResolution": "node",
+      "moduleResolution": "Node",
       "noImplicitAny": true,
       "noImplicitReturns": true,
       "noImplicitThis": true,
@@ -75,9 +75,9 @@
       "strictFunctionTypes": true,
       "strictNullChecks": true,
       "strictPropertyInitialization": true,
-      "target": "esnext"
+      "target": "ESNext"
     }
   },
   "types": "./dist/types/index.d.ts",
-  "version": "0.0.34"
+  "version": "0.0.35"
 }

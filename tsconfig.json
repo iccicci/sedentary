@@ -2,7 +2,7 @@
   "compilerOptions": {
     "alwaysStrict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
@@ -11,7 +11,7 @@
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "target": "esnext"
+    "target": "ESNext"
   },
   "exclude": ["*.d.ts"],
   "include": ["*.ts", "test/*.ts"]
