@@ -287,7 +287,18 @@ export const expected = {
     "'test1': Changing field type: 'd' 'INT8' '8'",
     "'test1': Changing field type: 'e' 'DATETIME' ''"
   ],
-  types_int: [
+  types_number: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'NUMBER' ''",
+    "'test1': Adding field: 'b' 'NUMBER' ''",
+    "'test1': Adding field: 'c' 'VARCHAR' ''",
+    "'test1': Adding unique constraint on field: 'id'"
+  ],
+  types_number_changes: ["'test1': Changing field type: 'b' 'VARCHAR' ''", "'test1': Changing field type: 'c' 'NUMBER' ''"],
+  types_int:            [
     "Adding table: 'test1'",
     "Setting auto increment: 'test1'",
     "'test1': Adding field: 'id' 'INT' '4'",

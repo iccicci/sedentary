@@ -149,6 +149,10 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     return new Type({ base: BigInt, size: 8, type: "INT8" });
   }
 
+  public NUMBER(): Type<number, unknown> {
+    return new Type({ base: Number, type: "NUMBER" });
+  }
+
   public VARCHAR(size?: number): Type<string, unknown> {
     const message = "Sedentary.VARCHAR: 'size' argument: Wrong value, expected positive integer";
 
@@ -368,7 +372,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
       const call = (defaultValue: Natural | undefined, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<Natural, unknown>, message1: string, message2: string) => {
         if(func === this.FKEY) throw new Error(`${message1} 'this.FKEY' can't be used directly`);
-        if(func !== this.DATETIME && func !== this.INT && func !== this.INT8 && func !== this.VARCHAR) throw new Error(`${message1} ${message2}`);
+        if(! ([this.DATETIME, this.NUMBER, this.INT, this.INT8, this.VARCHAR] as unknown[]).includes(func as unknown)) throw new Error(`${message1} ${message2}`);
 
         return new Attribute({ attributeName, defaultValue, fieldName, modelName, notNull, tableName, unique, ...func() });
       };

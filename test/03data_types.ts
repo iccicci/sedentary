@@ -59,4 +59,26 @@ describe("data types", () => {
       });
     });
   });
+
+  describe("NUMBER", function() {
+    helper(expected.types_number, async db => {
+      db.model("test1", {
+        a: db.NUMBER,
+        b: db.NUMBER,
+        c: db.VARCHAR
+      });
+      await db.connect();
+    });
+
+    describe("NUMBER changes", function() {
+      helper(expected.types_number_changes, true, async db => {
+        db.model("test1", {
+          a: db.NUMBER,
+          b: db.VARCHAR,
+          c: db.NUMBER
+        });
+        await db.connect();
+      });
+    });
+  });
 });
