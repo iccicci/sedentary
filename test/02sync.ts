@@ -84,7 +84,8 @@ describe("sync", () => {
         c: { defaultValue: 23, type: db.INT(2) },
         d: { defaultValue: "23", notNull: true, type: db.VARCHAR },
         e: { fieldName: "f", type: db.INT },
-        g: { fieldName: "h", type: db.INT() }
+        g: { fieldName: "h", type: db.INT() },
+        i: db.INT()
       });
       await db.connect();
     });
@@ -96,7 +97,8 @@ describe("sync", () => {
           b: { type: db.INT, unique: true },
           c: { notNull: true, type: db.INT(2) },
           d: { defaultValue: 42n, type: db.INT8 },
-          f: { notNull: true, type: db.INT8 }
+          f: { notNull: true, type: db.INT8 },
+          i: { defaultValue: 23, notNull: true, type: db.INT }
         });
         await db.connect();
       });

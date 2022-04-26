@@ -147,6 +147,7 @@ export const expected = {
     "'test1': Setting not null for field: 'd'",
     "'test1': Adding field: 'f' 'INT' '4'",
     "'test1': Adding field: 'h' 'INT' '4'",
+    "'test1': Adding field: 'i' 'INT' '4'",
     "'test1': Adding unique constraint on field: 'id'",
     "'test1': Adding unique constraint on field: 'a'"
   ],
@@ -161,6 +162,8 @@ export const expected = {
     "'test1': Changing default value to '42' for field: 'd'",
     "'test1': Changing field type: 'f' 'INT8' '8'",
     "'test1': Setting not null for field: 'f'",
+    "'test1': Setting default value '23' for field: 'i'",
+    "'test1': Setting not null for field: 'i'",
     "'test1': Adding unique constraint on field: 'b'"
   ],
   sync_foreign_keys_1: [
