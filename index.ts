@@ -16,9 +16,10 @@ export type AttributesDefinition = { [key: string]: AttributeDefinition<Natural,
 type ForeignKeysAttributes<T, k> = T extends AttributeDefinition<Natural, infer E> ? (E extends EntryBase ? k : never) : never;
 type ForeignKeys<A extends AttributesDefinition> = { [a in keyof A]?: ForeignKeysAttributes<A[a], a> }[keyof A];
 
-type Native__<T> = T extends Type<infer N, unknown> ? N | null : never;
-type Native_<T> = T extends () => Type<infer N, infer E> ? Native__<Type<N, E>> : Native__<T>;
-type Native<T> = T extends AttributeOptions<infer N, infer E> ? Native__<Type<N, E>> : Native_<T>;
+type Native___<T> = T extends Type<infer N, unknown> ? N : never;
+type Native__<T> = T extends () => Type<infer N, infer E> ? Native___<Type<N, E>> : Native___<T>;
+type Native_<T, N extends Natural, E> = T extends { notNull: true } ? Native___<Type<N, E>> : Native___<Type<N, E>> | null;
+type Native<T> = T extends AttributeOptions<infer N, infer E> ? Native_<T, N, E> : Native__<T> | null;
 
 export type IndexAttributes = string[] | string;
 
@@ -57,7 +58,7 @@ type BaseKeyType<B extends boolean> = IsUnion<B> extends true ? number : B exten
 type KeyType<B extends boolean, P extends ModelStd> = P extends new () => EntryBase ? (P extends Attribute<infer T, EntryBase> ? T : never) : BaseKeyType<B>;
 
 type ForeignKey<A> = A extends AttributeDefinition<Natural, infer E> ? () => Promise<E> : never;
-type EntryBaseAttributes<A extends AttributesDefinition> = { [a in keyof A]?: Native<A[a]> };
+type EntryBaseAttributes<A extends AttributesDefinition> = { [a in keyof A]: Native<A[a]> };
 
 type EntryMethodsBase<P extends ModelStd> = P extends new () => EntryBase ? P["methods"] : EntryBase;
 type EntryMethodsFK<A extends AttributesDefinition> = { [a in ForeignKeys<A> & string as `${a}Load`]: ForeignKey<A[a]> };
@@ -66,7 +67,7 @@ type EntryMethods<A extends AttributesDefinition, P extends ModelStd> = keyof En
 type ModelAttributesIf<A extends AttributesDefinition, T> = keyof A extends never ? T : T & A;
 type ModelAttributes<A extends AttributesDefinition, B extends boolean, K extends string, P extends ModelStd> = K extends keyof A
   ? A
-  : ModelAttributesIf<A, P extends new () => EntryBase ? P["attributes"] : { id: Type<BaseKeyType<B>, unknown> }>;
+  : ModelAttributesIf<A, P extends new () => EntryBase ? P["attributes"] : { id: { notNull: true; type: Type<BaseKeyType<B>, unknown> } }>;
 
 export interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> {
   attributes: A;
@@ -75,7 +76,7 @@ export interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> 
 }
 
 type ModelBase<N extends Natural, A extends AttributesDefinition, EA extends Record<string, Natural | undefined>, EM extends EntryBase, E extends EntryBase> = (new (
-  from?: EA,
+  from?: Partial<EA>,
   tx?: Transaction
 ) => E) &
   Attribute<N, E> & { foreignKeys: Record<string, boolean>; methods: EM; parent?: ModelStd; tableName: string } & { [a in keyof A]: Attribute<Native<A[a]>, E> } & ModelLoad<A, E>;

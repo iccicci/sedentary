@@ -17,7 +17,7 @@ describe("data types", () => {
       await db.connect();
     });
 
-    describe("INT & VARCHAR", function() {
+    describe("INT & VARCHAR changes", function() {
       helper(expected.types_int_change, true, async db => {
         db.model("test1", {
           a: db.INT(),

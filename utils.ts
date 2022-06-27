@@ -12,7 +12,7 @@ const npm: string[] = [".*", "*.ts", "!*.d.ts", "Makefile", "docs", "requirement
 const descriptions = { sedentary: "", "sedentary-mysql": " - MySQL", "sedentary-pg": " - PostgreSQL", "sedentary-sqlite": " - SQLite" };
 const urls = { sedentary: "", "sedentary-mysql": "-mysql", "sedentary-pg": "-pg", "sedentary-sqlite": "-sqlite" };
 const deps = { sedentary: {}, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg": "8.6.5", pg: "8.7.3", "pg-format": "1.0.4" }, "sedentary-sqlite": {} };
-const devd = { sedentary: { tsd: "0.20.0" }, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg-format": "1.0.2" }, "sedentary-sqlite": {} };
+const devd = { sedentary: { tsd: "0.21.0" }, "sedentary-mysql": {}, "sedentary-pg": { "@types/pg-format": "1.0.2" }, "sedentary-sqlite": {} };
 const author = "Daniele Ricci <daniele.icc@gmail.com> (https://github.com/iccicci)";
 
 const packagejson = {
@@ -20,17 +20,17 @@ const packagejson = {
   contributors:    [author, "yossarian <sergiybiluk@gmail.com> (https://github.com/captain-yossarian)"],
   dependencies:    {},
   devDependencies: {
-    "@types/mocha":                     "9.1.0",
-    "@types/node":                      "17.0.24",
+    "@types/mocha":                     "9.1.1",
+    "@types/node":                      "18.0.0",
     "@types/yamljs":                    "0.2.31",
-    "@typescript-eslint/eslint-plugin": "5.19.0",
-    "@typescript-eslint/parser":        "5.19.0",
-    eslint:                             "8.13.0",
-    mocha:                              "9.2.2",
-    prettier:                           "2.6.2",
+    "@typescript-eslint/eslint-plugin": "5.30.0",
+    "@typescript-eslint/parser":        "5.30.0",
+    eslint:                             "8.18.0",
+    mocha:                              "10.0.0",
+    prettier:                           "2.7.1",
     nyc:                                "15.1.0",
-    "ts-node":                          "10.7.0",
-    typescript:                         "4.6.3",
+    "ts-node":                          "10.8.1",
+    typescript:                         "4.7.4",
     yamljs:                             "0.3.0"
   },
   engines:  { node: ">=14.0" },
