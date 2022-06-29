@@ -34,13 +34,14 @@ const packagejson = {
     typescript:                             "4.7.4",
     yamljs:                                 "0.3.0"
   },
-  engines:  { node: ">=14.0" },
-  funding:  { url: "https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB" },
-  keywords: ["DB", "ORM", "database", "migration", "mysql", "postgresql", "sqlite"],
-  license:  "MIT",
-  main:     "./dist/cjs/index.js",
-  module:   "./dist/es/index.js",
-  prettier: {
+  engines:              { node: ">=14.0" },
+  funding:              { url: "https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB" },
+  keywords:             ["DB", "ORM", "database", "migration", "mysql", "postgresql", "sqlite"],
+  license:              "MIT",
+  main:                 "./dist/cjs/index.js",
+  module:               "./dist/es/index.js",
+  optionalDependencies: { fsevents: "2.3.2" },
+  prettier:             {
     arrowParens:        "avoid",
     endOfLine:          "lf",
     jsxBracketSameLine: true,
@@ -74,7 +75,7 @@ const travis = {
     after_script:  [`if [[ \`node --version\` =~ ^v16 ${conditions[npm_package_name]}]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi`],
     before_script: before_script_common,
     language:      "node_js",
-    node_js:       ["16", "14"],
+    node_js:       ["18", "16", "14"],
     script:        "npm run coverage",
     sudo:          "required"
   },
