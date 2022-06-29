@@ -72,8 +72,9 @@ const before_script_common = [
 const conditions = { sedentary: "", "sedentary-pg": "&& $PG_VERSION == 14 " };
 const travis = {
   common: {
-    after_script:  [`if [[ \`node --version\` =~ ^v16 ${conditions[npm_package_name]}]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi`],
+    after_script:  [`if [[ \`node --version\` =~ ^v18 ${conditions[npm_package_name]}]] ; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT ; fi`],
     before_script: before_script_common,
+    dist:          "focal",
     language:      "node_js",
     node_js:       ["18", "16", "14"],
     script:        "npm run coverage",
