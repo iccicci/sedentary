@@ -1,6 +1,6 @@
-import { deepStrictEqual as de, strictEqual as eq } from "assert";
+import { deepStrictEqual as de, strictEqual as eq, ok } from "assert";
 
-import { Attribute, DB, EntryBase, Table, Transaction, Type } from "..";
+import { Attribute, DB, EntryBase, Sedentary as Sed, Table, Transaction, Type } from "..";
 import { Sedentary, helper } from "./helper";
 import { connection, coverage } from "./local";
 import { TestDB } from "./testdb";
@@ -18,6 +18,7 @@ class SedentaryTest extends Sedentary {
 }
 
 describe("coverage", () => {
+  it("constructor", () => ok(new Sed() instanceof Sed));
   it("EntryBase", () => eq(new EntryBase() instanceof EntryBase, true));
   it("EntryBase.remove", async () => eq(await new EntryBase().remove(), false));
   it("EntryBase.save", async () => eq(await new EntryBase().save(), false));
@@ -29,7 +30,7 @@ describe("coverage", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let test: any;
 
-    before(async () => {
+    beforeAll(async () => {
       test = db.model("test", {});
     });
 
@@ -53,7 +54,7 @@ describe("coverage", () => {
   describe("connect error type any", () => {
     let db: Sedentary;
 
-    before(async () => {
+    beforeAll(async () => {
       try {
         db = new SedentaryTest();
         await db.connect();

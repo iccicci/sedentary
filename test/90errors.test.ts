@@ -7,7 +7,7 @@ describe("class Sedentary - errors", () => {
   let err: Error;
 
   describe("new Sedentary(filename)", () => {
-    before(async () => {
+    beforeAll(async () => {
       try {
         await new Sedentary({ log: null }).connect();
       } catch(e) {
@@ -19,7 +19,7 @@ describe("class Sedentary - errors", () => {
   });
 
   describe("new Sedentary(options) - type", () => {
-    before(async () => {
+    beforeAll(async () => {
       try {
         new Sedentary("test" as never);
       } catch(e) {
@@ -31,7 +31,7 @@ describe("class Sedentary - errors", () => {
   });
 
   describe("new Sedentary(options) - option", () => {
-    before(async () => {
+    beforeAll(async () => {
       try {
         new Sedentary({ test: "test" } as never);
       } catch(e) {
@@ -43,7 +43,7 @@ describe("class Sedentary - errors", () => {
   });
 
   describe("new Sedentary(, { autoSync }) - type", () => {
-    before(async () => {
+    beforeAll(async () => {
       try {
         new Sedentary({ autoSync: "test" } as never);
       } catch(e) {
@@ -55,7 +55,7 @@ describe("class Sedentary - errors", () => {
   });
 
   describe("new Sedentary(, { log }) - type", () => {
-    before(async () => {
+    beforeAll(async () => {
       try {
         new Sedentary({ log: "test" } as never);
       } catch(e) {
@@ -67,7 +67,7 @@ describe("class Sedentary - errors", () => {
   });
 
   describe("new Sedentary(, { sync }) - type", () => {
-    before(async () => {
+    beforeAll(async () => {
       try {
         new Sedentary({ sync: "test" } as never);
       } catch(e) {
@@ -263,12 +263,18 @@ describe("class Sedentary - errors", () => {
     errorHelper(async db => await db.model("test1", { a: db.INT }).load({ a: ["NOT", "test"] } as never))("test1.load: 'where' argument: 'NOT' operator is unary"));
   describe("Sedentary.load(where) - value 9", () =>
     errorHelper(async db => await db.model("test1", { a: db.INT }).load({ a: ["=", "test", "test"] } as never))("test1.load: 'where' argument: '=' operator is binary"));
-  describe("Sedentary.load(, order) - type 1", () => errorHelper(async db => await db.model("test1", {}).load({}, {} as never))("test1.load: 'order' argument: Wrong type, expected 'string[]'"));
-  describe("Sedentary.load(, order) - type 2", () => errorHelper(async db => await db.model("test1", {}).load({}, [{}] as never))("test1.load: 'order' argument: Wrong type, expected 'string[]'"));
+  describe("Sedentary.load(, order) - type 1", () =>
+    errorHelper(async db => await db.model("test1", {}).load({}, {} as never))("test1.load: 'order' argument: Wrong type, expected 'string | string[]'"));
+  describe("Sedentary.load(, order) - type 2", () =>
+    errorHelper(async db => await db.model("test1", {}).load({}, [{}] as never))("test1.load: 'order' argument: Wrong type, expected 'string | string[]'"));
   describe("Sedentary.load(, order) - value 1", () =>
     errorHelper(async db => await db.model("test1", {}).load({}, ["test"] as never))("test1.load: 'order' argument: 'test' is not an attribute name"));
   describe("Sedentary.load(, order) - value 2", () =>
     errorHelper(async db => await db.model("test1", {}).load({}, ["-test"] as never))("test1.load: 'order' argument: 'test' is not an attribute name"));
   describe("Sedentary.load(, order) - value 3", () => errorHelper(async db => await db.model("test1", { a: db.INT }).load({}, ["-a", "a"]))("test1.load: 'order' argument: Reused 'a' attribute"));
+  describe("Sedentary.load(,, limit) - type", () =>
+    errorHelper(async db => await db.model("test1", { a: db.INT }).load({}, "a", "b" as never))("test1.load: 'limit' argument: Wrong type, expected 'number'"));
+  describe("Sedentary.load(,,, tx) - type", () =>
+    errorHelper(async db => await db.model("test1", { a: db.INT }).load({}, 1, 1 as never))("test1.load: 'tx' argument: Wrong type, expected 'Transaction'"));
   describe("Sedentary.remove()", () => errorHelper(async db => await new (db.model("test1", { a: db.INT }))().remove())("test1.remove: Can't remove a never saved Entry"));
 });

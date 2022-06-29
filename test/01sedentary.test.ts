@@ -11,7 +11,7 @@ describe("class Sedentary", () => {
   describe("connect", () => {
     const db = new Sedentary(connection);
 
-    before(async () => {
+    beforeAll(async () => {
       await db.connect();
       await db.end();
     });
@@ -24,7 +24,7 @@ describe("class Sedentary", () => {
     const db = new Sedentary(wrongConnection);
     let err: Error;
 
-    before(async () => {
+    beforeAll(async () => {
       try {
         await db.connect();
       } catch(e) {
@@ -39,7 +39,7 @@ describe("class Sedentary", () => {
   describe("autoSync false", () => {
     const db = new Sedentary(connection, { autoSync: false });
 
-    before(async () => {
+    beforeAll(async () => {
       await db.connect();
       await db.end();
     });

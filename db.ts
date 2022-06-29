@@ -166,7 +166,7 @@ export abstract class DB<T extends Transaction> {
     pk: Attribute<Natural, unknown>,
     model: new () => EntryBase,
     table: Table
-  ): (where: string, order?: string[], tx?: Transaction, lock?: boolean) => Promise<EntryBase[]>;
+  ): (where: string, order?: string | string[], limit?: number, tx?: Transaction, lock?: boolean) => Promise<EntryBase[]>;
   abstract remove(tableName: string, pk: Attribute<Natural, unknown>): (this: EntryBase & Record<string, Natural>) => Promise<boolean>;
   abstract save(tableName: string, attributes: Record<string, string>, pk: Attribute<Natural, unknown>): (this: EntryBase & Record<string, Natural>) => Promise<boolean>;
 

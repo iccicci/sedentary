@@ -30,7 +30,7 @@ PARENT=$(shell if [ -f ../Makefile ] ; then echo yes ; else echo no ; fi)
 
 ifeq (${PARENT}, yes)
 
-TESTS=$(shell cd .. ; ls test/0*.ts test/helper.ts | grep -v .d.ts)
+TESTS=$(shell cd .. ; ls test/0*.ts test/helper.ts)
 VSCODE=$(shell cd .. ; ls .vscode/*)
 
 test/%.ts: ../test/%.ts

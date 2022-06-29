@@ -45,7 +45,7 @@ describe("models", () => {
       l5.b = "test";
       saveC = await l5.save();
       saveD = await l5.save();
-      l6 = await test1.load({ b: ["IN", ["a", "b", "test"]] }, ["id"]);
+      l6 = await test1.load({ b: ["IN", ["a", "b", "test"]] }, "id");
       r1 = await l6[0].remove();
       r2 = await l6[0].remove();
     });
@@ -210,6 +210,8 @@ describe("models", () => {
       }
 
       await t32[2].remove();
+
+      await test1.load({}, ["id"], 1);
     });
 
     it("methods", () =>
@@ -280,7 +282,9 @@ describe("models", () => {
         "test3.preRemove 3",
         "test1.postRemove 3",
         "test2.postRemove 3",
-        "test3.postRemove 3"
+        "test3.postRemove 3",
+        "test1.preLoad",
+        "test1.postLoad 1"
       ]));
   });
 

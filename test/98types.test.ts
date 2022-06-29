@@ -5,8 +5,7 @@ type Diagnostics = ReturnType<typeof tsd> extends Promise<infer T> ? T : never;
 describe("types", () => {
   let diagnostics: Diagnostics;
 
-  before(async function() {
-    this.timeout(10000);
+  beforeAll(async function() {
     diagnostics = await tsd({ cwd: ".", testFiles: ["test/types.ts"], typingsFile: "index.ts" });
   });
 

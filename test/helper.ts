@@ -47,7 +47,7 @@ export function helper(expected: string[], notClean: Test | boolean, options?: T
     return current;
   }
 
-  before(async function() {
+  beforeAll(async function() {
     try {
       if(! notClean) await clean();
       await (test as Test)((db = new Sedentary(connection, options as SedentaryOptions)));
@@ -68,7 +68,7 @@ export function helper(expected: string[], notClean: Test | boolean, options?: T
 export function errorHelper(test: (db: Sedentary) => void): (message: string) => void {
   let err: Error;
 
-  before(async function() {
+  beforeAll(async function() {
     try {
       await test(new Sedentary(connection));
     } catch(e) {

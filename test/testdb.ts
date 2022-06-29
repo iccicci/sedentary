@@ -49,7 +49,12 @@ export class TestDB extends DB<Transaction> {
     return typeof value === "number" ? value.toString() : `'${value}'`;
   }
 
-  load(tableName: string, attributes: Record<string, string>, pk: Attribute<Natural, unknown>, model: new (from: "load") => EntryBase): (where: string, order?: string[]) => Promise<EntryBase[]> {
+  load(
+    tableName: string,
+    attributes: Record<string, string>,
+    pk: Attribute<Natural, unknown>,
+    model: new (from: "load") => EntryBase
+  ): (where: string, order?: string | string[]) => Promise<EntryBase[]> {
     const loads: Record<string, Record<string, Natural>[][]> = {
       test1: [
         [{ id: 1, a: 23, b: "ok" }],
@@ -90,8 +95,8 @@ export class TestDB extends DB<Transaction> {
       ]
     };
 
-    return async (where: string, order?: string[]) => {
-      this.log(`Load from ${tableName} where: "${where}"${order ? ` order by: ${order.join(", ")}` : ""}`);
+    return async (where: string, order?: string | string[]) => {
+      this.log(`Load from ${tableName} where: "${where}"${order ? ` order by: ${(typeof order === "string" ? [order] : order).join(", ")}` : ""}`);
 
       return (loads[tableName].shift() || []).map(_ => {
         const ret = new model("load");

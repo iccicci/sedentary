@@ -213,6 +213,7 @@ expectAssignable<WT12>(["AND", ["NOT", { a: ["=", 0], b: [">", "test"] }], { c: 
 expectAssignable<WT12>(["OR", ["NOT", { a: 0, b: [">", "test"] }], { c: ["IN", [2, 3, 4]] }, "plain condition"]);
 expectAssignable<OT12>([]);
 expectAssignable<OT12>(["a", "-b", "id", "-c"]);
+expectAssignable<OT12>("a");
 
 const T13 = db.model("T13", { a: db.FKEY(T6) });
 type ET13 = Entry<typeof T13>;

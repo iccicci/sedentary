@@ -50,7 +50,8 @@ type ConditionAttribute<N extends Natural> = N | ["=" | ">" | "<" | ">=" | "<=" 
 type ConditionBase<A extends AttributesDefinition> = string | { [a in keyof A]?: ConditionAttribute<Native<A[a]>> };
 type Condition<A extends AttributesDefinition> = ConditionBase<A> | ["NOT", Condition<A>] | ["AND", ...Condition<A>[]] | ["OR", ...Condition<A>[]];
 
-type Order<A extends AttributesDefinition> = (keyof A | `-${string & keyof A}`)[];
+type Order_<A extends AttributesDefinition> = keyof A | `-${string & keyof A}`;
+type Order<A extends AttributesDefinition> = Order_<A> | Order_<A>[];
 
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 type IsUnion<T> = [T] extends [UnionToIntersection<T>] ? false : true;
@@ -70,22 +71,22 @@ type ModelAttributes<A extends AttributesDefinition, B extends boolean, K extend
   : ModelAttributesIf<A, P extends new () => EntryBase ? P["attributes"] : { id: { notNull: true; type: Type<BaseKeyType<B>, unknown> } }>;
 
 export interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> {
-  attributes: A;
+  load(where: Condition<A>, order?: Order<A>, limit?: number, tx?: Transaction, lock?: boolean): Promise<E[]>;
   load(where: Condition<A>, order?: Order<A>, tx?: Transaction, lock?: boolean): Promise<E[]>;
+  load(where: Condition<A>, limit?: number, tx?: Transaction, lock?: boolean): Promise<E[]>;
   load(where: Condition<A>, tx: Transaction, lock?: boolean): Promise<E[]>;
 }
 
-type ModelBase<N extends Natural, A extends AttributesDefinition, EA extends Record<string, Natural | undefined>, EM extends EntryBase, E extends EntryBase> = (new (
-  from?: Partial<EA>,
-  tx?: Transaction
-) => E) &
-  Attribute<N, E> & { foreignKeys: Record<string, boolean>; methods: EM; parent?: ModelStd; tableName: string } & { [a in keyof A]: Attribute<Native<A[a]>, E> } & ModelLoad<A, E>;
+type ModelBase<N extends Natural, A extends AttributesDefinition, EA extends Record<string, Natural>, EM extends EntryBase, E extends EntryBase> = (new (from?: Partial<EA>, tx?: Transaction) => E) &
+  Attribute<N, E> & { attributes: A; foreignKeys: Record<string, boolean>; methods: EM; parent?: ModelStd; tableName: string } & { [a in keyof A]: Attribute<Native<A[a]>, E> } & ModelLoad<A, E>;
 type Model<N extends Natural, A extends AttributesDefinition, EM extends EntryBase> = ModelBase<N, A, EntryBaseAttributes<A>, EM, EntryBaseAttributes<A> & EM>;
 type ModelStd = Attribute<Natural, EntryBase> & { attributes: AttributesDefinition; foreignKeys: Record<string, boolean>; methods: EntryBase; parent?: ModelStd };
 
 export type Entry<M> = M extends new () => infer E ? E : never;
-export type OrderBy<M> = M extends { load(where: unknown, order?: infer T, tx?: Transaction): void; load(where: unknown, tx?: Transaction): void } ? Exclude<T, undefined> : never;
-export type Where<M> = M extends { load(where: infer T, order?: unknown, tx?: Transaction): void; load(where: unknown, tx?: Transaction): void } ? T : never;
+export type OrderBy<M> = M extends { load(where: unknown, order?: infer T): void; load(where: unknown, limit?: number): void; load(where: unknown, tx?: Transaction): void }
+  ? Exclude<T, undefined>
+  : never;
+export type Where<M> = M extends { load(where: infer T): void } ? T : never;
 
 export interface SedentaryOptions {
   autoSync?: boolean;
@@ -171,12 +172,16 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   }
 
   private checkOrderBy(order: unknown, attributes: Record<string, string>, modelName: string): order is string[] {
+    let array = [];
+
     if(! order) return true;
-    if(! (order instanceof Array)) return false;
+    if(typeof order === "string") array = [order];
+    else if(order instanceof Array) array = order;
+    else return false;
 
     const provided: Record<string, boolean> = {};
 
-    for(const attribute of order) {
+    for(const attribute of array) {
       if(typeof attribute !== "string") return false;
 
       const attributeName = attribute.startsWith("-") ? attribute.substring(1) : attribute;
@@ -545,17 +550,37 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     this.db.tables.push(table);
 
     const load_ = this.db.load(tableName, attr2field, pk, ret, table);
-    const load = async (where: unknown, order?: string[], tx?: Transaction, lock?: boolean) => {
-      if(order instanceof Transaction) {
-        if(typeof tx === "boolean" && tx) lock = true;
-        tx = order;
-        order = undefined;
-      }
+    const load = async (where: unknown, ...args: unknown[]) => {
+      let order: string | string[] | undefined = undefined;
+      let limit: number | undefined = undefined;
+      let tx: Transaction | undefined = undefined;
+      let lock: boolean | undefined = undefined;
 
-      if(! this.checkOrderBy(order, attr2field, modelName)) throw new Error(`${modelName}.load: 'order' argument: Wrong type, expected 'string[]'`);
+      const checkArgs = (first: boolean) => {
+        if(! args.length) return;
+
+        if(args[0] instanceof Transaction) {
+          if(first) order = undefined;
+          limit = undefined;
+          [tx, lock] = args as [Transaction, boolean];
+        } else if(typeof args[0] === "number") {
+          if(first) order = undefined;
+          [limit, tx, lock] = args as [number, Transaction, boolean];
+        } else {
+          if(first) {
+            order = args.shift() as string | string[];
+            checkArgs(false);
+          } else throw new Error(`${modelName}.load: 'limit' argument: Wrong type, expected 'number'`);
+        }
+      };
+
+      checkArgs(true);
+
+      if(! this.checkOrderBy(order, attr2field, modelName)) throw new Error(`${modelName}.load: 'order' argument: Wrong type, expected 'string | string[]'`);
+      if(tx && ! ((tx as unknown) instanceof Transaction)) throw new Error(`${modelName}.load: 'tx' argument: Wrong type, expected 'Transaction'`);
 
       const [str] = this.createWhere(modelName, attr2field, where);
-      const ret = await load_(str, order, tx, lock);
+      const ret = await load_(str, order, limit, tx, lock);
 
       return ret;
     };
