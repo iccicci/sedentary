@@ -274,7 +274,6 @@ describe("class Sedentary - errors", () => {
   describe("Sedentary.load(, order) - value 3", () => errorHelper(async db => await db.model("test1", { a: db.INT }).load({}, ["-a", "a"]))("test1.load: 'order' argument: Reused 'a' attribute"));
   describe("Sedentary.load(,, limit) - type", () =>
     errorHelper(async db => await db.model("test1", { a: db.INT }).load({}, "a", "b" as never))("test1.load: 'limit' argument: Wrong type, expected 'number'"));
-  describe("Sedentary.load(,,, tx) - type", () =>
-    errorHelper(async db => await db.model("test1", { a: db.INT }).load({}, 1, 1 as never))("test1.load: 'tx' argument: Wrong type, expected 'Transaction'"));
+  describe("Sedentary.load(,,, tx) - type", () => errorHelper(async db => await db.model("test1", {}).load({}, 1, 1 as never))("test1.load: 'tx' argument: Wrong type, expected 'Transaction'"));
   describe("Sedentary.remove()", () => errorHelper(async db => await new (db.model("test1", { a: db.INT }))().remove())("test1.remove: Can't remove a never saved Entry"));
 });
