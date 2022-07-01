@@ -151,7 +151,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     return new Type({ base: Number, size, type: "INT" });
   }
 
-  public INT8(): Type<BigInt, unknown> {
+  public INT8(): Type<bigint, unknown> {
     return new Type({ base: BigInt, size: 8, type: "INT8" });
   }
 
@@ -354,7 +354,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     let autoIncrement = true;
     const { indexes, int8id, parent, primaryKey, sync, tableName } = { sync: this.doSync, tableName: modelName, ...options };
     let aarray: Attribute<Natural, unknown>[] = int8id
-      ? [new Attribute<BigInt, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })]
+      ? [new Attribute<bigint, unknown>({ ...this.INT8(), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })]
       : [new Attribute<number, unknown>({ ...this.INT(4), attributeName: "id", fieldName: "id", modelName, notNull: true, tableName, unique: true })];
     let constraints: Constraint[] = [{ attribute: aarray[0], constraintName: `${tableName}_id_unique`, type: "u" }];
     const iarray: Index[] = [];
