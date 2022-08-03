@@ -1,8 +1,0 @@
-{
-  "compilerOptions": {
-    "module": "ESNext",
-    "outDir": "dist/es",
-    "target": "ESNext"
-  },
-  "extends": "./tsconfig.build.json"
-}

@@ -14,7 +14,7 @@
     "target": "ESNext"
   },
   "include": [
-    "packages/**/*.ts",
-    "scripts/*.ts"
+    "*.ts",
+    "test/*.ts"
   ]
 }

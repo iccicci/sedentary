@@ -1,0 +1,58 @@
+#!/bin/bash
+
+needs_coverage() {
+  [[ `node --version` =~ ^v18  && ( $PACKAGE == sedentary || $PG_VERSION == 14 ) ]]
+}
+
+reporter_id() {
+  case $PACKAGE in
+    sedentary)
+      echo 1aa1f737e7bf7d2859a2c7d9a0d9634a0d9aa89e3a19476d576faa7d02a1d46f
+      ;;
+
+    sedentary-pg)
+      echo c7519657dfea145349c1b7a98f7134f033c25f598b40ad5b077744eb4beb7c66
+      ;;
+  esac
+}
+
+case $1 in
+  before_install)
+    if [[ $PACKAGE == sedentary-pg ]] ; then
+      sudo service postgresql stop
+      sudo service postgresql restart $PG_VERSION
+      echo Started PostgreSQL v$PG_VERSION
+    fi
+    ;;
+
+  before_script)
+    if needs_coverage ; then
+      wget https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 -q -O ./cc-test-reporter
+      chmod +x ./cc-test-reporter
+      echo cc-test-reporter
+      CC_TEST_REPORTER_ID=$(reporter_id) ./cc-test-reporter before-build
+    fi
+
+    if [ $PACKAGE = sedentary-pg ] ; then
+      psql -c "CREATE DATABASE sedentary;" -U postgres
+      psql -c "ALTER DATABASE sedentary SET timezone TO 'GMT';" -U postgres
+    fi
+    ;;
+
+  script)
+    cd packages/$PACKAGE
+    if needs_coverage ; then
+      yarn coverage
+    else
+      yarn test
+    fi
+  ;;
+
+  after_script)
+    if needs_coverage ; then
+      cd packages/$PACKAGE
+      CC_TEST_REPORTER_ID=$(reporter_id) ../../cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+    fi
+    ;;
+
+esac

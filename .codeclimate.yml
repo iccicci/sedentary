@@ -20,4 +20,3 @@ plugins:
     enabled: true
 exclude_patterns:
   - "**/node_modules/"
-  - "**/*.d.ts"
