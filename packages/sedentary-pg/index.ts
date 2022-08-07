@@ -1,4 +1,4 @@
-import { Attribute, EntryBase, ForeignKeyOptions, Natural, Sedentary, SedentaryOptions, Type } from "sedentary";
+import { Attribute, EntryBase, ForeignKeyOptions, Sedentary, SedentaryOptions, Type } from "sedentary";
 import { PoolConfig } from "pg";
 
 import { PGDB, TransactionPG } from "./pgdb";
@@ -15,21 +15,19 @@ export class SedentaryPG extends Sedentary<PGDB, TransactionPG> {
     this.db = new PGDB(connection, this.log);
   }
 
-  FKEY<N extends Natural, E extends EntryBase>(attribute: Attribute<N, E>, options?: ForeignKeyOptions): Type<N, E> {
+  FKey<T, E extends EntryBase>(attribute: Attribute<T, E>, options?: ForeignKeyOptions): Type<T, E> {
     const { attributeName, modelName, unique } = attribute;
 
-    if(! unique) throw new Error(`Sedentary.FKEY: '${modelName}' model: '${attributeName}' attribute: is not unique: can't be used as FKEY target`);
+    if(! unique) throw new Error(`SedentaryPG.FKey: '${modelName}' model: '${attributeName}' attribute: is not unique: can't be used as FKey target`);
 
-    return super.FKEY(attribute, options);
+    return super.FKey(attribute, options);
   }
 
-  public async begin(): Promise<TransactionPG> {
-    return (this.db as PGDB).begin();
+  public begin() {
+    return this.db.begin();
   }
 
-  public async client() {
-    return (this.db as PGDB).client();
+  public client() {
+    return this.db.client();
   }
 }
-
-export const Package = SedentaryPG;

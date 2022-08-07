@@ -52,7 +52,7 @@ const db = new Sedentary("file.db");
 
 class Items extends db.model("Item", {
   num: db.INT,
-  str: db.VARCHAR(30)
+  str: db.VarChar(30)
 });
 
 (async function () {

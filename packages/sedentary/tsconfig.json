@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "alwaysStrict": true,
+    "composite": true,
     "esModuleInterop": true,
     "moduleResolution": "Node",
     "noImplicitAny": true,

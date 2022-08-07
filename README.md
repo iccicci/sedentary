@@ -52,7 +52,7 @@ const db = new Sedentary("file.db");
 
 class Items extends db.model("Item", {
   num: db.INT,
-  str: db.VARCHAR(30)
+  str: db.VarChar(30)
 });
 
 (async function () {
@@ -109,9 +109,9 @@ To work with the package under Windows, be sure to configure `bash.exe` as your 
 > npm config set script-shell bash.exe
 ```
 
-# Licence
+# License
 
-[MIT Licence](https://github.com/iccicci/sedentary/blob/master/LICENSE)
+[MIT License](https://github.com/iccicci/sedentary/blob/master/LICENSE)
 
 # Bugs
 

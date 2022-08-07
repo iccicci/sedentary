@@ -29,6 +29,7 @@ async function package_json() {
       tsd: {
         compilerOptions: {
           alwaysStrict:                 true,
+          composite:                    false,
           esModuleInterop:              true,
           moduleResolution:             "Node",
           noImplicitAny:                true,
@@ -65,12 +66,12 @@ async function package_json() {
     repository,
     scripts:  {
       build:       "make build",
-      coverage:    "jest --coverage --runInBand",
+      coverage:    "jest --coverage --no-cache --runInBand",
       deploy:      'npm_config_registry="registry.npmjs.org" npm publish',
       precoverage: "make pretest",
       preinstall:  "if [ -f Makefile ] ; then make ; fi",
       pretest:     "make pretest",
-      test:        "jest --runInBand"
+      test:        "jest --no-cache --runInBand"
     },
     types: "./dist/types/index.d.ts",
     version,
@@ -106,9 +107,9 @@ async function version() {
 }
 
 const specificOptions = {
-  "tsconfig.json":       {},
   "tsconfig.cjs.json":   { module: "CommonJS", outDir: "dist/cjs", target: "ES2020" },
   "tsconfig.es.json":    { module: "ESNext", outDir: "dist/es" },
+  "tsconfig.json":       {},
   "tsconfig.types.json": { declaration: true, emitDeclarationOnly: true, outDir: "dist/types" }
 };
 const compilerOptions = {
@@ -116,20 +117,22 @@ const compilerOptions = {
   esModuleInterop:              true,
   moduleResolution:             "Node",
   noImplicitAny:                true,
-  noImplicitThis:               true,
   noImplicitReturns:            true,
+  noImplicitThis:               true,
   strict:                       true,
   strictBindCallApply:          true,
   strictFunctionTypes:          true,
   strictNullChecks:             true,
   strictPropertyInitialization: true,
   target:                       "ESNext",
-  ...specificOptions[file as keyof typeof specificOptions]
+  ...specificOptions[file as keyof typeof specificOptions],
+  ...(PACKAGE === "sedentary" ? { composite: true } : {})
 };
 const include = file === "tsconfig.json" ? (PACKAGE === "core" ? ["packages/**/*.ts", "scripts/*.ts"] : ["*.ts", "test/*.ts"]) : ["*.ts"];
+const references = ["core", "sedentary"].includes(PACKAGE) ? {} : { references: [{ path: "../sedentary" }] };
 
 function tsconfig_json() {
-  writeFile(file, JSON.stringify(sort({ compilerOptions, include }), null, 2) + "\n");
+  writeFile(file, JSON.stringify(sort({ compilerOptions, include, ...references }), null, 2) + "\n");
 }
 
 (() => {

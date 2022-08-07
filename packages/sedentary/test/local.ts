@@ -35,8 +35,8 @@ export const coverage = {
   ]
 };
 
-export const dryrun = {
-  dryrun: [
+export const dry_run = {
+  dry_run: [
     "NOT SYNCING: 'test1': Removing unique constraint from field: 'c'",
     "NOT SYNCING: 'test1': Removing index: 'a'",
     "NOT SYNCING: 'test1': Removing field: 'c'",
@@ -280,7 +280,7 @@ export const expected = {
     "'test1': Adding unique constraint on field: 'id'"
   ],
   types_boolean_changes: ["'test1': Changing field type: 'b' 'VARCHAR' ''", "'test1': Changing field type: 'c' 'BOOLEAN' ''"],
-  types_datetime:        [
+  types_date_time:       [
     "Adding table: 'test1'",
     "Setting auto increment: 'test1'",
     "'test1': Adding field: 'id' 'INT' '4'",
@@ -295,24 +295,13 @@ export const expected = {
     "'test1': Setting not null for field: 'f'",
     "'test1': Adding unique constraint on field: 'id'"
   ],
-  types_datetime_changes: [
+  types_date_time_changes: [
     "'test1': Changing field type: 'b' 'VARCHAR' ''",
     "'test1': Changing field type: 'c' 'DATETIME' ''",
     "'test1': Changing field type: 'd' 'INT8' '8'",
     "'test1': Changing field type: 'e' 'DATETIME' ''"
   ],
-  types_number: [
-    "Adding table: 'test1'",
-    "Setting auto increment: 'test1'",
-    "'test1': Adding field: 'id' 'INT' '4'",
-    "'test1': Setting not null for field: 'id'",
-    "'test1': Adding field: 'a' 'NUMBER' ''",
-    "'test1': Adding field: 'b' 'NUMBER' ''",
-    "'test1': Adding field: 'c' 'VARCHAR' ''",
-    "'test1': Adding unique constraint on field: 'id'"
-  ],
-  types_number_changes: ["'test1': Changing field type: 'b' 'VARCHAR' ''", "'test1': Changing field type: 'c' 'NUMBER' ''"],
-  types_int:            [
+  types_int: [
     "Adding table: 'test1'",
     "Setting auto increment: 'test1'",
     "'test1': Adding field: 'id' 'INT' '4'",
@@ -335,7 +324,36 @@ export const expected = {
     "'test1': Changing field type: 'c' 'VARCHAR' '23'",
     "'test1': Changing field type: 'd' 'VARCHAR' '42'",
     "'test1': Changing default value to '42' for field: 'e'"
-  ]
+  ],
+  types_json: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'JSON' ''",
+    "'test1': Adding field: 'b' 'JSON' ''",
+    "'test1': Adding field: 'c' 'VARCHAR' ''",
+    "'test1': Adding field: 'd' 'JSON' ''",
+    "'test1': Adding field: 'e' 'INT' '4'",
+    "'test1': Adding unique constraint on field: 'id'"
+  ],
+  types_json_changes: [
+    "'test1': Changing field type: 'b' 'VARCHAR' ''",
+    "'test1': Changing field type: 'c' 'JSON' ''",
+    "'test1': Changing field type: 'd' 'INT' '4'",
+    "'test1': Changing field type: 'e' 'JSON' ''"
+  ],
+  types_number: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'NUMBER' ''",
+    "'test1': Adding field: 'b' 'NUMBER' ''",
+    "'test1': Adding field: 'c' 'VARCHAR' ''",
+    "'test1': Adding unique constraint on field: 'id'"
+  ],
+  types_number_changes: ["'test1': Changing field type: 'b' 'VARCHAR' ''", "'test1': Changing field type: 'c' 'NUMBER' ''"]
 };
 
 export const models = {
@@ -356,8 +374,8 @@ export const models = {
     'Load from test1 where: "id < 23" order by: id',
     'Load from test1 where: "" order by: -id',
     `Load from test1 where: "b = 'ok'"`,
-    'Save to test1 {"id":1,"a":23,"b":"test"}',
-    'Save to test1 {"id":1,"a":23,"b":"test"}',
+    'Save to test1 {"a":23,"b":"test","id":1}',
+    'Save to test1 {"a":23,"b":"test","id":1}',
     `Load from test1 where: "b IN ('a', 'b', 'test')" order by: id`,
     "Delete from test1 1",
     "Delete from test1 1"
@@ -412,7 +430,7 @@ export const transactions = {
     'Save to test2 {"a":1,"b":"1"}',
     'Save to test2 {"a":2,"b":"2"}',
     'Load from test2 where: ""',
-    'Save to test2 {"id":1,"a":11,"b":"11"}',
+    'Save to test2 {"a":11,"b":"11","id":1}',
     "Delete from test2 2",
     'Save to test2 {"a":3,"b":"3"}',
     'Load from test2 where: "" order by: id'
@@ -429,7 +447,7 @@ export const transactions = {
     'Save to test3 {"a":1,"b":"1"}',
     'Save to test3 {"a":2,"b":"2"}',
     'Load from test3 where: ""',
-    'Save to test3 {"id":1,"a":11,"b":"11"}',
+    'Save to test3 {"a":11,"b":"11","id":1}',
     "Delete from test3 2",
     'Save to test3 {"a":3,"b":"3"}',
     'Load from test3 where: "" order by: id'

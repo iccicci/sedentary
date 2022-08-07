@@ -1,3 +1,5 @@
+SHELL   := PACKAGE=core $(shell which bash)
+
 PACKAGES := $(shell ls packages)
 UTILS    := scripts/utils.ts
 
@@ -5,13 +7,13 @@ UTILS    := scripts/utils.ts
 all: $(patsubst %,packages/%/package.json, $(PACKAGES)) tsconfig.json
 	@:
 
-%/package.json: $(UTILS) packages/sedentary/Makefile Makefile
+%/package.json: $(UTILS) packages/sedentary/Makefile package.json
 	make -C $*
 
 deploy: $(UTILS) all Makefile
 	yarn workspaces run deploy
-	echo git tag v$$(ts-node $< $@)
-	echo git push --tags
+	git tag v$$(ts-node $< $@)
+	git push --tags
 
 docs/build/.deps: docs/requirements.txt Makefile
 	@mkdir -p docs/build
@@ -22,4 +24,4 @@ doc: docs/build/.deps
 	cd docs ; PYTHONPATH="${PYTHONPATH}:." sphinx-build . build
 
 tsconfig.json: scripts/utils.ts Makefile
-	-PACKAGE=core ts-node $< $@
+	-ts-node $< $@

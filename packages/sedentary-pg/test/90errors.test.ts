@@ -92,11 +92,11 @@ describe("errors", () => {
     it("error", () => eq(err.message, "Unknown type: 'test', '3'"));
   });
 
-  describe("SedentaryPG.FKEY", () =>
+  describe("SedentaryPG.FKey", () =>
     errorHelper(db => {
-      class test1 extends db.model("test1", { a: db.INT }) {}
-      db.model("test", { a: db.FKEY(test1.a) });
-    })("Sedentary.FKEY: 'test1' model: 'a' attribute: is not unique: can't be used as FKEY target"));
+      class test1 extends db.model("test1", { a: db.Int }) {}
+      db.model("test", { a: db.FKey(test1.a) });
+    })("SedentaryPG.FKey: 'test1' model: 'a' attribute: is not unique: can't be used as FKey target"));
 
   describe("SedentaryPG.escape(null)", () =>
     errorHelper(db => {

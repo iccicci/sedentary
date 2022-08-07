@@ -1,23 +1,33 @@
 import { DatabaseError, Pool, PoolClient, PoolConfig, types as PGtypes } from "pg";
 import format from "pg-format";
-import { Attribute, DB, EntryBase, ForeignKeyActions, Index, Natural, Table, Transaction } from "sedentary";
+import { Attribute, DB, EntryBase, ForeignKeyActions, Index, Table, Transaction } from "sedentary";
 import { adsrc } from "./adsrc";
 
 const needDrop = [
   ["DATETIME", "int2"],
   ["DATETIME", "int4"],
   ["DATETIME", "int8"],
+  ["DATETIME", "numeric"],
+  ["INT", "json"],
   ["INT", "timestamptz"],
-  ["INT8", "timestamptz"]
+  ["INT8", "json"],
+  ["INT8", "timestamptz"],
+  ["JSON", "int2"],
+  ["JSON", "int4"],
+  ["JSON", "int8"],
+  ["JSON", "numeric"],
+  ["NUMBER", "json"],
+  ["NUMBER", "timestamptz"]
 ];
 const needUsing = [
   ["BOOLEAN", "varchar"],
   ["DATETIME", "varchar"],
   ["INT", "varchar"],
   ["INT8", "varchar"],
+  ["JSON", "varchar"],
   ["NUMBER", "varchar"]
 ];
-const types = { bool: "BOOL", int2: "SMALLINT", int4: "INTEGER", int8: "BIGINT", numeric: "NUMERIC", timestamptz: "DATETIME", varchar: "VARCHAR" };
+const types = { bool: "BOOL", int2: "SMALLINT", int4: "INTEGER", int8: "BIGINT", json: "JSON", numeric: "NUMERIC", timestamptz: "DATETIME", varchar: "VARCHAR" };
 
 const actions: { [k in ForeignKeyActions]: string } = { cascade: "c", "no action": "a", restrict: "r", "set default": "d", "set null": "n" };
 
@@ -35,7 +45,7 @@ PGtypes.setTypeParser(1700, parseNumber);
 export class PGDB extends DB<TransactionPG> {
   private _client: PoolClient = {} as PoolClient;
   private indexes: string[] = [];
-  private oidLoad: Record<number, (ids: Natural[]) => Promise<EntryBase[]>> = {};
+  private oidLoad: Record<number, (ids: unknown[]) => Promise<EntryBase[]>> = {};
   private pool: Pool;
   private released = false;
   private version = 0;
@@ -59,7 +69,7 @@ export class PGDB extends DB<TransactionPG> {
     await this.pool.end();
   }
 
-  defaultNeq(src: string, value: Natural): boolean {
+  defaultNeq(src: string, value: unknown): boolean {
     if(src === value) return false;
 
     return src.split("::")[0] !== value;
@@ -78,20 +88,18 @@ export class PGDB extends DB<TransactionPG> {
     return await this.pool.connect();
   }
 
-  escape(value: Natural): string {
+  escape(value: unknown): string {
     if(value === null || value === undefined) throw new Error("SedentaryPG: Can't escape null nor undefined values; use the 'IS NULL' operator instead");
 
-    const type = typeof value;
-
-    if(type === "number" || type === "boolean") return value.toString();
-    if(type === "string") return format("%L", value);
+    if(typeof value === "boolean" || typeof value === "number") return value.toString();
+    if(typeof value === "string") return format("%L", value);
     //if(value instanceof Date)
     return format("%L", value).replace(/\.\d\d\d\+/, "+");
     //return format("%L", JSON.stringify(value));
   }
 
-  fill(attributes: Record<string, string>, row: Record<string, Natural>, entry: Record<string, Natural>) {
-    const loaded: Record<string, Natural> = {};
+  fill(attributes: Record<string, string>, row: Record<string, unknown>, entry: Record<string, unknown>) {
+    const loaded: Record<string, unknown> = {};
 
     for(const attribute in attributes) entry[attribute] = loaded[attribute] = row[attributes[attribute]];
     Object.defineProperty(entry, "loaded", { configurable: true, value: loaded });
@@ -100,7 +108,7 @@ export class PGDB extends DB<TransactionPG> {
   load(
     tableName: string,
     attributes: Record<string, string>,
-    pk: Attribute<Natural, unknown>,
+    pk: Attribute<unknown, unknown>,
     model: new (from: "load") => EntryBase,
     table: Table
   ): (where: string, order?: string | string[], limit?: number, tx?: Transaction) => Promise<EntryBase[]> {
@@ -110,7 +118,7 @@ export class PGDB extends DB<TransactionPG> {
       const { oid } = table;
       const ret: EntryBase[] = [];
       const client = tx ? (tx as unknown as { _client: PoolClient })._client : await this.pool.connect();
-      const oidPK: Record<number, [number, Natural][]> = {};
+      const oidPK: Record<number, [number, unknown][]> = {};
 
       try {
         const forUpdate = lock ? " FOR UPDATE" : "";
@@ -123,7 +131,7 @@ export class PGDB extends DB<TransactionPG> {
 
         for(const row of res.rows) {
           if(row.tableoid === oid) {
-            const entry = new model("load") as EntryBase & Record<string, Natural>;
+            const entry = new model("load") as EntryBase & Record<string, unknown>;
 
             this.fill(attributes, row, entry);
 
@@ -140,7 +148,7 @@ export class PGDB extends DB<TransactionPG> {
         for(const oid in oidPK) {
           const res = await this.oidLoad[oid](oidPK[oid].map(_ => _[1]));
 
-          for(const entry of res) for(const [id, pk] of oidPK[oid]) if(pk === (entry as unknown as Record<string, Natural>)[pkFldName]) ret[id] = entry;
+          for(const entry of res) for(const [id, pk] of oidPK[oid]) if(pk === (entry as unknown as Record<string, unknown>)[pkFldName]) ret[id] = entry;
         }
       } finally {
         if(! tx) client.release();
@@ -150,10 +158,10 @@ export class PGDB extends DB<TransactionPG> {
     };
   }
 
-  remove(tableName: string, pk: Attribute<Natural, unknown>): (this: Record<string, Natural> & { tx?: TransactionPG }) => Promise<boolean> {
+  remove(tableName: string, pk: Attribute<unknown, unknown>): (this: Record<string, unknown> & { tx?: TransactionPG }) => Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    const pkAttrnName = pk.attributeName;
+    const pkAttrName = pk.attributeName;
     const pkFldName = pk.fieldName;
 
     return async function() {
@@ -161,7 +169,7 @@ export class PGDB extends DB<TransactionPG> {
       let removed = false;
 
       try {
-        const query = `DELETE FROM ${tableName} WHERE ${pkFldName} = ${self.escape(this[pkAttrnName])}`;
+        const query = `DELETE FROM ${tableName} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`;
 
         self.log(query);
         removed = (await client.query(query)).rowCount === 1;
@@ -176,11 +184,11 @@ export class PGDB extends DB<TransactionPG> {
   save(
     tableName: string,
     attributes: Record<string, string>,
-    pk: Attribute<Natural, unknown>
-  ): (this: Record<string, Natural> & { loaded?: Record<string, unknown>; tx?: TransactionPG }) => Promise<boolean> {
+    pk: Attribute<unknown, unknown>
+  ): (this: Record<string, unknown> & { loaded?: Record<string, unknown>; tx?: TransactionPG }) => Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    const pkAttrnName = pk.attributeName;
+    const pkAttrName = pk.attributeName;
     const pkFldName = pk.fieldName;
 
     return async function() {
@@ -200,7 +208,7 @@ export class PGDB extends DB<TransactionPG> {
           }
 
           if(actions.length) {
-            const query = `UPDATE ${tableName} SET ${actions.join(", ")} WHERE ${pkFldName} = ${self.escape(this[pkAttrnName])}`;
+            const query = `UPDATE ${tableName} SET ${actions.join(", ")} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`;
 
             self.log(query);
             self.fill(attributes, (await client.query(query + " RETURNING *")).rows[0], this);
@@ -276,7 +284,7 @@ export class PGDB extends DB<TransactionPG> {
 
   async dropIndexes(table: Table, constraintIndexes: number[]): Promise<void> {
     const { indexes, oid } = table;
-    const iobject: { [key: string]: Index } = {};
+    const iObject: { [key: string]: Index } = {};
     const res = await this._client.query(
       "SELECT amname, attname, indexrelid, indisunique, relname FROM pg_class, pg_index, pg_attribute, pg_am WHERE indrelid = $1 AND indexrelid = pg_class.oid AND attrelid = pg_class.oid AND relam = pg_am.oid ORDER BY attnum",
       [oid]
@@ -286,8 +294,8 @@ export class PGDB extends DB<TransactionPG> {
       const { amname, attname, indexrelid, indisunique, relname } = row;
 
       if(! constraintIndexes.includes(indexrelid)) {
-        if(iobject[relname]) iobject[relname].fields.push(attname);
-        else iobject[relname] = { fields: [attname], indexName: relname, type: amname, unique: indisunique };
+        if(iObject[relname]) iObject[relname].fields.push(attname);
+        else iObject[relname] = { fields: [attname], indexName: relname, type: amname, unique: indisunique };
       }
     }
 
@@ -295,13 +303,13 @@ export class PGDB extends DB<TransactionPG> {
     for(const index of indexes) {
       const { indexName } = index;
 
-      if(iobject[indexName] && this.indexesEq(index, iobject[indexName])) {
+      if(iObject[indexName] && this.indexesEq(index, iObject[indexName])) {
         this.indexes.push(indexName);
-        delete iobject[indexName];
+        delete iObject[indexName];
       }
     }
 
-    for(const index of Object.keys(iobject).sort()) {
+    for(const index of Object.keys(iObject).sort()) {
       const statement = `DROP INDEX ${index}`;
 
       this.syncLog(statement);
@@ -345,7 +353,7 @@ export class PGDB extends DB<TransactionPG> {
     try {
       await super.syncDataBase();
 
-      for(const table of this.tables) this.oidLoad[table.oid || 0] = (ids: Natural[]) => table.model.load({ [table.pk.attributeName]: ["IN", ids] });
+      for(const table of this.tables) this.oidLoad[table.oid || 0] = (ids: unknown[]) => table.model.load({ [table.pk.attributeName]: ["IN", ids] });
     } catch(e) {
       throw e;
     } finally {
@@ -354,7 +362,7 @@ export class PGDB extends DB<TransactionPG> {
     }
   }
 
-  fieldType(attribute: Attribute<Natural, unknown>): string[] {
+  fieldType(attribute: Attribute<unknown, unknown>): string[] {
     const { size, type } = attribute;
     let ret;
 
@@ -363,13 +371,15 @@ export class PGDB extends DB<TransactionPG> {
       return ["BOOL", "BOOL"];
     case "DATETIME":
       return ["DATETIME", "TIMESTAMP (3) WITH TIME ZONE"];
-    case "NUMBER":
-      return ["NUMERIC", "NUMERIC"];
     case "INT":
       ret = size === 2 ? "SMALLINT" : "INTEGER";
       return [ret, ret];
     case "INT8":
       return ["BIGINT", "BIGINT"];
+    case "JSON":
+      return ["JSON", "JSON"];
+    case "NUMBER":
+      return ["NUMERIC", "NUMERIC"];
     case "VARCHAR":
       return ["VARCHAR", "VARCHAR" + (size ? `(${size})` : "")];
     }
@@ -439,14 +449,14 @@ export class PGDB extends DB<TransactionPG> {
         const { adsrc, attnotnull, atttypmod, typname } = res.rows[0];
 
         if(types[typname as keyof typeof types] !== base || (base === "VARCHAR" && (size ? size + 4 !== atttypmod : atttypmod !== -1))) {
-          if(needDrop.filter(([type, name]) => attribute.type === type && typname === name).length) {
+          if(needDrop.some(([type, name]) => attribute.type === type && typname === name)) {
             await this.dropField(tableName, fieldName);
             await addField();
             await setDefault(false);
           } else {
             if(adsrc) dropDefault();
 
-            const using = needUsing.filter(([type, name]) => attribute.type === type && typname === name).length ? " USING " + fieldName + "::" + type : "";
+            const using = needUsing.some(([type, name]) => attribute.type === type && typname === name) ? " USING " + fieldName + "::" + type : "";
             const statement = `ALTER TABLE ${tableName} ALTER COLUMN ${fieldName} TYPE ${type}${using}`;
 
             this.syncLog(statement);

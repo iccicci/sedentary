@@ -10,7 +10,7 @@ describe("transactions", () => {
     let result: unknown;
 
     helper(transactions.commit, async db => {
-      const test2 = db.model("test2", { a: db.INT, b: db.VARCHAR });
+      const test2 = db.model("test2", { a: db.Int, b: db.VarChar });
       await db.connect();
       const r1 = new test2({ a: 1, b: "1" });
       await r1.save();
@@ -26,7 +26,7 @@ describe("transactions", () => {
       await r3.save();
       await tx.commit();
       l2 = await test2.load({}, ["id"]);
-      result = [new test2({ id: 1, a: 11, b: "11" }), new test2({ id: 3, a: 3, b: "3" })];
+      result = [new test2({ a: 11, b: "11", id: 1 }), new test2({ a: 3, b: "3", id: 3 })];
     });
 
     it("commit", () => de(l2, result));
@@ -37,7 +37,7 @@ describe("transactions", () => {
     let result: unknown;
 
     helper(transactions.rollback, async db => {
-      const test3 = db.model("test3", { a: db.INT, b: db.VARCHAR });
+      const test3 = db.model("test3", { a: db.Int, b: db.VarChar });
       await db.connect();
       const r1 = new test3({ a: 1, b: "1" });
       await r1.save();
@@ -53,7 +53,7 @@ describe("transactions", () => {
       await r3.save();
       await tx.rollback();
       l2 = await test3.load({}, ["id"]);
-      result = [new test3({ id: 1, a: 1, b: "1" }), new test3({ id: 2, a: 2, b: "2" })];
+      result = [new test3({ a: 1, b: "1", id: 1 }), new test3({ a: 2, b: "2", id: 2 })];
     });
 
     it("rollback", () => de(l2, result));
@@ -63,22 +63,30 @@ describe("transactions", () => {
     const actual = [] as unknown[];
 
     helper(transactions.locks, async db => {
-      const test1 = db.model("test1", { a: db.INT, b: db.VARCHAR });
+      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.JSON<{ a?: number[]; b: string }>() });
       await db.connect();
-      const r1 = new test1({ a: 1, b: "1" });
+      const r1 = new test1({ a: 1, b: "1", c: { b: "test" } });
       const r2 = new test1({ a: 2, b: "2" });
       await r1.save();
       await r2.save();
 
-      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
       const tx1 = await db.begin();
       const tx2 = await db.begin();
       const tx3 = await db.begin();
 
+      let w1: () => void;
+      let w2: () => void;
+      let w3: () => void;
+
+      const p1 = new Promise<void>(resolve => (w1 = resolve));
+      const p2 = new Promise<void>(resolve => (w2 = resolve));
+      const p3 = new Promise<void>(resolve => (w3 = resolve));
+
       const t1 = async () => {
         const l = await test1.load({ a: 1 }, tx1, true);
 
-        await sleep(600);
+        w1();
+        await p3;
 
         actual.push({ ...l[0] });
         l[0].b = "3";
@@ -88,9 +96,10 @@ describe("transactions", () => {
       };
 
       const t2 = async () => {
-        await sleep(200);
+        await p1;
 
         const l1 = await test1.load({ a: 2 }, tx2, true);
+        w2();
         const l2 = await test1.load({ a: 1 }, tx2, true);
 
         actual.push({ ...l1[0] });
@@ -102,7 +111,8 @@ describe("transactions", () => {
       };
 
       const t3 = async () => {
-        await sleep(400);
+        await p2;
+        w3();
 
         const l = await test1.load({ a: 2 }, tx3, true);
 
@@ -116,10 +126,10 @@ describe("transactions", () => {
 
     it("locks", () =>
       de(actual, [
-        { id: 1, a: 1, b: "1" },
-        { id: 2, a: 2, b: "2" },
-        { id: 1, a: 1, b: "3" },
-        { id: 2, a: 2, b: "4" }
+        { a: 1, b: "1", c: { b: "test" }, id: 1 },
+        { a: 2, b: "2", c: null, id: 2 },
+        { a: 1, b: "3", c: { b: "test" }, id: 1 },
+        { a: 2, b: "4", c: null, id: 2 }
       ]));
   });
 });

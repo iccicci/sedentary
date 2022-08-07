@@ -16,5 +16,10 @@
   "include": [
     "*.ts",
     "test/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../sedentary"
+    }
   ]
 }

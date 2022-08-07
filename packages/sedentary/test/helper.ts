@@ -58,7 +58,10 @@ export function helper(expected: string[], notClean: Test | boolean, options?: T
     }
   });
 
-  it("No exceptions", () => de(err, undefined));
+  it("No exceptions", () => {
+    if(err) throw err;
+  });
+
   if(expected[0]) {
     for(const i in expected) it(expected[i], () => eq(log(), expected[i]));
     it("End", () => de(db.logs, [...(j === 3 ? ["Synced"] : []), "Closing connection...", "Connection closed"]));

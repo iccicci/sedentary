@@ -1,17 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Attribute, DB, Natural, Table, Transaction } from "../db";
+import { Attribute, DB, Table, Transaction } from "../db";
 import { promises } from "fs";
 import { EntryBase } from "..";
 
 const { readFile, writeFile } = promises;
 
-function stringifyer(key: string, value: unknown) {
-  return typeof value === "bigint" ? value.toString() : value;
-}
-
 function stringify(value: unknown) {
-  return JSON.stringify(value, stringifyer);
+  return JSON.stringify(value, (key: string, value: unknown) => (typeof value === "bigint" ? value + "n" : value));
 }
 
 export class TestDB extends DB<Transaction> {
@@ -45,52 +41,52 @@ export class TestDB extends DB<Transaction> {
     await writeFile(this.file, stringify(this.body));
   }
 
-  escape(value: Natural): string {
+  escape(value: unknown): string {
     return typeof value === "number" ? value.toString() : `'${value}'`;
   }
 
   load(
     tableName: string,
     attributes: Record<string, string>,
-    pk: Attribute<Natural, unknown>,
+    pk: Attribute<unknown, unknown>,
     model: new (from: "load") => EntryBase
   ): (where: string, order?: string | string[]) => Promise<EntryBase[]> {
-    const loads: Record<string, Record<string, Natural>[][]> = {
+    const loads: Record<string, Record<string, unknown>[][]> = {
       test1: [
-        [{ id: 1, a: 23, b: "ok" }],
-        [{ id: 2, a: null, b: "test" }],
+        [{ a: 23, b: "ok", id: 1 }],
+        [{ a: null, b: "test", id: 2 }],
         [
-          { id: 1, a: 23, b: "ok" },
-          { id: 2, a: null, b: "test" }
+          { a: 23, b: "ok", id: 1 },
+          { a: null, b: "test", id: 2 }
         ],
         [
-          { id: 2, a: null, b: "test" },
-          { id: 1, a: 23, b: "ok" }
+          { a: null, b: "test", id: 2 },
+          { a: 23, b: "ok", id: 1 }
         ],
-        [{ id: 1, a: 23, b: "ok" }],
+        [{ a: 23, b: "ok", id: 1 }],
         [
-          { id: 1, a: 23, b: "test" },
-          { id: 2, a: null, b: "test" }
+          { a: 23, b: "test", id: 1 },
+          { a: null, b: "test", id: 2 }
         ]
       ],
       test2: [
         [
-          { id: 1, a: 1, b: "1" },
-          { id: 2, a: 2, b: "2" }
+          { a: 1, b: "1", id: 1 },
+          { a: 2, b: "2", id: 2 }
         ],
         [
-          { id: 1, a: 11, b: "11" },
-          { id: 3, a: 3, b: "3" }
+          { a: 11, b: "11", id: 1 },
+          { a: 3, b: "3", id: 3 }
         ]
       ],
       test3: [
         [
-          { id: 1, a: 1, b: "1" },
-          { id: 2, a: 2, b: "2" }
+          { a: 1, b: "1", id: 1 },
+          { a: 2, b: "2", id: 2 }
         ],
         [
-          { id: 1, a: 1, b: "1" },
-          { id: 2, a: 2, b: "2" }
+          { a: 1, b: "1", id: 1 },
+          { a: 2, b: "2", id: 2 }
         ]
       ]
     };
@@ -110,7 +106,7 @@ export class TestDB extends DB<Transaction> {
     };
   }
 
-  remove(tableName: string): (this: EntryBase & Record<string, Natural>) => Promise<boolean> {
+  remove(tableName: string): (this: EntryBase & Record<string, unknown>) => Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     let value = true;
@@ -125,14 +121,14 @@ export class TestDB extends DB<Transaction> {
     };
   }
 
-  save(tableName: string): (this: Record<string, Natural>) => Promise<boolean> {
+  save(tableName: string): (this: Record<string, unknown>) => Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    const saves: [boolean, Record<string, Natural>][] = [
-      [true, { id: 1, a: 23, b: "ok" }],
-      [true, { id: 2, a: null, b: "test" }],
-      [true, { id: 1, a: 23, b: "test" }],
-      [false, { id: 1, a: 23, b: "test" }]
+    const saves: [boolean, Record<string, unknown>][] = [
+      [true, { a: 23, b: "ok", id: 1 }],
+      [true, { a: null, b: "test", id: 2 }],
+      [true, { a: 23, b: "test", id: 1 }],
+      [false, { a: 23, b: "test", id: 1 }]
     ];
 
     return async function() {
@@ -161,7 +157,7 @@ export class TestDB extends DB<Transaction> {
     }
 
     for(const constraint of Object.keys(constraints.u).sort()) {
-      if(! table.constraints.filter(({ constraintName, type }) => constraintName === constraint && type === "u").length) {
+      if(! table.constraints.some(({ constraintName, type }) => constraintName === constraint && type === "u")) {
         this.syncLog(`'${table.tableName}': Removing unique constraint from field: '${constraints.u[constraint].on}'`);
         if(this.sync) delete constraints.u[constraint];
       }
@@ -213,7 +209,7 @@ export class TestDB extends DB<Transaction> {
           const onUpdate = options.onUpdate !== "no action" ? ` on update ${options.onUpdate}` : "";
 
           this.syncLog(`'${table.tableName}': Adding foreign key '${constraint.constraintName}' on field: '${attribute.fieldName}' references '${tableName}(${fieldName})'${onDelete}${onUpdate}`);
-          if(this.sync) constraints[type][constraintName] = { on: attribute.fieldName, options, fieldName, tableName };
+          if(this.sync) constraints[type][constraintName] = { fieldName, on: attribute.fieldName, options, tableName };
         } else {
           this.syncLog(`'${table.tableName}': Adding unique constraint on field: '${attribute.fieldName}'`);
           if(this.sync) constraints[type][constraintName] = { on: attribute.fieldName };

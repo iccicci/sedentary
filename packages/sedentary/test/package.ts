@@ -1,5 +1,5 @@
 import { Sedentary as SedentaryBase, SedentaryOptions, Transaction } from "..";
-import { TestDB } from "./testdb";
+import { TestDB } from "./testDb";
 
 export class Sedentary extends SedentaryBase<TestDB, Transaction> {
   constructor(filename: string, options?: SedentaryOptions) {

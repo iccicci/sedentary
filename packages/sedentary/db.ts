@@ -1,5 +1,3 @@
-export type Natural = Date | Record<string, unknown> | bigint | boolean | number | string | null;
-
 export class EntryBase {
   constructor(from?: Partial<EntryBase>) {
     if(from === "load") this.preLoad();
@@ -33,10 +31,10 @@ export interface ForeignKeyOptions {
   onUpdate?: ForeignKeyActions;
 }
 
-export interface Type<N extends Natural, E> {
+export interface Type<T, E> {
   base: unknown;
   entry?: E;
-  native?: N;
+  native?: T;
   size?: number;
   type: string;
   foreignKey?: {
@@ -47,15 +45,15 @@ export interface Type<N extends Natural, E> {
   };
 }
 
-export class Type<N extends Natural, E> {
-  constructor(from: Type<N, E>) {
+export class Type<T, E> {
+  constructor(from: Type<T, E>) {
     Object.assign(this, from);
   }
 }
 
-export interface Attribute<N extends Natural, E> extends Type<N, E> {
+export interface Attribute<T, E> extends Type<T, E> {
   attributeName: string;
-  defaultValue?: Natural;
+  defaultValue?: unknown;
   fieldName: string;
   modelName: string;
   notNull: boolean;
@@ -63,8 +61,8 @@ export interface Attribute<N extends Natural, E> extends Type<N, E> {
   unique?: boolean;
 }
 
-export class Attribute<N extends Natural, E> extends Type<N, E> {
-  constructor(from: Attribute<N, E>) {
+export class Attribute<T, E> extends Type<T, E> {
+  constructor(from: Attribute<T, E>) {
     super(from);
   }
 }
@@ -78,7 +76,7 @@ function autoImplement<T>() {
 }
 
 export interface Constraint {
-  attribute: Attribute<Natural, unknown>;
+  attribute: Attribute<unknown, unknown>;
   constraintName: string;
   type: "f" | "u";
 }
@@ -91,14 +89,14 @@ export interface Index {
 }
 
 interface ITable {
-  attributes: Attribute<Natural, unknown>[];
+  attributes: Attribute<unknown, unknown>[];
   autoIncrement: boolean;
   constraints: Constraint[];
   indexes: Index[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   model: { load: (where: any, order?: string[], tx?: Transaction) => Promise<EntryBase[]> };
-  parent?: Attribute<Natural, unknown>;
-  pk: Attribute<Natural, unknown>;
+  parent?: Attribute<unknown, unknown>;
+  pk: Attribute<unknown, unknown>;
   sync: boolean;
   tableName: string;
 }
@@ -107,7 +105,7 @@ export class Table extends autoImplement<ITable>() {
   autoIncrementOwn?: boolean;
   oid?: number;
 
-  findField(name: string): Attribute<Natural, unknown> {
+  findField(name: string): Attribute<unknown, unknown> {
     return this.attributes.filter(_ => _.fieldName === name)[0];
   }
 }
@@ -159,16 +157,16 @@ export abstract class DB<T extends Transaction> {
 
   abstract begin(): Promise<T>;
 
-  abstract escape(value: Natural): string;
+  abstract escape(value: unknown): string;
   abstract load(
     tableName: string,
     attributes: Record<string, string>,
-    pk: Attribute<Natural, unknown>,
+    pk: Attribute<unknown, unknown>,
     model: new () => EntryBase,
     table: Table
   ): (where: string, order?: string | string[], limit?: number, tx?: Transaction, lock?: boolean) => Promise<EntryBase[]>;
-  abstract remove(tableName: string, pk: Attribute<Natural, unknown>): (this: EntryBase & Record<string, Natural>) => Promise<boolean>;
-  abstract save(tableName: string, attributes: Record<string, string>, pk: Attribute<Natural, unknown>): (this: EntryBase & Record<string, Natural>) => Promise<boolean>;
+  abstract remove(tableName: string, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<boolean>;
+  abstract save(tableName: string, attributes: Record<string, string>, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<boolean>;
 
   abstract dropConstraints(table: Table): Promise<number[]>;
   abstract dropFields(table: Table): Promise<void>;

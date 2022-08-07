@@ -1,18 +1,18 @@
 import { helper } from "./helper";
-import { dryrun } from "./local";
+import { dry_run } from "./local";
 
 describe("dry run", () => {
   describe("sync", function() {
-    helper(dryrun.sync, async db => {
-      const test1 = db.model("test1", { a: db.INT, b: { type: db.INT, unique: true }, c: { type: db.INT, unique: true } }, { indexes: { a: "c" } });
-      db.model("test2", { d: db.FKEY(test1.b), e: { defaultValue: 23, type: db.INT }, f: { defaultValue: 23, type: db.INT } }, { parent: test1 });
+    helper(dry_run.sync, async db => {
+      const test1 = db.model("test1", { a: db.Int, b: { type: db.Int, unique: true }, c: { type: db.Int, unique: true } }, { indexes: { a: "c" } });
+      db.model("test2", { d: db.FKey(test1.b), e: { defaultValue: 23, type: db.Int }, f: { defaultValue: 23, type: db.Int } }, { parent: test1 });
       await db.connect();
     });
 
     describe("dry run", function() {
-      helper(dryrun.dryrun, true, { sync: false }, async db => {
-        const test1 = db.model("test1", { a: { defaultValue: 23n, type: db.INT8, unique: true }, b: { type: db.INT, unique: true } }, { indexes: { b: "b" } });
-        db.model("test2", { g: db.FKEY(test1.b), e: db.INT, f: { defaultValue: 42, type: db.INT } });
+      helper(dry_run.dry_run, true, { sync: false }, async db => {
+        const test1 = db.model("test1", { a: { defaultValue: 23n, type: db.Int8, unique: true }, b: { type: db.Int, unique: true } }, { indexes: { b: "b" } });
+        db.model("test2", { e: db.Int, f: { defaultValue: 42, type: db.Int }, g: db.FKey(test1.b) });
         db.model("test3", {});
         db.model("test4", {}, { parent: test1 });
         await db.connect();

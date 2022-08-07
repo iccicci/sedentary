@@ -3,7 +3,7 @@ import { deepStrictEqual as de, strictEqual as eq, ok } from "assert";
 import { Attribute, DB, EntryBase, Sedentary as Sed, Table, Transaction, Type } from "..";
 import { Sedentary, helper } from "./helper";
 import { connection, coverage } from "./local";
-import { TestDB } from "./testdb";
+import { TestDB } from "./testDb";
 
 class SedentaryTest extends Sedentary {
   constructor() {
@@ -67,7 +67,7 @@ describe("coverage", () => {
   describe("parent's foreign keys", function() {
     helper(coverage.first, async db => {
       const test1 = db.model("test1", {});
-      db.model("test3", { b: db.INT }, { parent: db.model("test2", { a: db.FKEY(test1) }) }, { c: () => {} });
+      db.model("test3", { b: db.Int }, { parent: db.model("test2", { a: db.FKey(test1) }) }, { c: () => {} });
       await db.connect();
     });
   });

@@ -8,8 +8,8 @@ export const connection = JSON.parse(process.env.SPG);
 
 export const packageName = "sedentary-pg" as string;
 
-export const wrongConnection = { host: "none.nodomain.none" };
-export const wrongConnectionError = `getaddrinfo ENOTFOUND none.nodomain.none${v10 ? " none.nodomain.none:5432" : ""}`;
+export const wrongConnection = { host: "none.no-domain.none" };
+export const wrongConnectionError = `getaddrinfo ENOTFOUND none.no-domain.none${v10 ? " none.no-domain.none:5432" : ""}`;
 
 export async function clean(): Promise<void> {
   const pool = new Pool(connection);
@@ -73,8 +73,8 @@ export const client = {
   ]
 };
 
-export const dryrun = {
-  dryrun: [
+export const dry_run = {
+  dry_run: [
     "NOT SYNCING: ALTER TABLE test1 DROP CONSTRAINT test1_c_unique CASCADE",
     "NOT SYNCING: DROP INDEX a",
     "NOT SYNCING: DROP INDEX test1_c_unique",
@@ -359,7 +359,7 @@ export const expected = {
     "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)"
   ],
   types_boolean_changes: ["ALTER TABLE test1 ALTER COLUMN b TYPE VARCHAR", "ALTER TABLE test1 ALTER COLUMN c TYPE BOOL USING c::BOOL"],
-  types_datetime:        [
+  types_date_time:       [
     "CREATE SEQUENCE test1_id_seq",
     "CREATE TABLE test1 ()",
     "ALTER TABLE test1 ADD COLUMN id INTEGER",
@@ -378,7 +378,7 @@ export const expected = {
     "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
     "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)"
   ],
-  types_datetime_changes: [
+  types_date_time_changes: [
     "ALTER TABLE test1 ALTER COLUMN b TYPE VARCHAR",
     "ALTER TABLE test1 ALTER COLUMN c TYPE TIMESTAMP (3) WITH TIME ZONE USING c::TIMESTAMP (3) WITH TIME ZONE",
     "ALTER TABLE test1 DROP COLUMN d",
@@ -386,21 +386,7 @@ export const expected = {
     "ALTER TABLE test1 DROP COLUMN e",
     "ALTER TABLE test1 ADD COLUMN e TIMESTAMP (3) WITH TIME ZONE"
   ],
-  types_number: [
-    "CREATE SEQUENCE test1_id_seq",
-    "CREATE TABLE test1 ()",
-    "ALTER TABLE test1 ADD COLUMN id INTEGER",
-    "ALTER TABLE test1 ALTER COLUMN id SET DEFAULT nextval('test1_id_seq'::regclass)",
-    "UPDATE test1 SET id = nextval('test1_id_seq'::regclass) WHERE id IS NULL",
-    "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
-    "ALTER TABLE test1 ADD COLUMN a NUMERIC",
-    "ALTER TABLE test1 ADD COLUMN b NUMERIC",
-    "ALTER TABLE test1 ADD COLUMN c VARCHAR",
-    "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
-    "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)"
-  ],
-  types_number_changes: ["ALTER TABLE test1 ALTER COLUMN b TYPE VARCHAR", "ALTER TABLE test1 ALTER COLUMN c TYPE NUMERIC USING c::NUMERIC"],
-  types_int:            [
+  types_int: [
     "CREATE SEQUENCE test1_id_seq",
     "CREATE TABLE test1 ()",
     "ALTER TABLE test1 ADD COLUMN id INTEGER",
@@ -428,7 +414,44 @@ export const expected = {
     "ALTER TABLE test1 ALTER COLUMN c TYPE VARCHAR(23)",
     "ALTER TABLE test1 ALTER COLUMN d TYPE VARCHAR(42)",
     "ALTER TABLE test1 ALTER COLUMN e SET DEFAULT '42'"
-  ]
+  ],
+  types_json: [
+    "CREATE SEQUENCE test1_id_seq",
+    "CREATE TABLE test1 ()",
+    "ALTER TABLE test1 ADD COLUMN id INTEGER",
+    "ALTER TABLE test1 ALTER COLUMN id SET DEFAULT nextval('test1_id_seq'::regclass)",
+    "UPDATE test1 SET id = nextval('test1_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test1 ADD COLUMN a JSON",
+    "ALTER TABLE test1 ADD COLUMN b JSON",
+    "ALTER TABLE test1 ADD COLUMN c VARCHAR",
+    "ALTER TABLE test1 ADD COLUMN d JSON",
+    "ALTER TABLE test1 ADD COLUMN e INTEGER",
+    "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
+    "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)"
+  ],
+  types_json_changes: [
+    "ALTER TABLE test1 ALTER COLUMN b TYPE VARCHAR",
+    "ALTER TABLE test1 ALTER COLUMN c TYPE JSON USING c::JSON",
+    "ALTER TABLE test1 DROP COLUMN d",
+    "ALTER TABLE test1 ADD COLUMN d INTEGER",
+    "ALTER TABLE test1 DROP COLUMN e",
+    "ALTER TABLE test1 ADD COLUMN e JSON"
+  ],
+  types_number: [
+    "CREATE SEQUENCE test1_id_seq",
+    "CREATE TABLE test1 ()",
+    "ALTER TABLE test1 ADD COLUMN id INTEGER",
+    "ALTER TABLE test1 ALTER COLUMN id SET DEFAULT nextval('test1_id_seq'::regclass)",
+    "UPDATE test1 SET id = nextval('test1_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test1 ADD COLUMN a NUMERIC",
+    "ALTER TABLE test1 ADD COLUMN b NUMERIC",
+    "ALTER TABLE test1 ADD COLUMN c VARCHAR",
+    "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
+    "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)"
+  ],
+  types_number_changes: ["ALTER TABLE test1 ALTER COLUMN b TYPE VARCHAR", "ALTER TABLE test1 ALTER COLUMN c TYPE NUMERIC USING c::NUMERIC"]
 };
 
 export const models = {
@@ -551,9 +574,10 @@ export const transactions = {
     "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
     "ALTER TABLE test1 ADD COLUMN a INTEGER",
     "ALTER TABLE test1 ADD COLUMN b VARCHAR",
+    "ALTER TABLE test1 ADD COLUMN c JSON",
     "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
     "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)",
-    "INSERT INTO test1 (a, b) VALUES (1, '1')",
+    "INSERT INTO test1 (a, b, c) VALUES (1, '1', '{\"b\":\"test\"}'::jsonb)",
     "INSERT INTO test1 (a, b) VALUES (2, '2')",
     "BEGIN",
     "BEGIN",

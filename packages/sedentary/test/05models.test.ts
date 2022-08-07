@@ -28,10 +28,10 @@ describe("models", () => {
     let saveD = true;
 
     helper(models.base, async db => {
-      const test1 = db.model("test1", { a: db.INT, b: { type: db.VARCHAR, defaultValue: "test" } });
-      dbA = new test1({ id: 1, a: 23, b: "ok" });
-      dbB = new test1({ id: 2, a: null, b: "test" });
-      dbC = new test1({ id: 1, a: 23, b: "test" });
+      const test1 = db.model("test1", { a: db.Int, b: { defaultValue: "test", type: db.VarChar } });
+      dbA = new test1({ a: 23, b: "ok", id: 1 });
+      dbB = new test1({ a: null, b: "test", id: 2 });
+      dbC = new test1({ a: 23, b: "test", id: 1 });
       await db.connect();
       a = new test1({ a: 23, b: "ok" });
       b = new test1();
@@ -73,30 +73,30 @@ describe("models", () => {
     helper(models.inheritance, async db => {
       const test1 = db.model(
         "test1",
-        { a: db.INT, b: { type: db.VARCHAR, defaultValue: "test" } },
+        { a: db.Int, b: { defaultValue: "test", type: db.VarChar } },
         {},
         {
           construct: function() {
             this.a = 23;
             log("test1.construct");
           },
-          preLoad: function() {
-            log("test1.preLoad");
-          },
           postLoad: function() {
             log(`test1.postLoad ${this.id}`);
-          },
-          preRemove: function() {
-            log(`test1.preRemove ${this.id}`);
           },
           postRemove: function() {
             log(`test1.postRemove ${this.id}`);
           },
-          preSave: function() {
-            log(`test1.preSave${this.id ? " " + this.id : ""}`);
-          },
           postSave: function() {
             log(`test1.postSave ${this.id}`);
+          },
+          preLoad: function() {
+            log("test1.preLoad");
+          },
+          preRemove: function() {
+            log(`test1.preRemove ${this.id}`);
+          },
+          preSave: function() {
+            log(`test1.preSave${this.id ? " " + this.id : ""}`);
           },
           reset: function() {
             log(`test1.reset ${this.id}`);
@@ -107,18 +107,12 @@ describe("models", () => {
 
       const test2 = db.model(
         "test2",
-        { c: { type: db.INT, defaultValue: 23 }, d: db.DATETIME },
+        { c: { defaultValue: 23, type: db.Int }, d: db.DateTime },
         { parent: test1 },
         {
           construct: function() {
             test1.prototype.construct.call(this);
             log("test2.construct");
-          },
-          preLoad: function() {
-            log("test2.preLoad");
-          },
-          preRemove: function() {
-            log(`test2.preRemove ${this.id}`);
           },
           postRemove: function() {
             test1.prototype.postRemove.call(this);
@@ -127,6 +121,12 @@ describe("models", () => {
           postSave: function() {
             test1.prototype.postSave.call(this);
             log(`test2.postSave ${this.id}`);
+          },
+          preLoad: function() {
+            log("test2.preLoad");
+          },
+          preRemove: function() {
+            log(`test2.preRemove ${this.id}`);
           },
           reset: function() {
             log(`test2.reset ${this.id}`);
@@ -138,35 +138,35 @@ describe("models", () => {
 
       const test3 = db.model(
         "test3",
-        { e: db.INT, f: db.VARCHAR },
+        { e: db.Int, f: db.VarChar },
         { parent: test2 },
         {
           construct: function() {
             test2.prototype.construct.call(this);
             log("test3.construct");
           },
-          preLoad: function() {
-            test2.prototype.preLoad.call(this);
-            log("test3.preLoad");
-          },
           postLoad: function() {
             log(`test3.postLoad ${JSON.stringify(this)}`);
-          },
-          preRemove: function() {
-            test2.prototype.preRemove.call(this);
-            log(`test3.preRemove ${this.id}`);
           },
           postRemove: function() {
             test2.prototype.postRemove.call(this);
             log(`test3.postRemove ${this.id}`);
           },
-          preSave: function() {
-            test1.prototype.preSave.call(this);
-            log(`test3.preSave${this.id ? " " + this.id : ""}`);
-          },
           postSave: function() {
             test2.prototype.postSave.call(this);
             log(`test3.postSave ${this.id}`);
+          },
+          preLoad: function() {
+            test2.prototype.preLoad.call(this);
+            log("test3.preLoad");
+          },
+          preRemove: function() {
+            test2.prototype.preRemove.call(this);
+            log(`test3.preRemove ${this.id}`);
+          },
+          preSave: function() {
+            test1.prototype.preSave.call(this);
+            log(`test3.preSave${this.id ? " " + this.id : ""}`);
           },
           reset: function() {
             test1.prototype.reset.call(this);
@@ -293,7 +293,7 @@ describe("models", () => {
     let b: EntryBase;
 
     helper(models.types, async db => {
-      const test1 = db.model("test1", { a: db.INT, b: db.VARCHAR, c: db.DATETIME, d: db.INT8, e: db.NUMBER, f: db.BOOLEAN });
+      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.DateTime, d: db.Int8, e: db.Number, f: db.Boolean });
       await db.connect();
       a = new test1({ a: 23, b: "ok", c: new Date("1976-01-23"), d: 23n, e: 2.3, f: true });
       await a.save();
