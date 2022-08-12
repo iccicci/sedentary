@@ -67,7 +67,7 @@ async function package_json() {
     scripts:  {
       build:       "make build",
       coverage:    "jest --coverage --no-cache --runInBand",
-      deploy:      'npm_config_registry="registry.npmjs.org" npm publish',
+      deploy:      "make deploy",
       precoverage: "make pretest",
       preinstall:  "if [ -f Makefile ] ; then make ; fi",
       pretest:     "make pretest",

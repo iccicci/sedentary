@@ -13,6 +13,9 @@ build: all $(TSCONFIGS)
 	tsc -p tsconfig.es.json
 	tsc -p tsconfig.types.json
 
+deploy: build
+	npm_config_registry=registry.npmjs.org npm publish
+
 pretest: all jest.config.js
 	rm -rf dist
 
