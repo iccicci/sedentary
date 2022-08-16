@@ -89,6 +89,10 @@ describe("coverage", () => {
         return new Transaction(console.log);
       }
 
+      cancel() {
+        return async () => 0;
+      }
+
       escape() {
         return "";
       }

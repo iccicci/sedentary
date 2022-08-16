@@ -25,7 +25,7 @@ describe("transactions", () => {
       await l1[1].remove();
       await r3.save();
       await tx.commit();
-      l2 = await test2.load({}, ["id"]);
+      l2 = await test2.load({ id: [">", 0] }, ["id"]);
       result = [new test2({ a: 11, b: "11", id: 1 }), new test2({ a: 3, b: "3", id: 3 })];
     });
 
@@ -60,7 +60,7 @@ describe("transactions", () => {
   });
 
   desc("locks", function() {
-    const actual = [] as unknown[];
+    const actual: unknown[] = [];
 
     helper(transactions.locks, async db => {
       const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.JSON<{ a?: number[]; b: string }>() });
@@ -131,5 +131,29 @@ describe("transactions", () => {
         { a: 1, b: "3", c: { b: "test" }, id: 1 },
         { a: 2, b: "4", c: null, id: 2 }
       ]));
+  });
+
+  describe("cancel", () => {
+    const actual: unknown[] = [];
+    let result: unknown[] = [];
+
+    helper(transactions.cancel, async db => {
+      const test1 = db.model("test1", { a: db.Int, b: db.VarChar });
+      await db.connect();
+      const r1 = new test1({ a: 1, b: "1" });
+      await r1.save();
+      const r2 = new test1({ a: 2, b: "2" });
+      await r2.save();
+      const tx = await db.begin();
+      const r3 = new test1({ a: 3, b: "3" }, tx);
+      await r3.save();
+      actual.push(await test1.cancel({}, tx));
+      await tx.rollback();
+      actual.push(await test1.cancel({ b: "1" }));
+      actual.push(await test1.load({ a: ["<=", 10] }));
+      result = [3, 1, [new test1({ a: 2, b: "2", id: 2 })]];
+    });
+
+    it("cancel", () => de(actual, result));
   });
 });

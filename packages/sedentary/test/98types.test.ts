@@ -2,7 +2,9 @@ import tsd from "tsd";
 
 type Diagnostics = ReturnType<typeof tsd> extends Promise<infer T> ? T : never;
 
-describe("types", () => {
+const desc = process.env.TYPES === "no" ? xdescribe : describe;
+
+desc("types", () => {
   let diagnostics: Diagnostics;
 
   beforeAll(async function() {

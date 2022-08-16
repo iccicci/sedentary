@@ -288,16 +288,16 @@ describe("models", () => {
       ]));
   });
 
-  desc("data types", function() {
+  describe("data types", function() {
     let a: EntryBase;
     let b: EntryBase;
 
     helper(models.types, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.DateTime, d: db.Int8, e: db.Number, f: db.Boolean });
+      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.DateTime, d: db.Int8, e: db.Number, f: db.Boolean, g: db.JSON });
       await db.connect();
-      a = new test1({ a: 23, b: "ok", c: new Date("1976-01-23"), d: 23n, e: 2.3, f: true });
+      a = new test1({ a: 23, b: "ok", c: new Date("1976-01-23"), d: 23n, e: 2.3, f: true, g: { a: "b" } });
       await a.save();
-      b = (await test1.load({}))[0];
+      b = (await test1.load({ d: 23n }))[0];
     });
 
     it("data types", () => de(a, b));

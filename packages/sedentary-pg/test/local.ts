@@ -536,14 +536,35 @@ export const models = {
     "ALTER TABLE test1 ADD COLUMN d BIGINT",
     "ALTER TABLE test1 ADD COLUMN e NUMERIC",
     "ALTER TABLE test1 ADD COLUMN f BOOL",
+    "ALTER TABLE test1 ADD COLUMN g JSON",
     "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
     "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)",
-    "INSERT INTO test1 (a, b, c, d, e, f) VALUES (23, 'ok', '1976-01-23 00:00:00+00', '23', 2.3, true)",
-    "SELECT *, tableoid FROM test1"
+    "INSERT INTO test1 (a, b, c, d, e, f, g) VALUES (23, 'ok', '1976-01-23 00:00:00+00', '23', 2.3, true, '{\"a\":\"b\"}'::jsonb)",
+    "SELECT *, tableoid FROM test1 WHERE d = '23'"
   ]
 };
 
 export const transactions = {
+  cancel: [
+    "CREATE SEQUENCE test1_id_seq",
+    "CREATE TABLE test1 ()",
+    "ALTER TABLE test1 ADD COLUMN id INTEGER",
+    "ALTER TABLE test1 ALTER COLUMN id SET DEFAULT nextval('test1_id_seq'::regclass)",
+    "UPDATE test1 SET id = nextval('test1_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test1 ADD COLUMN a INTEGER",
+    "ALTER TABLE test1 ADD COLUMN b VARCHAR",
+    "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
+    "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)",
+    "INSERT INTO test1 (a, b) VALUES (1, '1')",
+    "INSERT INTO test1 (a, b) VALUES (2, '2')",
+    "BEGIN",
+    "INSERT INTO test1 (a, b) VALUES (3, '3')",
+    "DELETE FROM test1",
+    "ROLLBACK",
+    "DELETE FROM test1 WHERE b = '1'",
+    "SELECT *, tableoid FROM test1 WHERE a <= 10"
+  ],
   commit: [
     "CREATE SEQUENCE test2_id_seq",
     "CREATE TABLE test2 ()",
@@ -563,7 +584,7 @@ export const transactions = {
     "DELETE FROM test2 WHERE id = 2",
     "INSERT INTO test2 (a, b) VALUES (3, '3')",
     "COMMIT",
-    "SELECT *, tableoid FROM test2 ORDER BY id"
+    "SELECT *, tableoid FROM test2 WHERE id > 0 ORDER BY id"
   ],
   locks: [
     "CREATE SEQUENCE test1_id_seq",

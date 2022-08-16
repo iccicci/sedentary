@@ -157,6 +157,7 @@ export abstract class DB<T extends Transaction> {
 
   abstract begin(): Promise<T>;
 
+  abstract cancel(tableName: string): (where: string, tx?: Transaction) => Promise<number>;
   abstract escape(value: unknown): string;
   abstract load(
     tableName: string,

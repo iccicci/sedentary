@@ -24,6 +24,16 @@ export class TestDB extends DB<Transaction> {
     return new Transaction(this.log);
   }
 
+  cancel(tableName: string) {
+    const results: Record<string, Record<string, number>> = { test1: { "": 3, "b = '1'": 1 } };
+
+    return async (where: string) => {
+      this.log(`Cancel from ${tableName} where: "${where}"`);
+
+      return results[tableName][where];
+    };
+  }
+
   async connect(): Promise<void> {
     this.body = { next: {}, tables: {} };
 
@@ -51,50 +61,50 @@ export class TestDB extends DB<Transaction> {
     pk: Attribute<unknown, unknown>,
     model: new (from: "load") => EntryBase
   ): (where: string, order?: string | string[]) => Promise<EntryBase[]> {
-    const loads: Record<string, Record<string, unknown>[][]> = {
-      test1: [
-        [{ a: 23, b: "ok", id: 1 }],
-        [{ a: null, b: "test", id: 2 }],
-        [
-          { a: 23, b: "ok", id: 1 },
-          { a: null, b: "test", id: 2 }
-        ],
-        [
+    const longWhere = "(fixed) AND NOT (a = 23 AND b IS NULL AND NOT c AND d > 23 AND e IN (23, 42)) OR (fixed)";
+    const results: Record<string, Record<string, Record<string, unknown>[]>> = {
+      test1: {
+        "": [
           { a: null, b: "test", id: 2 },
           { a: 23, b: "ok", id: 1 }
         ],
-        [{ a: 23, b: "ok", id: 1 }],
-        [
+        "a <= 10":                 [{ a: 2, b: "2", id: 2 }],
+        "a IS NULL":               [{ a: null, b: "test", id: 2 }],
+        "b = 'ok'":                [{ a: 23, b: "ok", id: 1 }],
+        "b IN ('a', 'b', 'test')": [
           { a: 23, b: "test", id: 1 },
           { a: null, b: "test", id: 2 }
-        ]
-      ],
-      test2: [
-        [
+        ],
+        "d = '23'": [{ a: 23, b: "ok", c: new Date("1976-01-23"), d: 23n, e: 2.3, f: true, g: { a: "b" }, id: 1 }],
+        "id < 23":  [
+          { a: 23, b: "ok", id: 1 },
+          { a: null, b: "test", id: 2 }
+        ],
+        "id <> 23":  [{ a: 23, b: "ok", id: 1 }],
+        [longWhere]: [{ a: 23, b: "ok", id: 1 }]
+      },
+      test2: {
+        "": [
           { a: 1, b: "1", id: 1 },
           { a: 2, b: "2", id: 2 }
         ],
-        [
+        "id > 0": [
           { a: 11, b: "11", id: 1 },
           { a: 3, b: "3", id: 3 }
         ]
-      ],
-      test3: [
-        [
-          { a: 1, b: "1", id: 1 },
-          { a: 2, b: "2", id: 2 }
-        ],
-        [
+      },
+      test3: {
+        "": [
           { a: 1, b: "1", id: 1 },
           { a: 2, b: "2", id: 2 }
         ]
-      ]
+      }
     };
 
     return async (where: string, order?: string | string[]) => {
       this.log(`Load from ${tableName} where: "${where}"${order ? ` order by: ${(typeof order === "string" ? [order] : order).join(", ")}` : ""}`);
 
-      return (loads[tableName].shift() || []).map(_ => {
+      return results[tableName][where].map(_ => {
         const ret = new model("load");
 
         Object.assign(ret, _);

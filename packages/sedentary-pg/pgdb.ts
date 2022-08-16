@@ -84,6 +84,24 @@ export class PGDB extends DB<TransactionPG> {
     return ret;
   }
 
+  cancel(tableName: string) {
+    return async (where: string, tx?: Transaction) => {
+      const client = tx ? (tx as unknown as { _client: PoolClient })._client : await this.pool.connect();
+      let rowCount = 0;
+
+      try {
+        const query = `DELETE FROM ${tableName}${where ? ` WHERE ${where}` : ""}`;
+
+        this.log(query);
+        ({ rowCount } = await client.query(query));
+      } finally {
+        if(! tx) client.release();
+      }
+
+      return rowCount;
+    };
+  }
+
   async client() {
     return await this.pool.connect();
   }

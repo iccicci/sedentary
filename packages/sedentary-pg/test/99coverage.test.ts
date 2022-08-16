@@ -33,7 +33,7 @@ describe("coverage", () => {
       await l1[1].remove();
       await r3.save();
       await tx.commit();
-      await test2.load({}, ["id"]);
+      await test2.load({ id: [">", 0] }, ["id"]);
       await tx.commit();
       await tx.rollback();
     });

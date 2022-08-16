@@ -84,7 +84,7 @@ async function package_json() {
 const common = ["*.tgz", ".gitignore", ".npmignore", "coverage", "jest.config.js", "node_modules", ...(sedentary ? ["test.json"] : []), "tsconfig.*.json"];
 const ignored = {
   ".gitignore": [...common, "dist", ...(sedentary ? [] : ["test/0*.test.ts", "test/helper.ts"])],
-  ".npmignore": [...common, ".*", "*.ts", "!*.d.ts", "Makefile", "test", "tsconfig.json"]
+  ".npmignore": [...common, ".*", "*.ts", "!*.d.ts", "*.tsbuildinfo", "Makefile", "test", "tsconfig.json"]
 };
 
 function ignore() {

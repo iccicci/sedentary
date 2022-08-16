@@ -61,7 +61,7 @@
     "preinstall": "make",
     "test": "yarn workspaces run test"
   },
-  "version": "0.0.44",
+  "version": "0.0.45",
   "workspaces": [
     "packages/sedentary",
     "packages/sedentary-pg"

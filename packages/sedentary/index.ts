@@ -75,6 +75,7 @@ export interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> 
   load(where: Condition<A>, order?: Order<A>, tx?: Transaction, lock?: boolean): Promise<E[]>;
   load(where: Condition<A>, limit?: number, tx?: Transaction, lock?: boolean): Promise<E[]>;
   load(where: Condition<A>, tx: Transaction, lock?: boolean): Promise<E[]>;
+  cancel(where: Condition<A>, tx?: Transaction): Promise<number>;
 }
 
 type ModelBase<T, A extends AttributesDefinition, EA extends Record<string, unknown>, EM extends EntryBase, E extends EntryBase> = (new (from?: Partial<EA>, tx?: Transaction) => E) &
@@ -163,7 +164,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     return new Type({ base: Number, type: "NUMBER" });
   }
 
-  public VarChar(size?: number): Type<string, unknown> {
+  public VarChar<S extends string>(size?: number): Type<S, unknown> {
     const message = "Sedentary.VARCHAR: 'size' argument: Wrong value, expected positive integer";
 
     size = size ? this.checkSize(size, message) : undefined;
@@ -553,8 +554,12 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
     this.db.tables.push(table);
 
+    const cancel_ = this.db.cancel(tableName);
+    const cancel = (where: unknown, tx?: Transaction) => cancel_(this.createWhere(modelName, attr2field, where)[0], tx);
+    Object.defineProperty(cancel, "name", { value: modelName + ".cancel" });
+
     const load_ = this.db.load(tableName, attr2field, pk, ret, table);
-    const load = async (where: unknown, ...args: unknown[]) => {
+    const load = (where: unknown, ...args: unknown[]) => {
       let order: string | string[] | undefined = undefined;
       let limit: number | undefined = undefined;
       let tx: Transaction | undefined = undefined;
@@ -583,13 +588,11 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
       if(! this.checkOrderBy(order, attr2field, modelName)) throw new Error(`${modelName}.load: 'order' argument: Wrong type, expected 'string | string[]'`);
       if(tx && ! ((tx as unknown) instanceof Transaction)) throw new Error(`${modelName}.load: 'tx' argument: Wrong type, expected 'Transaction'`);
 
-      const [str] = this.createWhere(modelName, attr2field, where);
-      const ret = await load_(str, order, limit, tx, lock);
-
-      return ret;
+      return load_(this.createWhere(modelName, attr2field, where)[0], order, limit, tx, lock);
     };
     Object.defineProperty(load, "name", { value: modelName + ".load" });
 
+    Object.defineProperty(ret, "cancel", { value: cancel });
     Object.defineProperty(ret, "name", { value: modelName });
     Object.defineProperty(ret, "load", { value: load });
     Object.defineProperty(ret, "attr2field", { value: attr2field });

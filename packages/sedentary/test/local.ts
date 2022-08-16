@@ -381,7 +381,22 @@ export const models = {
     "Delete from test1 1"
   ],
   inheritance: [""],
-  types:       [""]
+  types:       [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'INT' '4'",
+    "'test1': Adding field: 'b' 'VARCHAR' ''",
+    "'test1': Adding field: 'c' 'DATETIME' ''",
+    "'test1': Adding field: 'd' 'INT8' '8'",
+    "'test1': Adding field: 'e' 'NUMBER' ''",
+    "'test1': Adding field: 'f' 'BOOLEAN' ''",
+    "'test1': Adding field: 'g' 'JSON' ''",
+    "'test1': Adding unique constraint on field: 'id'",
+    'Save to test1 {"a":23,"b":"ok","c":"1976-01-23T00:00:00.000Z","d":"23n","e":2.3,"f":true,"g":{"a":"b"}}',
+    "Load from test1 where: \"d = '23'\""
+  ]
 };
 
 export const wheres = {
@@ -419,6 +434,21 @@ export const wheres = {
 };
 
 export const transactions = {
+  cancel: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'INT' '4'",
+    "'test1': Adding field: 'b' 'VARCHAR' ''",
+    "'test1': Adding unique constraint on field: 'id'",
+    'Save to test1 {"a":1,"b":"1"}',
+    'Save to test1 {"a":2,"b":"2"}',
+    'Save to test1 {"a":3,"b":"3"}',
+    'Cancel from test1 where: ""',
+    "Cancel from test1 where: \"b = '1'\"",
+    'Load from test1 where: "a <= 10"'
+  ],
   commit: [
     "Adding table: 'test2'",
     "Setting auto increment: 'test2'",
@@ -433,7 +463,7 @@ export const transactions = {
     'Save to test2 {"a":11,"b":"11","id":1}',
     "Delete from test2 2",
     'Save to test2 {"a":3,"b":"3"}',
-    'Load from test2 where: "" order by: id'
+    'Load from test2 where: "id > 0" order by: id'
   ],
   locks:    [],
   rollback: [
