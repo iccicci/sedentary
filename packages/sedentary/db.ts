@@ -1,3 +1,11 @@
+export const actions = Symbol("actions");
+export const loaded = Symbol("loaded");
+
+export interface Action {
+  action: "remove" | "save";
+  records: number | false;
+}
+
 export class EntryBase {
   constructor(from?: Partial<EntryBase>) {
     if(from === "load") this.preLoad();
@@ -8,9 +16,15 @@ export class EntryBase {
   }
 
   construct() {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  postCommit(actions: Action[]) {}
   postLoad() {}
-  postRemove() {}
-  postSave() {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  postRemove(deletedRecords: number) {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  postSave(savedRecords: number | false) {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  preCommit(actions: Action[]) {}
   preLoad() {}
   preRemove() {}
   preSave() {}
@@ -166,8 +180,8 @@ export abstract class DB<T extends Transaction> {
     model: new () => EntryBase,
     table: Table
   ): (where: string, order?: string | string[], limit?: number, tx?: Transaction, lock?: boolean) => Promise<EntryBase[]>;
-  abstract remove(tableName: string, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<boolean>;
-  abstract save(tableName: string, attributes: Record<string, string>, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<boolean>;
+  abstract remove(tableName: string, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number>;
+  abstract save(tableName: string, attributes: Record<string, string>, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number | false>;
 
   abstract dropConstraints(table: Table): Promise<number[]>;
   abstract dropFields(table: Table): Promise<void>;
@@ -180,7 +194,7 @@ export abstract class DB<T extends Transaction> {
 }
 
 export class Transaction {
-  private entries: (EntryBase & { tx?: Transaction })[] = [];
+  private entries: (EntryBase & { [actions]?: Action[]; tx?: Transaction })[] = [];
   protected log: (message: string) => void;
 
   constructor(log: (message: string) => void) {
@@ -195,12 +209,26 @@ export class Transaction {
   clean() {
     const { entries } = this;
 
-    for(const entry of entries) Object.defineProperty(entry, "tx", { configurable: true, value: null });
+    for(const entry of entries) {
+      Object.defineProperty(entry, actions, { configurable: true, value: undefined });
+      Object.defineProperty(entry, "tx", { configurable: true, value: undefined });
+    }
+
     this.entries = [];
   }
 
   async commit() {
+    const { entries } = this;
+
+    for(const entry of entries) if(entry[actions]) entry.postCommit(entry[actions]);
+
     this.clean();
+  }
+
+  protected preCommit() {
+    const { entries } = this;
+
+    for(const entry of entries) if(entry[actions]) entry.preCommit(entry[actions]);
   }
 
   async rollback() {

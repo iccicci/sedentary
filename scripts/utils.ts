@@ -45,7 +45,7 @@ async function package_json() {
       }
     },
     "sedentary-pg": {
-      dependencies: { "@types/pg": "8.6.5", pg: "8.7.3", "pg-format": "1.0.4", sedentary: version },
+      dependencies: { "@types/pg": "8.6.5", pg: "8.8.0", "pg-format": "1.0.4", sedentary: version },
       description:  description + " - PostgreSQL"
     }
   };
@@ -107,13 +107,15 @@ async function version() {
 }
 
 const specificOptions = {
-  "tsconfig.cjs.json":   { module: "CommonJS", outDir: "dist/cjs", target: "ES2020" },
-  "tsconfig.es.json":    { module: "ESNext", outDir: "dist/es" },
+  "tsconfig.cjs.json":   { composite: false, declaration: false, module: "CommonJS", outDir: "dist/cjs", target: "ES2020" },
+  "tsconfig.es.json":    { composite: false, declaration: false, module: "ESNext", outDir: "dist/es" },
   "tsconfig.json":       {},
-  "tsconfig.types.json": { declaration: true, emitDeclarationOnly: true, outDir: "dist/types" }
+  "tsconfig.types.json": { emitDeclarationOnly: true, outDir: "dist/types" }
 };
 const compilerOptions = {
   alwaysStrict:                 true,
+  composite:                    true,
+  declaration:                  true,
   esModuleInterop:              true,
   moduleResolution:             "Node",
   noImplicitAny:                true,
@@ -125,11 +127,10 @@ const compilerOptions = {
   strictNullChecks:             true,
   strictPropertyInitialization: true,
   target:                       "ESNext",
-  ...specificOptions[file as keyof typeof specificOptions],
-  ...(PACKAGE === "sedentary" ? { composite: true } : {})
+  ...specificOptions[file as keyof typeof specificOptions]
 };
 const include = file === "tsconfig.json" ? (PACKAGE === "core" ? ["packages/**/*.ts", "scripts/*.ts"] : ["*.ts", "test/*.ts"]) : ["*.ts"];
-const references = ["core", "sedentary"].includes(PACKAGE) ? {} : { references: [{ path: "../sedentary" }] };
+const references = ["core", "sedentary"].includes(PACKAGE) || file !== "tsconfig.json" ? {} : { references: [{ path: "../sedentary" }] };
 
 function tsconfig_json() {
   writeFile(file, JSON.stringify(sort({ compilerOptions, include, ...references }), null, 2) + "\n");

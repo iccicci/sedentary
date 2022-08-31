@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Attribute, DB, Table, Transaction } from "../db";
 import { promises } from "fs";
+
 import { EntryBase } from "..";
+import { Attribute, DB, Table, Transaction } from "../db";
 
 const { readFile, writeFile } = promises;
 
@@ -10,7 +11,14 @@ function stringify(value: unknown) {
   return JSON.stringify(value, (key: string, value: unknown) => (typeof value === "bigint" ? value + "n" : value));
 }
 
-export class TestDB extends DB<Transaction> {
+class TestTransaction extends Transaction {
+  async commit() {
+    this.preCommit();
+    super.commit();
+  }
+}
+
+export class TestDB extends DB<TestTransaction> {
   private body: any;
   private file: string;
 
@@ -21,7 +29,7 @@ export class TestDB extends DB<Transaction> {
   }
 
   async begin() {
-    return new Transaction(this.log);
+    return new TestTransaction(this.log);
   }
 
   cancel(tableName: string) {
@@ -101,7 +109,7 @@ export class TestDB extends DB<Transaction> {
       }
     };
 
-    return async (where: string, order?: string | string[]) => {
+    return async (where: string, order?: string | string[], limit?: number, tx?: Transaction) => {
       this.log(`Load from ${tableName} where: "${where}"${order ? ` order by: ${(typeof order === "string" ? [order] : order).join(", ")}` : ""}`);
 
       return results[tableName][where].map(_ => {
@@ -109,6 +117,7 @@ export class TestDB extends DB<Transaction> {
 
         Object.assign(ret, _);
         Object.defineProperty(ret, "loaded", { configurable: true, value: true });
+        if(tx) tx.addEntry(ret);
         ret.postLoad();
 
         return ret;
@@ -116,35 +125,49 @@ export class TestDB extends DB<Transaction> {
     };
   }
 
-  remove(tableName: string): (this: EntryBase & Record<string, unknown>) => Promise<boolean> {
+  remove(tableName: string): (this: EntryBase & Record<string, unknown>) => Promise<number> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    let value = true;
+    let value = 1;
 
     return async function() {
       const ret = value;
 
       self.log(`Delete from ${tableName} ${this.id}`);
-      value = false;
+      value = 0;
 
       return ret;
     };
   }
 
-  save(tableName: string): (this: Record<string, unknown>) => Promise<boolean> {
+  save(tableName: string): (this: Record<string, unknown>) => Promise<number | false> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    const saves: [boolean, Record<string, unknown>][] = [
-      [true, { a: 23, b: "ok", id: 1 }],
-      [true, { a: null, b: "test", id: 2 }],
-      [true, { a: 23, b: "test", id: 1 }],
+    const saves: [number | false, Record<string, unknown>][] = [
+      [1, { a: 23, b: "ok", id: 1 }],
+      [1, { a: null, b: "test", id: 2 }],
+      [1, { a: 23, b: "test", id: 1 }],
       [false, { a: 23, b: "test", id: 1 }]
     ];
+    const saves2: Record<string, [number | false, Record<string, unknown>]> = {
+      '{"a":1,"b":"1"}': [1, { a: 1, b: "1" }],
+      '{"a":2,"b":"2"}': [1, { a: 2, b: "2" }],
+      '{"a":3,"b":"3"}': [1, { a: 3, b: "3", id: 3 }]
+    };
+
+    const getSaves2 = (obj: unknown) => {
+      try {
+        //console.log(JSON.stringify(obj), saves2[JSON.stringify(obj)]);
+        return saves2[JSON.stringify(obj)];
+      } catch(e) {
+        return false;
+      }
+    };
 
     return async function() {
       self.log(`Save to ${tableName} ${stringify(this)}`);
 
-      const [changed, obj] = saves.shift() || [false, {}];
+      const [changed, obj] = getSaves2(this) || saves.shift() || [false, {}];
 
       Object.assign(this, obj);
 

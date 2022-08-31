@@ -1,7 +1,7 @@
-import { deepStrictEqual as de, strictEqual as eq, ok } from "assert";
+import { deepStrictEqual as de, ok, strictEqual as eq } from "assert";
 
 import { Attribute, DB, EntryBase, Sedentary as Sed, Table, Transaction, Type } from "..";
-import { Sedentary, helper } from "./helper";
+import { helper, Sedentary } from "./helper";
 import { connection, coverage } from "./local";
 import { TestDB } from "./testDb";
 
@@ -102,11 +102,11 @@ describe("coverage", () => {
       }
 
       remove() {
-        return async () => false;
+        return async () => 0;
       }
 
       save() {
-        return async () => false;
+        return async () => false as const;
       }
 
       async dropConstraints() {

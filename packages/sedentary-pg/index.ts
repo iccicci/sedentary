@@ -1,10 +1,10 @@
-import { Attribute, EntryBase, ForeignKeyOptions, Sedentary, SedentaryOptions, Type } from "sedentary";
 import { PoolConfig } from "pg";
+import { Attribute, EntryBase, ForeignKeyOptions, Sedentary, SedentaryOptions, Type } from "sedentary";
 
 import { PGDB, TransactionPG } from "./pgdb";
 
-export { Entry, EntryBase, SedentaryOptions, Type } from "sedentary";
 export { TransactionPG } from "./pgdb";
+export { Action, Entry, EntryBase, SedentaryOptions, Type } from "sedentary";
 
 export class SedentaryPG extends Sedentary<PGDB, TransactionPG> {
   constructor(connection: PoolConfig, options?: SedentaryOptions) {

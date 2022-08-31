@@ -1,4 +1,6 @@
 import { deepStrictEqual as de } from "assert";
+
+import { Action, EntryBase } from "..";
 import { helper } from "./helper";
 import { packageName, transactions } from "./local";
 
@@ -6,11 +8,27 @@ const desc = packageName === "sedentary" ? xdescribe : describe;
 
 describe("transactions", () => {
   describe("commit", function() {
+    const logs: string[] = [];
+    const log = (msg: string) => logs.push(msg);
     let l2: unknown;
     let result: unknown;
 
     helper(transactions.commit, async db => {
-      const test2 = db.model("test2", { a: db.Int, b: db.VarChar });
+      const test2 = db.model(
+        "test2",
+        { a: db.Int, b: db.VarChar },
+        {},
+        {
+          postCommit: function(actions: Action[]) {
+            log(`postCommit ${this.id} ${JSON.stringify(actions)}`);
+            EntryBase.prototype.postCommit.call(this, actions);
+          },
+          preCommit: function(actions: Action[]) {
+            log(`preCommit ${this.id} ${JSON.stringify(actions)}`);
+            EntryBase.prototype.preCommit.call(this, actions);
+          }
+        }
+      );
       await db.connect();
       const r1 = new test2({ a: 1, b: "1" });
       await r1.save();
@@ -30,6 +48,15 @@ describe("transactions", () => {
     });
 
     it("commit", () => de(l2, result));
+    it("logs", () =>
+      de(logs, [
+        'preCommit 3 [{"action":"save","records":1}]',
+        'preCommit 1 [{"action":"save","records":1}]',
+        'preCommit 2 [{"action":"remove","records":1}]',
+        'postCommit 3 [{"action":"save","records":1}]',
+        'postCommit 1 [{"action":"save","records":1}]',
+        'postCommit 2 [{"action":"remove","records":1}]'
+      ]));
   });
 
   describe("rollback", function() {

@@ -1,8 +1,8 @@
 import { deepStrictEqual as de, strictEqual as eq } from "assert";
 
 import { SedentaryOptions } from "..";
-import { Sedentary as SedentaryBase } from "./package";
 import { clean, connection } from "./local";
+import { Sedentary as SedentaryBase } from "./package";
 
 export { Package } from "./package";
 

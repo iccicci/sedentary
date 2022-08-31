@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { deepStrictEqual as de, strictEqual as eq } from "assert";
-import { EntryBase } from "..";
 
+import { EntryBase } from "..";
 import { helper } from "./helper";
 import { models, packageName } from "./local";
 
@@ -50,9 +50,9 @@ describe("models", () => {
       r2 = await l6[0].remove();
     });
 
-    it("save a", () => eq(saveA, true));
-    it("save b", () => eq(saveB, true));
-    it("save c", () => eq(saveC, true));
+    it("save a", () => eq(saveA, 1));
+    it("save b", () => eq(saveB, 1));
+    it("save c", () => eq(saveC, 1));
     it("save d", () => eq(saveD, false));
     it("a", () => de(a, dbA));
     it("b", () => de(b, dbB));
@@ -61,13 +61,12 @@ describe("models", () => {
     it("load 3", () => de(l3, [dbA, dbB]));
     it("load 4", () => de(l4, [dbB, dbA]));
     it("load 6", () => de(l6, [dbC, dbB]));
-    it("remove 1", () => de(r1, true));
-    it("remove 2", () => de(r2, false));
+    it("remove 1", () => de(r1, 1));
+    it("remove 2", () => de(r2, 0));
   });
 
   desc("inheritance & methods", function() {
     const logs: string[] = [];
-
     const log = (msg: string) => logs.push(msg);
 
     helper(models.inheritance, async db => {
@@ -83,11 +82,11 @@ describe("models", () => {
           postLoad: function() {
             log(`test1.postLoad ${this.id}`);
           },
-          postRemove: function() {
-            log(`test1.postRemove ${this.id}`);
+          postRemove: function(removedRecords: number) {
+            log(`test1.postRemove ${this.id} ${removedRecords}`);
           },
-          postSave: function() {
-            log(`test1.postSave ${this.id}`);
+          postSave: function(savedRecords: number | false) {
+            log(`test1.postSave ${this.id} ${savedRecords}`);
           },
           preLoad: function() {
             log("test1.preLoad");
@@ -114,13 +113,13 @@ describe("models", () => {
             test1.prototype.construct.call(this);
             log("test2.construct");
           },
-          postRemove: function() {
-            test1.prototype.postRemove.call(this);
-            log(`test2.postRemove ${this.id}`);
+          postRemove: function(removedRecords: number) {
+            test1.prototype.postRemove.call(this, removedRecords);
+            log(`test2.postRemove ${this.id} ${removedRecords}`);
           },
-          postSave: function() {
-            test1.prototype.postSave.call(this);
-            log(`test2.postSave ${this.id}`);
+          postSave: function(savedRecords: number | false) {
+            test1.prototype.postSave.call(this, savedRecords);
+            log(`test2.postSave ${this.id} ${savedRecords}`);
           },
           preLoad: function() {
             log("test2.preLoad");
@@ -148,13 +147,13 @@ describe("models", () => {
           postLoad: function() {
             log(`test3.postLoad ${JSON.stringify(this)}`);
           },
-          postRemove: function() {
-            test2.prototype.postRemove.call(this);
-            log(`test3.postRemove ${this.id}`);
+          postRemove: function(removedRecords: number) {
+            test2.prototype.postRemove.call(this, removedRecords);
+            log(`test3.postRemove ${this.id} ${removedRecords}`);
           },
-          postSave: function() {
-            test2.prototype.postSave.call(this);
-            log(`test3.postSave ${this.id}`);
+          postSave: function(savedRecords: number | false) {
+            test2.prototype.postSave.call(this, savedRecords);
+            log(`test3.postSave ${this.id} ${savedRecords}`);
           },
           preLoad: function() {
             test2.prototype.preLoad.call(this);
@@ -218,38 +217,41 @@ describe("models", () => {
       de(logs, [
         "test1.construct",
         "test1.preSave",
-        "test1.postSave 1",
+        "test1.postSave 1 1",
         "test1.preLoad",
         "test1.postLoad 1",
         "test1.preSave 1",
+        "test1.postSave 1 false",
         "test1.preSave 1",
-        "test1.postSave 1",
+        "test1.postSave 1 1",
         "test1.construct",
         "test2.construct",
         "test1.preSave",
-        "test1.postSave 2",
-        "test2.postSave 2",
+        "test1.postSave 2 1",
+        "test2.postSave 2 1",
         "test1.preLoad",
         "test1.postLoad 1",
         "test2.preLoad",
         "test1.postLoad 2",
         "test1.preSave 2",
+        "test1.postSave 2 false",
+        "test2.postSave 2 false",
         "test1.preSave 2",
-        "test1.postSave 2",
-        "test2.postSave 2",
+        "test1.postSave 2 1",
+        "test2.postSave 2 1",
         "test1.construct",
         "test2.construct",
         "test3.construct",
         "test1.preSave",
         "test3.preSave",
-        "test1.postSave 3",
-        "test2.postSave 3",
-        "test3.postSave 3",
+        "test1.postSave 3 1",
+        "test2.postSave 3 1",
+        "test3.postSave 3 1",
         "test1.construct",
         "test2.construct",
         "test1.preSave",
-        "test1.postSave 4",
-        "test2.postSave 4",
+        "test1.postSave 4 1",
+        "test2.postSave 4 1",
         "test1.preLoad",
         "test1.postLoad 1",
         "test2.preLoad",
@@ -261,28 +263,28 @@ describe("models", () => {
         'test3.postLoad {"id":3,"a":23,"b":"test","c":23,"d":null,"e":23,"f":"test"}',
         "test1.reset 1",
         "test1.preSave 1",
-        "test1.postSave 1",
+        "test1.postSave 1 1",
         "test2.reset 2",
         "test1.preSave 2",
-        "test1.postSave 2",
-        "test2.postSave 2",
+        "test1.postSave 2 1",
+        "test2.postSave 2 1",
         "test1.reset 3",
         "test2.reset 3",
         "test3.reset 3",
         "test1.preSave 3",
         "test3.preSave 3",
-        "test1.postSave 3",
-        "test2.postSave 3",
-        "test3.postSave 3",
+        "test1.postSave 3 1",
+        "test2.postSave 3 1",
+        "test3.postSave 3 1",
         "test2.reset 4",
         "test1.preSave 4",
-        "test1.postSave 4",
-        "test2.postSave 4",
+        "test1.postSave 4 1",
+        "test2.postSave 4 1",
         "test2.preRemove 3",
         "test3.preRemove 3",
-        "test1.postRemove 3",
-        "test2.postRemove 3",
-        "test3.postRemove 3",
+        "test1.postRemove 3 1",
+        "test2.postRemove 3 1",
+        "test3.postRemove 3 1",
         "test1.preLoad",
         "test1.postLoad 1"
       ]));

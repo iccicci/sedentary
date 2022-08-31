@@ -1,6 +1,6 @@
-import { deepStrictEqual as de, strictEqual as eq, ok } from "assert";
+import { deepStrictEqual as de, ok,strictEqual as eq } from "assert";
 
-import { Package, Sedentary, helper } from "./helper";
+import { helper,Package, Sedentary } from "./helper";
 import { connection, wrongConnection, wrongConnectionError } from "./local";
 
 describe("class Sedentary", () => {

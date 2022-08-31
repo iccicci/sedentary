@@ -1,6 +1,7 @@
-import { DatabaseError, Pool, PoolClient, PoolConfig, types as PGtypes } from "pg";
+import { DatabaseError, Pool, PoolClient, PoolConfig, QueryResult, types as PGtypes } from "pg";
 import format from "pg-format";
 import { Attribute, DB, EntryBase, ForeignKeyActions, Index, Table, Transaction } from "sedentary";
+
 import { adsrc } from "./adsrc";
 
 const needDrop = [
@@ -110,10 +111,8 @@ export class PGDB extends DB<TransactionPG> {
     if(value === null || value === undefined) throw new Error("SedentaryPG: Can't escape null nor undefined values; use the 'IS NULL' operator instead");
 
     if(typeof value === "boolean" || typeof value === "number") return value.toString();
-    if(typeof value === "string") return format("%L", value);
-    //if(value instanceof Date)
-    return format("%L", value).replace(/\.\d\d\d\+/, "+");
-    //return format("%L", JSON.stringify(value));
+    if(value instanceof Date) return format("%L", value).replace(/\.\d\d\d\+/, "+");
+    return format("%L", value);
   }
 
   fill(attributes: Record<string, string>, row: Record<string, unknown>, entry: Record<string, unknown>) {
@@ -176,7 +175,7 @@ export class PGDB extends DB<TransactionPG> {
     };
   }
 
-  remove(tableName: string, pk: Attribute<unknown, unknown>): (this: Record<string, unknown> & { tx?: TransactionPG }) => Promise<boolean> {
+  remove(tableName: string, pk: Attribute<unknown, unknown>): (this: Record<string, unknown> & { tx?: TransactionPG }) => Promise<number> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const pkAttrName = pk.attributeName;
@@ -184,13 +183,13 @@ export class PGDB extends DB<TransactionPG> {
 
     return async function() {
       const client = this.tx ? (this.tx as unknown as { _client: PoolClient })._client : await self.pool.connect();
-      let removed = false;
+      let removed: number;
 
       try {
         const query = `DELETE FROM ${tableName} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`;
 
         self.log(query);
-        removed = (await client.query(query)).rowCount === 1;
+        removed = (await client.query(query)).rowCount;
       } finally {
         if(! this.tx) client.release();
       }
@@ -203,7 +202,7 @@ export class PGDB extends DB<TransactionPG> {
     tableName: string,
     attributes: Record<string, string>,
     pk: Attribute<unknown, unknown>
-  ): (this: Record<string, unknown> & { loaded?: Record<string, unknown>; tx?: TransactionPG }) => Promise<boolean> {
+  ): (this: Record<string, unknown> & { loaded?: Record<string, unknown>; tx?: TransactionPG }) => Promise<number | false> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const pkAttrName = pk.attributeName;
@@ -212,6 +211,16 @@ export class PGDB extends DB<TransactionPG> {
     return async function() {
       const client = this.tx ? (this.tx as unknown as { _client: PoolClient })._client : await self.pool.connect();
       let changed = false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: QueryResult<any> | null = null;
+
+      const save = async (query: string) => {
+        self.log(query);
+
+        changed = true;
+        result = await client.query(query + " RETURNING *");
+        self.fill(attributes, result.rows[0], this);
+      };
 
       try {
         const { loaded } = this;
@@ -225,13 +234,7 @@ export class PGDB extends DB<TransactionPG> {
             if(value !== loaded[attribute]) actions.push(`${attributes[attribute]} = ${self.escape(value)}`);
           }
 
-          if(actions.length) {
-            const query = `UPDATE ${tableName} SET ${actions.join(", ")} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`;
-
-            self.log(query);
-            self.fill(attributes, (await client.query(query + " RETURNING *")).rows[0], this);
-            changed = true;
-          }
+          if(actions.length) await save(`UPDATE ${tableName} SET ${actions.join(", ")} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`);
         } else {
           const fields: string[] = [];
           const values: string[] = [];
@@ -245,18 +248,13 @@ export class PGDB extends DB<TransactionPG> {
             }
           }
 
-          const query = fields.length ? `INSERT INTO ${tableName} (${fields.join(", ")}) VALUES (${values.join(", ")})` : `INSERT INTO ${tableName} DEFAULT VALUES`;
-
-          self.log(query);
-          self.fill(attributes, (await client.query(query + " RETURNING *")).rows[0], this);
-
-          changed = true;
+          await save(fields.length ? `INSERT INTO ${tableName} (${fields.join(", ")}) VALUES (${values.join(", ")})` : `INSERT INTO ${tableName} DEFAULT VALUES`);
         }
       } finally {
         if(! this.tx) client.release();
       }
 
-      return changed;
+      return changed && result!.rowCount;
     };
   }
 
@@ -594,6 +592,7 @@ export class TransactionPG extends Transaction {
 
   public async commit() {
     if(! this.released) {
+      this.preCommit();
       this.log("COMMIT");
       await this._client.query("COMMIT");
       this.release();
