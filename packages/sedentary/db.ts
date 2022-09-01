@@ -235,3 +235,27 @@ export class Transaction {
     this.clean();
   }
 }
+
+const sortedEntries = (obj: object) => Object.entries(obj).sort((entryA, entryB) => (entryA[0] > entryB[0] ? -1 : 1));
+
+export function differ(a: unknown, b: unknown) {
+  if(typeof a !== "object") return a !== b;
+  if(typeof b !== "object") return true;
+  if(a === null) return b !== null;
+  if(b === null) return true;
+
+  if(a instanceof Array) {
+    if(! (b instanceof Array)) return true;
+    for(const [i, value] of a.entries()) if(differ(value, b[i])) return true;
+
+    return false;
+  }
+
+  const entriesA = sortedEntries(a);
+  const entriesB = sortedEntries(b);
+
+  if(entriesA.length !== entriesB.length) return true;
+  for(const [i, [key, value]] of entriesA.entries()) if(key !== entriesB[i][0] || differ(value, entriesB[i][1])) return true;
+
+  return false;
+}

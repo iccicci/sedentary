@@ -1,6 +1,6 @@
 import { DatabaseError, Pool, PoolClient, PoolConfig, QueryResult, types as PGtypes } from "pg";
 import format from "pg-format";
-import { Attribute, DB, EntryBase, ForeignKeyActions, Index, Table, Transaction } from "sedentary";
+import { Attribute, DB, differ, EntryBase, ForeignKeyActions, Index, Table, Transaction } from "sedentary";
 
 import { adsrc } from "./adsrc";
 
@@ -231,7 +231,7 @@ export class PGDB extends DB<TransactionPG> {
           for(const attribute in attributes) {
             const value = this[attribute];
 
-            if(value !== loaded[attribute]) actions.push(`${attributes[attribute]} = ${self.escape(value)}`);
+            if(differ(value, loaded[attribute])) actions.push(`${attributes[attribute]} = ${self.escape(value)}`);
           }
 
           if(actions.length) await save(`UPDATE ${tableName} SET ${actions.join(", ")} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`);

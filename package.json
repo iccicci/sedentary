@@ -17,7 +17,7 @@
     "eslint-plugin-simple-import-sort": "7.0.0",
     "eslint-plugin-sort-keys-fix": "1.1.2",
     "jest": "29.0.1",
-    "jest-environment-node-single-context": "28.1.0",
+    "jest-environment-node-single-context": "29.0.0",
     "prettier": "2.7.1",
     "ts-jest": "28.0.8",
     "ts-node": "10.9.1",
@@ -63,7 +63,7 @@
     "preinstall": "make",
     "test": "yarn workspaces run test"
   },
-  "version": "0.0.46",
+  "version": "0.0.47",
   "workspaces": [
     "packages/sedentary",
     "packages/sedentary-pg"
