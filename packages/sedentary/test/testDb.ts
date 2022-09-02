@@ -3,7 +3,7 @@
 import { promises } from "fs";
 
 import { EntryBase } from "..";
-import { Attribute, DB, Table, Transaction } from "../db";
+import { Attribute, DB, loaded, Table, Transaction } from "../db";
 
 const { readFile, writeFile } = promises;
 
@@ -116,7 +116,7 @@ export class TestDB extends DB<TestTransaction> {
         const ret = new model("load");
 
         Object.assign(ret, _);
-        Object.defineProperty(ret, "loaded", { configurable: true, value: true });
+        Object.defineProperty(ret, loaded, { configurable: true, value: true });
         if(tx) tx.addEntry(ret);
         ret.postLoad();
 
@@ -205,7 +205,9 @@ export class TestDB extends DB<TestTransaction> {
     const { fields } = this.body.tables[table.tableName] || { fields: {} };
 
     for(const attribute of Object.keys(fields).sort()) {
-      if(! table.findField(attribute)) {
+      const field = table.findField(attribute);
+
+      if(! field || ! field.base) {
         this.syncLog(`'${table.tableName}': Removing field: '${attribute}'`);
         if(this.sync) delete fields[attribute];
       }
@@ -273,6 +275,8 @@ export class TestDB extends DB<TestTransaction> {
       const { fields } = this.body.tables[table.tableName] || { fields: {} };
       const { defaultValue, fieldName, notNull, size, type } = attribute;
       let field = fields[fieldName];
+
+      if(! field && type === "NONE") continue;
 
       if(! field) {
         this.syncLog(`'${table.tableName}': Adding field: '${fieldName}' '${type}' '${size || ""}'`);

@@ -438,7 +438,19 @@ export const expected = {
     "ALTER TABLE test1 DROP COLUMN e",
     "ALTER TABLE test1 ADD COLUMN e JSON"
   ],
-  types_number: [
+  types_none: [
+    "CREATE SEQUENCE test1_id_seq",
+    "CREATE TABLE test1 ()",
+    "ALTER TABLE test1 ADD COLUMN id INTEGER",
+    "ALTER TABLE test1 ALTER COLUMN id SET DEFAULT nextval('test1_id_seq'::regclass)",
+    "UPDATE test1 SET id = nextval('test1_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test1 ADD COLUMN c VARCHAR",
+    "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
+    "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)"
+  ],
+  types_none_changes: ["ALTER TABLE test1 DROP COLUMN c", "ALTER TABLE test1 ADD COLUMN b VARCHAR"],
+  types_number:       [
     "CREATE SEQUENCE test1_id_seq",
     "CREATE TABLE test1 ()",
     "ALTER TABLE test1 ADD COLUMN id INTEGER",

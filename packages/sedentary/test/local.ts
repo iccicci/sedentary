@@ -343,7 +343,16 @@ export const expected = {
     "'test1': Changing field type: 'd' 'INT' '4'",
     "'test1': Changing field type: 'e' 'JSON' ''"
   ],
-  types_number: [
+  types_none: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'c' 'VARCHAR' ''",
+    "'test1': Adding unique constraint on field: 'id'"
+  ],
+  types_none_changes: ["'test1': Removing field: 'c'", "'test1': Adding field: 'b' 'VARCHAR' ''"],
+  types_number:       [
     "Adding table: 'test1'",
     "Setting auto increment: 'test1'",
     "'test1': Adding field: 'id' 'INT' '4'",

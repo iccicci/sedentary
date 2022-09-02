@@ -238,12 +238,12 @@ type t14_1 = typeof T14 extends new (from: infer T) => EntryBase ? Exclude<T, un
 expectType<{ a?: Date | null; id?: number }>({} as t14_1);
 
 type t15_1 = { a: number; b?: string[] };
-const T15 = db.model("T15", { a: db.JSON(), b: db.JSON<t15_1>() });
+const T15 = db.model("T15", { a: db.JSON(), b: db.JSON<t15_1>(), c: { notNull: true, type: db.None<t15_1>() } });
 type T15 = Entry<typeof T15>;
 const t15 = new T15();
 expectAssignable<Type<number, EntryBase>>(T15);
 expectNotAssignable<Type<string, EntryBase>>(T15);
 expectType<T15>(t15);
-expectType<EntryBase & { a: unknown | null; b: t15_1 | null; id: number }>(t15);
+expectType<EntryBase & { a: unknown | null; b: t15_1 | null; c: t15_1; id: number }>(t15);
 type t15_2 = typeof T15 extends new (from: infer T) => EntryBase ? Exclude<T, undefined> : never;
-expectType<{ a?: unknown | null; b?: t15_1 | null; id?: number }>({} as t15_2);
+expectType<{ a?: unknown | null; b?: t15_1 | null; c?: t15_1; id?: number }>({} as t15_2);

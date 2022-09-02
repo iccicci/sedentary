@@ -1,5 +1,6 @@
 export const actions = Symbol("actions");
 export const loaded = Symbol("loaded");
+export const transaction = Symbol("transaction");
 
 export interface Action {
   action: "remove" | "save";
@@ -202,7 +203,7 @@ export class Transaction {
   }
 
   addEntry(entry: EntryBase) {
-    Object.defineProperty(entry, "tx", { configurable: true, value: this });
+    Object.defineProperty(entry, transaction, { configurable: true, value: this });
     this.entries.push(entry);
   }
 
@@ -211,7 +212,7 @@ export class Transaction {
 
     for(const entry of entries) {
       Object.defineProperty(entry, actions, { configurable: true, value: undefined });
-      Object.defineProperty(entry, "tx", { configurable: true, value: undefined });
+      Object.defineProperty(entry, transaction, { configurable: true, value: undefined });
     }
 
     this.entries = [];

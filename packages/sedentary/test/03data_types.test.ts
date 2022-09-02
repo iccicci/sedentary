@@ -129,4 +129,26 @@ describe("data types", () => {
       });
     });
   });
+
+  describe("None", function() {
+    helper(expected.types_none, async db => {
+      db.model("test1", {
+        a: db.None,
+        b: db.None,
+        c: db.VarChar
+      });
+      await db.connect();
+    });
+
+    describe("Int & Varchar changes", function() {
+      helper(expected.types_none_changes, true, async db => {
+        db.model("test1", {
+          a: db.None,
+          b: db.VarChar,
+          c: db.None
+        });
+        await db.connect();
+      });
+    });
+  });
 });

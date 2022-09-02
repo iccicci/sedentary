@@ -1,4 +1,4 @@
-import { Action, actions, Attribute, Constraint, DB, EntryBase, ForeignKeyOptions, Index, Table, Transaction, Type } from "./db";
+import { Action, actions, Attribute, Constraint, DB, EntryBase, ForeignKeyOptions, Index, loaded, Table, Transaction, transaction, Type } from "./db";
 
 export { Action, Attribute, DB, differ, EntryBase, ForeignKeyActions, ForeignKeyOptions, Index, Table, Transaction, Type } from "./db";
 export type TypeDefinition<T, E> = (() => Type<T, E>) | Type<T, E>;
@@ -98,26 +98,7 @@ export interface SedentaryOptions {
 const allowedOption = ["indexes", "int8id", "parent", "primaryKey", "sync", "tableName"];
 const reservedNames = [
   ...["attr2field", "attributeName", "attributes", "base", "class", "construct", "constructor", "defaultValue", "entry", "fieldName", "foreignKeys", "load"],
-  ...[
-    "loaded",
-    "methods",
-    "name",
-    "postCommit",
-    "postLoad",
-    "postRemove",
-    "postSave",
-    "preCommit",
-    "preLoad",
-    "preRemove",
-    "preSave",
-    "primaryKey",
-    "prototype",
-    "save",
-    "size",
-    "tableName",
-    "tx",
-    "type"
-  ]
+  ...["methods", "name", "postCommit", "postLoad", "postRemove", "postSave", "preCommit", "preLoad", "preRemove", "preSave", "primaryKey", "prototype", "save", "size", "tableName", "type"]
 ];
 
 export class Sedentary<D extends DB<T>, T extends Transaction> {
@@ -181,6 +162,10 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
   public Number(): Type<number, unknown> {
     return new Type({ base: Number, type: "NUMBER" });
+  }
+
+  public None<T>(): Type<T, unknown> {
+    return new Type({ base: undefined, type: "NONE" });
   }
 
   public VarChar<S extends string>(size?: number): Type<S, unknown> {
@@ -406,7 +391,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
       const call = (defaultValue: unknown | undefined, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<unknown, unknown>, message1: string, message2: string) => {
         if(func === this.FKey) throw new Error(`${message1} 'this.FKey' can't be used directly`);
-        if(! ([this.Boolean, this.DateTime, this.Int, this.JSON, this.Int8, this.Number, this.VarChar] as unknown[]).includes(func as unknown)) throw new Error(`${message1} ${message2}`);
+        if(! ([this.Boolean, this.DateTime, this.Int, this.JSON, this.Int8, this.None, this.Number, this.VarChar] as unknown[]).includes(func as unknown)) throw new Error(`${message1} ${message2}`);
 
         return new Attribute({ attributeName, defaultValue, fieldName, modelName, notNull, tableName, unique, ...func() });
       };
@@ -620,39 +605,35 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     Object.defineProperty(ret, "methods", { value: methods });
     Object.assign(ret.prototype, methods);
 
+    const ensureActions = (entry: { [actions]?: Action[] }) => {
+      if(! entry[actions]) Object.defineProperty(entry, actions, { configurable: true, value: [] });
+
+      return entry[actions]!;
+    };
+
     const remove = this.db.remove(tableName, pk);
-    ret.prototype.remove = async function(this: EntryBase & Record<string, unknown> & { [actions]: Action[] }) {
-      if(! this.loaded) throw new Error(`${modelName}.remove: Can't remove a never saved Entry`);
+    ret.prototype.remove = async function(this: EntryBase & Record<string, unknown> & { [actions]?: Action[]; [loaded]: unknown; [transaction]: unknown }) {
+      if(! this[loaded]) throw new Error(`${modelName}.remove: Can't remove a never saved Entry`);
 
       this.preRemove();
 
       const records = await remove.call(this);
 
       this.postRemove(records);
-
-      if(this.tx) {
-        if(! this[actions]) Object.defineProperty(this, actions, { configurable: true, value: [] });
-
-        this[actions]!.push({ action: "remove", records });
-      }
+      if(this[transaction]) ensureActions(this).push({ action: "remove", records });
 
       return records;
     };
     Object.defineProperty(ret.prototype.remove, "name", { value: modelName + ".remove" });
 
     const save = this.db.save(tableName, attr2field, pk);
-    ret.prototype.save = async function(this: EntryBase & Record<string, unknown> & { [actions]: Action[] }) {
+    ret.prototype.save = async function(this: EntryBase & Record<string, unknown> & { [actions]?: Action[]; [transaction]: unknown }) {
       this.preSave();
 
       const records = await save.call(this);
 
       this.postSave(records);
-
-      if(this.tx) {
-        if(! this[actions]) Object.defineProperty(this, actions, { configurable: true, value: [] });
-
-        this[actions]!.push({ action: "save", records });
-      }
+      if(this[transaction]) ensureActions(this).push({ action: "save", records });
 
       return records;
     };
