@@ -1,7 +1,6 @@
 import { DatabaseError, Pool, PoolClient, PoolConfig, QueryResult, types as PGtypes } from "pg";
 import format from "pg-format";
-import { Attribute, DB, differ, EntryBase, ForeignKeyActions, Index, Table, Transaction } from "sedentary";
-import { loaded, transaction } from "sedentary/db";
+import { Attribute, DB, differ, EntryBase, ForeignKeyActions, Index, loaded, Table, Transaction,transaction } from "sedentary";
 
 import { adsrc } from "./adsrc";
 

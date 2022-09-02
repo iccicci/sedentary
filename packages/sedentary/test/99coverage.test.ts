@@ -1,6 +1,7 @@
 import { deepStrictEqual as de, ok, strictEqual as eq } from "assert";
 
-import { Attribute, DB, EntryBase, Sedentary as Sed, Table, Transaction, Type } from "..";
+import { Attribute, DB, EntryBase, loaded, Sedentary as Sed, Table, Transaction, transaction, Type } from "..";
+import { loaded as loadedDB, transaction as transactionDB } from "../db";
 import { helper, Sedentary } from "./helper";
 import { connection, coverage } from "./local";
 import { TestDB } from "./testDb";
@@ -122,4 +123,7 @@ describe("coverage", () => {
     // eslint-disable-next-line no-console
     it("Transaction", () => eq(new Transaction(console.log) instanceof Transaction, true));
   });
+
+  it("symbol loaded", () => expect(loaded).toBe(loadedDB));
+  it("symbol transaction", () => expect(transaction).toBe(transactionDB));
 });
