@@ -1,6 +1,6 @@
 import { DatabaseError, Pool, PoolClient, PoolConfig, QueryResult, types as PGtypes } from "pg";
 import format from "pg-format";
-import { Attribute, base, DB, differ, EntryBase, ForeignKeyActions, Index, loaded, size, Table, Transaction, transaction } from "sedentary";
+import { Attribute, base, DB, deepCopy, deepDiff, EntryBase, ForeignKeyActions, Index, loaded, size, Table, Transaction, transaction } from "sedentary";
 
 import { adsrc } from "./adsrc";
 
@@ -118,7 +118,7 @@ export class PGDB extends DB<TransactionPG> {
   fill(attr2field: Record<string, string>, row: Record<string, unknown>, entry: Record<string, unknown>) {
     const value: Record<string, unknown> = {};
 
-    for(const attribute in attr2field) entry[attribute] = value[attribute] = row[attr2field[attribute]];
+    for(const attribute in attr2field) value[attribute] = deepCopy((entry[attribute] = row[attr2field[attribute]]));
     Object.defineProperty(entry, loaded, { configurable: true, value });
   }
 
@@ -231,7 +231,7 @@ export class PGDB extends DB<TransactionPG> {
           for(const attribute in attr2field) {
             const value = this[attribute];
 
-            if(differ(value, loadedRecord[attribute])) actions.push(`${attr2field[attribute]} = ${self.escape(value)}`);
+            if(deepDiff(value, loadedRecord[attribute])) actions.push(`${attr2field[attribute]} = ${self.escape(value)}`);
           }
 
           if(actions.length) await save(`UPDATE ${tableName} SET ${actions.join(", ")} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`);

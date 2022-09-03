@@ -77,6 +77,7 @@ export class TestDB extends DB<TestTransaction> {
           { a: 23, b: "ok", id: 1 }
         ],
         "a <= 10":                 [{ a: 2, b: "2", id: 2 }],
+        "a >= 23":                 [{ a: 23, b: { a: [1], v: "test" }, id: 1 }],
         "a IS NULL":               [{ a: null, b: "test", id: 2 }],
         "b = 'ok'":                [{ a: 23, b: "ok", id: 1 }],
         "b IN ('a', 'b', 'test')": [
@@ -150,9 +151,10 @@ export class TestDB extends DB<TestTransaction> {
       [false, { a: 23, b: "test", id: 1 }]
     ];
     const saves2: Record<string, [number | false, Record<string, unknown>]> = {
-      '{"a":1,"b":"1"}': [1, { a: 1, b: "1" }],
-      '{"a":2,"b":"2"}': [1, { a: 2, b: "2" }],
-      '{"a":3,"b":"3"}': [1, { a: 3, b: "3", id: 3 }]
+      '{"a":1,"b":"1"}':                            [1, { a: 1, b: "1" }],
+      '{"a":2,"b":"2"}':                            [1, { a: 2, b: "2" }],
+      '{"a":23,"b":{"a":[1,2],"v":"test"},"id":1}': [1, { a: 23, b: { a: [1, 2], v: "test" }, id: 1 }],
+      '{"a":3,"b":"3"}':                            [1, { a: 3, b: "3", id: 3 }]
     };
 
     const getSaves2 = (obj: unknown) => {

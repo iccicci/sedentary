@@ -535,6 +535,21 @@ export const models = {
     "DELETE FROM test3 WHERE id = 3",
     "SELECT *, tableoid FROM test1 ORDER BY id LIMIT 1"
   ],
+  json: [
+    "CREATE SEQUENCE test1_id_seq",
+    "CREATE TABLE test1 ()",
+    "ALTER TABLE test1 ADD COLUMN id INTEGER",
+    "ALTER TABLE test1 ALTER COLUMN id SET DEFAULT nextval('test1_id_seq'::regclass)",
+    "UPDATE test1 SET id = nextval('test1_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test1 ADD COLUMN a INTEGER",
+    "ALTER TABLE test1 ADD COLUMN b JSON",
+    "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
+    "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)",
+    'INSERT INTO test1 (a, b) VALUES (23, \'{"a":[1],"v":"test"}\'::jsonb)',
+    "SELECT *, tableoid FROM test1 WHERE a >= 23",
+    'UPDATE test1 SET b = \'{"a":[1,2],"v":"test"}\'::jsonb WHERE id = 1'
+  ],
   types: [
     "CREATE SEQUENCE test1_id_seq",
     "CREATE TABLE test1 ()",

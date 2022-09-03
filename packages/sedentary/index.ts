@@ -1,6 +1,6 @@
 import { Action, actions, Attribute, base, Constraint, DB, EntryBase, ForeignKeyOptions, Index, loaded, size, Table, Transaction, transaction, Type } from "./db";
 
-export { Action, Attribute, base, DB, differ, EntryBase, ForeignKeyActions, ForeignKeyOptions, Index, loaded, size, Table, Transaction, transaction, Type } from "./db";
+export { Action, Attribute, base, DB, deepCopy, deepDiff, EntryBase, ForeignKeyActions, ForeignKeyOptions, Index, loaded, size, Table, Transaction, transaction, Type } from "./db";
 export type TypeDefinition<T, E> = (() => Type<T, E>) | Type<T, E>;
 export interface AttributeOptions<T, E> {
   defaultValue?: T;

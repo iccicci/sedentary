@@ -390,7 +390,19 @@ export const models = {
     "Delete from test1 1"
   ],
   inheritance: [""],
-  types:       [
+  json:        [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'INT' '4'",
+    "'test1': Adding field: 'b' 'JSON' ''",
+    "'test1': Adding unique constraint on field: 'id'",
+    'Save to test1 {"a":23,"b":{"a":[1],"v":"test"}}',
+    'Load from test1 where: "a >= 23"',
+    'Save to test1 {"a":23,"b":{"a":[1,2],"v":"test"},"id":1}'
+  ],
+  types: [
     "Adding table: 'test1'",
     "Setting auto increment: 'test1'",
     "'test1': Adding field: 'id' 'INT' '4'",

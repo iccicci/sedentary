@@ -241,7 +241,18 @@ export class Transaction {
 
 const sortedEntries = (obj: object) => Object.entries(obj).sort((entryA, entryB) => (entryA[0] > entryB[0] ? -1 : 1));
 
-export function differ(a: unknown, b: unknown) {
+export function deepCopy(o: unknown) {
+  if(! o || typeof o !== "object") return o;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [ret, entries] = o instanceof Array ? [new Array(o.length) as any, o.entries()] : [{}, Object.entries(o)];
+
+  for(const [k, v] of entries) ret[k] = deepCopy(v);
+
+  return ret;
+}
+
+export function deepDiff(a: unknown, b: unknown) {
   if(typeof a !== "object") return a !== b;
   if(typeof b !== "object") return true;
   if(a === null) return b !== null;
@@ -249,7 +260,7 @@ export function differ(a: unknown, b: unknown) {
 
   if(a instanceof Array) {
     if(! (b instanceof Array)) return true;
-    for(const [i, value] of a.entries()) if(differ(value, b[i])) return true;
+    for(const [i, value] of a.entries()) if(deepDiff(value, b[i])) return true;
 
     return false;
   }
@@ -258,7 +269,7 @@ export function differ(a: unknown, b: unknown) {
   const entriesB = sortedEntries(b);
 
   if(entriesA.length !== entriesB.length) return true;
-  for(const [i, [key, value]] of entriesA.entries()) if(key !== entriesB[i][0] || differ(value, entriesB[i][1])) return true;
+  for(const [i, [key, value]] of entriesA.entries()) if(key !== entriesB[i][0] || deepDiff(value, entriesB[i][1])) return true;
 
   return false;
 }

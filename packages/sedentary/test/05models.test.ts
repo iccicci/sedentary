@@ -68,6 +68,21 @@ describe("models", () => {
     it("remove 2", () => de(r2, 0));
   });
 
+  describe("with JSON field", function() {
+    helper(models.json, async db => {
+      const test1 = db.model("test1", { a: db.Int, b: db.JSON<{ a: number[]; v: string }>() });
+      await db.connect();
+      const a = new test1({ a: 23, b: { a: [1], v: "test" } });
+      await a.save();
+      const [b] = await test1.load({ a: [">=", 23] });
+
+      b.b?.a.push(2);
+
+      await expect(b.save()).resolves.toBe(1);
+      expect(b).toStrictEqual(new test1({ a: 23, b: { a: [1, 2], v: "test" }, id: 1 }));
+    });
+  });
+
   desc("inheritance & methods", function() {
     const logs: string[] = [];
     const log = (msg: string) => logs.push(msg);
