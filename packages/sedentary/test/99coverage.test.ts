@@ -1,7 +1,7 @@
 import { deepStrictEqual as de, ok, strictEqual as eq } from "assert";
 
-import { Attribute, DB, EntryBase, loaded, Sedentary as Sed, Table, Transaction, transaction, Type } from "..";
-import { loaded as loadedDB, transaction as transactionDB } from "../db";
+import { Attribute, base, DB, EntryBase, loaded, Sedentary as Sed, size, Table, Transaction, transaction, Type } from "..";
+import { base as baseDB, loaded as loadedDB, size as sizeDB, transaction as transactionDB } from "../db";
 import { helper, Sedentary } from "./helper";
 import { connection, coverage } from "./local";
 import { TestDB } from "./testDb";
@@ -23,10 +23,10 @@ describe("coverage", () => {
   it("EntryBase", () => eq(new EntryBase() instanceof EntryBase, true));
   it("EntryBase.remove", async () => eq(await new EntryBase().remove(), false));
   it("EntryBase.save", async () => eq(await new EntryBase().save(), false));
-  it("Type", () => eq(new Type({ base: null, type: "" }) instanceof Type, true));
+  it("Type", () => eq(new Type({ [base]: null, type: "" }) instanceof Type, true));
 
   describe("findTable", () => {
-    const att = new Attribute({ attributeName: "id", base: Number, fieldName: "id", modelName: "test", notNull: true, size: 4, tableName: "test", type: "INT", unique: true });
+    const att = new Attribute({ attributeName: "id", [base]: Number, fieldName: "id", modelName: "test", notNull: true, [size]: 4, tableName: "test", type: "INT", unique: true });
     const db = new Sedentary(connection);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let test: any;
@@ -124,6 +124,8 @@ describe("coverage", () => {
     it("Transaction", () => eq(new Transaction(console.log) instanceof Transaction, true));
   });
 
+  it("symbol base", () => expect(base).toBe(baseDB));
   it("symbol loaded", () => expect(loaded).toBe(loadedDB));
+  it("symbol size", () => expect(size).toBe(sizeDB));
   it("symbol transaction", () => expect(transaction).toBe(transactionDB));
 });

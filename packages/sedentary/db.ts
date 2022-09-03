@@ -1,5 +1,7 @@
 export const actions = Symbol("actions");
+export const base = Symbol("base");
 export const loaded = Symbol("loaded");
+export const size = Symbol("size");
 export const transaction = Symbol("transaction");
 
 export interface Action {
@@ -47,10 +49,10 @@ export interface ForeignKeyOptions {
 }
 
 export interface Type<T, E> {
-  base: unknown;
+  [base]: unknown;
   entry?: E;
   native?: T;
-  size?: number;
+  [size]?: number;
   type: string;
   foreignKey?: {
     attributeName: string;
@@ -182,7 +184,7 @@ export abstract class DB<T extends Transaction> {
     table: Table
   ): (where: string, order?: string | string[], limit?: number, tx?: Transaction, lock?: boolean) => Promise<EntryBase[]>;
   abstract remove(tableName: string, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number>;
-  abstract save(tableName: string, attributes: Record<string, string>, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number | false>;
+  abstract save(tableName: string, attr2field: Record<string, string>, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number | false>;
 
   abstract dropConstraints(table: Table): Promise<number[]>;
   abstract dropFields(table: Table): Promise<void>;

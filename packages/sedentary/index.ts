@@ -1,6 +1,6 @@
-import { Action, actions, Attribute, Constraint, DB, EntryBase, ForeignKeyOptions, Index, loaded, Table, Transaction, transaction, Type } from "./db";
+import { Action, actions, Attribute, base, Constraint, DB, EntryBase, ForeignKeyOptions, Index, loaded, size, Table, Transaction, transaction, Type } from "./db";
 
-export { Action, Attribute, DB, differ, EntryBase, ForeignKeyActions, ForeignKeyOptions, Index, loaded, Table, Transaction, transaction, Type } from "./db";
+export { Action, Attribute, base, DB, differ, EntryBase, ForeignKeyActions, ForeignKeyOptions, Index, loaded, size, Table, Transaction, transaction, Type } from "./db";
 export type TypeDefinition<T, E> = (() => Type<T, E>) | Type<T, E>;
 export interface AttributeOptions<T, E> {
   defaultValue?: T;
@@ -12,6 +12,9 @@ export interface AttributeOptions<T, E> {
 
 export type AttributeDefinition<T, E> = TypeDefinition<T, E> | AttributeOptions<T, E>;
 export type AttributesDefinition = { [key: string]: AttributeDefinition<unknown, unknown> };
+
+const attributes = Symbol("attributes");
+const methods = Symbol("methods");
 
 type ForeignKeysAttributes<T, k> = T extends AttributeDefinition<unknown, infer E> ? (E extends EntryBase ? k : never) : never;
 type ForeignKeys<A extends AttributesDefinition> = { [a in keyof A]?: ForeignKeysAttributes<A[a], a> }[keyof A];
@@ -61,14 +64,14 @@ type KeyType<B extends boolean, P extends ModelStd> = P extends new () => EntryB
 type ForeignKey<A> = A extends AttributeDefinition<unknown, infer E> ? () => Promise<E> : never;
 type EntryBaseAttributes<A extends AttributesDefinition> = { [a in keyof A]: Native<A[a]> };
 
-type EntryMethodsBase<P extends ModelStd> = P extends new () => EntryBase ? P["methods"] : EntryBase;
+type EntryMethodsBase<P extends ModelStd> = P extends new () => EntryBase ? P[typeof methods] : EntryBase;
 type EntryMethodsFK<A extends AttributesDefinition> = { [a in ForeignKeys<A> & string as `${a}Load`]: ForeignKey<A[a]> };
 type EntryMethods<A extends AttributesDefinition, P extends ModelStd> = keyof EntryMethodsFK<A> extends never ? EntryMethodsBase<P> : EntryMethodsBase<P> & EntryMethodsFK<A>;
 
 type ModelAttributesIf<A extends AttributesDefinition, T> = keyof A extends never ? T : T & A;
 type ModelAttributes<A extends AttributesDefinition, B extends boolean, K extends string, P extends ModelStd> = K extends keyof A
   ? A
-  : ModelAttributesIf<A, P extends new () => EntryBase ? P["attributes"] : { id: { notNull: true; type: Type<BaseKeyType<B>, unknown> } }>;
+  : ModelAttributesIf<A, P extends new () => EntryBase ? P[typeof attributes] : { id: { notNull: true; type: Type<BaseKeyType<B>, unknown> } }>;
 
 export interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> {
   load(where: Condition<A>, order?: Order<A>, limit?: number, tx?: Transaction, lock?: boolean): Promise<E[]>;
@@ -79,9 +82,9 @@ export interface ModelLoad<A extends AttributesDefinition, E extends EntryBase> 
 }
 
 type ModelBase<T, A extends AttributesDefinition, EA extends Record<string, unknown>, EM extends EntryBase, E extends EntryBase> = (new (from?: Partial<EA>, tx?: Transaction) => E) &
-  Attribute<T, E> & { attributes: A; foreignKeys: Record<string, boolean>; methods: EM; parent?: ModelStd; tableName: string } & { [a in keyof A]: Attribute<Native<A[a]>, E> } & ModelLoad<A, E>;
+  Attribute<T, E> & { [attributes]: A; foreignKeys: Record<string, boolean>; [methods]: EM; parent?: ModelStd; tableName: string } & { [a in keyof A]: Attribute<Native<A[a]>, E> } & ModelLoad<A, E>;
 type Model<T, A extends AttributesDefinition, EM extends EntryBase> = ModelBase<T, A, EntryBaseAttributes<A>, EM, EntryBaseAttributes<A> & EM>;
-type ModelStd = Attribute<unknown, EntryBase> & { attributes: AttributesDefinition; foreignKeys: Record<string, boolean>; methods: EntryBase; parent?: ModelStd };
+type ModelStd = Attribute<unknown, EntryBase> & { [attributes]: AttributesDefinition; foreignKeys: Record<string, boolean>; [methods]: EntryBase; parent?: ModelStd };
 
 export type Entry<M> = M extends new () => infer E ? E : never;
 export type OrderBy<M> = M extends { load(where: unknown, order?: infer T): void; load(where: unknown, limit?: number): void; load(where: unknown, tx?: Transaction): void }
@@ -97,8 +100,8 @@ export interface SedentaryOptions {
 
 const allowedOption = ["indexes", "int8id", "parent", "primaryKey", "sync", "tableName"];
 const reservedNames = [
-  ...["attr2field", "attributeName", "attributes", "base", "class", "construct", "constructor", "defaultValue", "entry", "fieldName", "foreignKeys", "load"],
-  ...["methods", "name", "postCommit", "postLoad", "postRemove", "postSave", "preCommit", "preLoad", "preRemove", "preSave", "primaryKey", "prototype", "save", "size", "tableName", "type"]
+  ...["attr2field", "attributeName", "cancel", "class", "construct", "constructor", "defaultValue", "fieldName", "foreignKeys", "load", "name"],
+  ...["postCommit", "postLoad", "postRemove", "postSave", "preCommit", "preLoad", "preRemove", "preSave", "primaryKey", "prototype", "save", "tableName", "type"]
 ];
 
 export class Sedentary<D extends DB<T>, T extends Transaction> {
@@ -129,51 +132,51 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   }
 
   public Boolean(): Type<boolean, unknown> {
-    return new Type({ base: Boolean, type: "BOOLEAN" });
+    return new Type({ [base]: Boolean, type: "BOOLEAN" });
   }
 
   public DateTime(): Type<Date, unknown> {
-    return new Type({ base: Date, type: "DATETIME" });
+    return new Type({ [base]: Date, type: "DATETIME" });
   }
 
   public FKey<T, E extends EntryBase>(attribute: Attribute<T, E>, options?: ForeignKeyOptions): Type<T, E> {
-    const { attributeName, base, fieldName, size, tableName, type } = attribute;
+    const { attributeName, fieldName, tableName, type, [base]: _base, [size]: _size } = attribute;
 
-    return new Type({ base, foreignKey: { attributeName, fieldName, options, tableName }, size, type });
+    return new Type({ [base]: _base, foreignKey: { attributeName, fieldName, options, tableName }, [size]: _size, type });
   }
 
-  public Int(size?: number): Type<number, unknown> {
+  public Int(_size?: number): Type<number, unknown> {
     const message = "Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4";
 
-    size = size ? this.checkSize(size, message) : 4;
+    _size = _size ? this.checkSize(_size, message) : 4;
 
-    if(size !== 2 && size !== 4) throw new Error(message);
+    if(_size !== 2 && _size !== 4) throw new Error(message);
 
-    return new Type({ base: Number, size, type: "INT" });
+    return new Type({ [base]: Number, [size]: _size, type: "INT" });
   }
 
   public Int8(): Type<bigint, unknown> {
-    return new Type({ base: BigInt, size: 8, type: "INT8" });
+    return new Type({ [base]: BigInt, [size]: 8, type: "INT8" });
   }
 
   public JSON<T>(): Type<T, unknown> {
-    return new Type<T, unknown>({ base: Object, type: "JSON" });
+    return new Type<T, unknown>({ [base]: Object, type: "JSON" });
   }
 
   public Number(): Type<number, unknown> {
-    return new Type({ base: Number, type: "NUMBER" });
+    return new Type({ [base]: Number, type: "NUMBER" });
   }
 
   public None<T>(): Type<T, unknown> {
-    return new Type({ base: undefined, type: "NONE" });
+    return new Type({ [base]: undefined, type: "NONE" });
   }
 
-  public VarChar<S extends string>(size?: number): Type<S, unknown> {
+  public VarChar<S extends string>(_size?: number): Type<S, unknown> {
     const message = "Sedentary.VARCHAR: 'size' argument: Wrong value, expected positive integer";
 
-    size = size ? this.checkSize(size, message) : undefined;
+    _size = _size ? this.checkSize(_size, message) : undefined;
 
-    return new Type({ base: String, size, type: "VARCHAR" });
+    return new Type({ [base]: String, [size]: _size, type: "VARCHAR" });
   }
 
   private checkDB() {
@@ -342,16 +345,16 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   /* eslint-enable @typescript-eslint/no-explicit-any */
   public model<A extends AttributesDefinition, P extends ModelStd, M extends Record<string,() => void>>(
     modelName: string,
-    attributes: A,
+    _attributes: A,
     options?: ModelOptions & { parent?: P & (new () => EntryBase) },
-    methods?: M
+    _methods?: M
   ): Model<unknown, A, EntryBase> {
     this.checkDB();
 
     if(typeof modelName !== "string") throw new Error("Sedentary.model: 'name' argument: Wrong type, expected 'string'");
     if(this.models[modelName]) throw new Error(`Sedentary.model: '${modelName}' model: Model already defined`);
-    if(! attributes) attributes = {} as A;
-    if(! (attributes instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'attributes' argument: Wrong type, expected 'Object'`);
+    if(! _attributes) _attributes = {} as A;
+    if(! (_attributes instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'attributes' argument: Wrong type, expected 'Object'`);
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'options' argument: Wrong type, expected 'Object'`);
 
@@ -370,13 +373,13 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     let pk = aArray[0];
     let attr2field: Record<string, string> = { id: "id" };
 
-    if(! methods) methods = {} as M;
-    if(! (methods instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'methods' option: Wrong type, expected 'Object'`);
+    if(! _methods) _methods = {} as M;
+    if(! (_methods instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'methods' option: Wrong type, expected 'Object'`);
 
-    if(parent) if(! parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: 'parent' option: Wrong type, expected 'Model'`);
+    if(parent) if(! parent[attributes]) throw new Error(`Sedentary.model: '${modelName}' model: 'parent' option: Wrong type, expected 'Model'`);
 
     if(primaryKey && typeof primaryKey !== "string") throw new Error(`Sedentary.model: '${modelName}' model: 'primaryKey' option: Wrong type, expected 'string'`);
-    if(primaryKey && ! Object.keys(attributes).includes(primaryKey)) throw new Error(`Sedentary.model: '${modelName}' model: 'primaryKey' option: Attribute '${primaryKey}' does not exists`);
+    if(primaryKey && ! Object.keys(_attributes).includes(primaryKey)) throw new Error(`Sedentary.model: '${modelName}' model: 'primaryKey' option: Attribute '${primaryKey}' does not exists`);
 
     if(parent || primaryKey) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -386,7 +389,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
       constraints = [];
     }
 
-    for(const attributeName of Object.keys(attributes).sort()) {
+    for(const attributeName of Object.keys(_attributes).sort()) {
       if(reservedNames.includes(attributeName)) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: Reserved name`);
 
       const call = (defaultValue: unknown | undefined, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<unknown, unknown>, message1: string, message2: string) => {
@@ -396,8 +399,17 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
         return new Attribute({ attributeName, defaultValue, fieldName, modelName, notNull, tableName, unique, ...func() });
       };
 
-      const attributeDefinition = attributes[attributeName];
-      let { base, defaultValue, fieldName, foreignKey, notNull, size, type, unique } = ((): Attribute<unknown, unknown> => {
+      const attributeDefinition = _attributes[attributeName];
+      let {
+        [base]: _base,
+        defaultValue,
+        fieldName,
+        foreignKey,
+        notNull,
+        [size]: _size,
+        type,
+        unique
+      } = ((): Attribute<unknown, unknown> => {
         const ret = ((): Attribute<unknown, unknown> => {
           if(attributeDefinition instanceof Type) return new Attribute({ attributeName, fieldName: attributeName, modelName, notNull: false, tableName, ...attributeDefinition });
           if(attributeDefinition instanceof Function) return call(undefined, attributeName, false, false, attributeDefinition, `Sedentary.model: '${modelName}' model: '${attributeName}' attribute:`, "Wrong type, expected 'Attribute'");
@@ -417,13 +429,13 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
           throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'type' option: Wrong type, expected 'Type'`);
         })();
 
-        const { base, defaultValue } = ret;
+        const { [base]: _base, defaultValue } = ret;
 
         if(defaultValue !== undefined) {
-          if(base === BigInt && typeof defaultValue !== "bigint") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'BigInt'`);
-          if(base === Date && ! (defaultValue instanceof Date)) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'Date'`);
-          if(base === Number && typeof defaultValue !== "number") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'number'`);
-          if(base === String && typeof defaultValue !== "string") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'string'`);
+          if(_base === BigInt && typeof defaultValue !== "bigint") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'BigInt'`);
+          if(_base === Date && ! (defaultValue instanceof Date)) throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'Date'`);
+          if(_base === Number && typeof defaultValue !== "number") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'number'`);
+          if(_base === String && typeof defaultValue !== "string") throw new Error(`Sedentary.model: '${modelName}' model: '${attributeName}' attribute: 'defaultValue' option: Wrong type, expected 'string'`);
         }
 
         return ret;
@@ -453,17 +465,17 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
       if(defaultValue) notNull = true;
 
-      const attribute = new Attribute({ attributeName, base, defaultValue, fieldName, foreignKey, modelName, notNull, size, tableName, type, unique });
+      const attribute = new Attribute({ attributeName, [base]: _base, defaultValue, fieldName, foreignKey, modelName, notNull, [size]: _size, tableName, type, unique });
 
       if(primaryKey === (attributeName as never)) pk = attribute;
       aArray.push(attribute);
-      attr2field[attributeName] = fieldName;
+      if(type !== "NONE") attr2field[attributeName] = fieldName;
       if(foreignKey) constraints.push({ attribute, constraintName: `fkey_${fieldName}_${foreignKey.tableName}_${foreignKey.fieldName}`, type: "f" });
       if(unique) constraints.push({ attribute, constraintName: `${tableName}_${fieldName}_unique`, type: "u" });
     }
 
     if(indexes) {
-      const originalAttributes = attributes;
+      const originalAttributes = _attributes;
 
       if(! (indexes instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'indexes' option: Wrong type, expected 'Object'`);
 
@@ -517,29 +529,29 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
       }, {});
 
     for(const foreignKey in foreignKeys) {
-      if(foreignKey + "Load" in attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with an attribute`);
-      if(foreignKey + "Load" in methods) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method`);
+      if(foreignKey + "Load" in _attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with an attribute`);
+      if(foreignKey + "Load" in _methods) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method`);
     }
 
-    for(const method in methods) if(method in attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute`);
+    for(const method in _methods) if(method in _attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute`);
 
     const checkParent = (parent?: ModelStd) => {
       if(! parent) return;
 
-      for(const attribute in attributes) {
-        if(attribute in parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${attribute}' attribute: conflicts with an attribute of '${parent.modelName}' model`);
-        if(attribute in parent.methods) throw new Error(`Sedentary.model: '${modelName}' model: '${attribute}' attribute: conflicts with a method of '${parent.modelName}' model`);
+      for(const attribute in _attributes) {
+        if(attribute in parent[attributes]) throw new Error(`Sedentary.model: '${modelName}' model: '${attribute}' attribute: conflicts with an attribute of '${parent.modelName}' model`);
+        if(attribute in parent[methods]) throw new Error(`Sedentary.model: '${modelName}' model: '${attribute}' attribute: conflicts with a method of '${parent.modelName}' model`);
 
         for(const foreignKey in parent.foreignKeys) if(attribute === foreignKey + "Load") throw new Error(`Sedentary.model: '${modelName}' model: '${attribute}' attribute: conflicts with an inferred methods of '${parent.modelName}' model`);
       }
 
       for(const foreignKey in foreignKeys) {
-        if(foreignKey + "Load" in parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with an attribute of '${parent.modelName}' model`);
-        if(foreignKey + "Load" in parent.methods) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method of '${parent.modelName}' model`);
+        if(foreignKey + "Load" in parent[attributes]) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with an attribute of '${parent.modelName}' model`);
+        if(foreignKey + "Load" in parent[methods]) throw new Error(`Sedentary.model: '${modelName}' model: '${foreignKey}' attribute: '${foreignKey}Load' inferred methods conflicts with a method of '${parent.modelName}' model`);
       }
 
-      for(const method in methods) {
-        if(method in parent.attributes) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute of '${parent.modelName}' model`);
+      for(const method in _methods) {
+        if(method in parent[attributes]) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an attribute of '${parent.modelName}' model`);
         for(const foreignKey in parent.foreignKeys) if(foreignKey + "Load" === method) throw new Error(`Sedentary.model: '${modelName}' model: '${method}' method: conflicts with an inferred methods of '${parent.modelName}' model`);
       }
 
@@ -600,10 +612,10 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     Object.defineProperty(ret, "name", { value: modelName });
     Object.defineProperty(ret, "load", { value: load });
     Object.defineProperty(ret, "attr2field", { value: attr2field });
-    Object.defineProperty(ret, "attributes", { value: attributes });
+    Object.defineProperty(ret, attributes, { value: _attributes });
     Object.defineProperty(ret, "foreignKeys", { value: foreignKeys });
-    Object.defineProperty(ret, "methods", { value: methods });
-    Object.assign(ret.prototype, methods);
+    Object.defineProperty(ret, methods, { value: _methods });
+    Object.assign(ret.prototype, _methods);
 
     const ensureActions = (entry: { [actions]?: Action[] }) => {
       if(! entry[actions]) Object.defineProperty(entry, actions, { configurable: true, value: [] });
@@ -640,7 +652,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     Object.defineProperty(ret.prototype.save, "name", { value: modelName + ".save" });
 
     for(const attribute of aArray) Object.defineProperty(ret, attribute.attributeName, { value: attribute });
-    for(const key of ["attributeName", "base", "fieldName", "modelName", "size", "tableName", "type", "unique"] as const) Object.defineProperty(ret, key, { value: pk[key] });
+    for(const key of ["attributeName", base, "fieldName", "modelName", size, "tableName", "type", "unique"] as const) Object.defineProperty(ret, key, { value: pk[key] });
 
     return ret;
   }

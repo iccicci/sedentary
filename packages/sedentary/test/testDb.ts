@@ -3,7 +3,7 @@
 import { promises } from "fs";
 
 import { EntryBase } from "..";
-import { Attribute, DB, loaded, Table, Transaction } from "../db";
+import { Attribute, base, DB, loaded, size, Table, Transaction } from "../db";
 
 const { readFile, writeFile } = promises;
 
@@ -207,7 +207,7 @@ export class TestDB extends DB<TestTransaction> {
     for(const attribute of Object.keys(fields).sort()) {
       const field = table.findField(attribute);
 
-      if(! field || ! field.base) {
+      if(! field || ! field[base]) {
         this.syncLog(`'${table.tableName}': Removing field: '${attribute}'`);
         if(this.sync) delete fields[attribute];
       }
@@ -273,20 +273,20 @@ export class TestDB extends DB<TestTransaction> {
   async syncFields(table: Table): Promise<void> {
     for(const attribute of table.attributes) {
       const { fields } = this.body.tables[table.tableName] || { fields: {} };
-      const { defaultValue, fieldName, notNull, size, type } = attribute;
+      const { defaultValue, fieldName, notNull, [size]: _size, type } = attribute;
       let field = fields[fieldName];
 
       if(! field && type === "NONE") continue;
 
       if(! field) {
-        this.syncLog(`'${table.tableName}': Adding field: '${fieldName}' '${type}' '${size || ""}'`);
-        if(this.sync) field = fields[fieldName] = { size, type };
+        this.syncLog(`'${table.tableName}': Adding field: '${fieldName}' '${type}' '${_size || ""}'`);
+        if(this.sync) field = fields[fieldName] = { _size, type };
         else field = {};
       }
 
-      if(field.size !== size || field.type !== type) {
-        this.syncLog(`'${table.tableName}': Changing field type: '${fieldName}' '${type}' '${size || ""}'`);
-        if(this.sync) field = fields[fieldName] = { ...field, size, type };
+      if(field._size !== _size || field.type !== type) {
+        this.syncLog(`'${table.tableName}': Changing field type: '${fieldName}' '${type}' '${_size || ""}'`);
+        if(this.sync) field = fields[fieldName] = { ...field, _size, type };
       }
 
       if(field.default) {

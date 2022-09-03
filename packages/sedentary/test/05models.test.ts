@@ -11,7 +11,8 @@ describe("models", () => {
   describe("base models", function() {
     let a: EntryBase;
     let b: EntryBase;
-    let dbA: any;
+    let dbAl: any;
+    let dbAs: any;
     let dbB: any;
     let dbC: any;
     let l1: any;
@@ -28,12 +29,13 @@ describe("models", () => {
     let saveD = true;
 
     helper(models.base, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: { defaultValue: "test", type: db.VarChar } });
-      dbA = new test1({ a: 23, b: "ok", id: 1 });
+      const test1 = db.model("test1", { a: db.Int, b: { defaultValue: "test", type: db.VarChar }, c: db.None<number>() });
+      dbAl = new test1({ a: 23, b: "ok", id: 1 });
+      dbAs = new test1({ a: 23, b: "ok", c: 42, id: 1 });
       dbB = new test1({ a: null, b: "test", id: 2 });
       dbC = new test1({ a: 23, b: "test", id: 1 });
       await db.connect();
-      a = new test1({ a: 23, b: "ok" });
+      a = new test1({ a: 23, b: "ok", c: 42 });
       b = new test1();
       saveA = await a.save();
       saveB = await b.save();
@@ -43,6 +45,7 @@ describe("models", () => {
       l4 = await test1.load({}, ["-id"]);
       [l5] = await test1.load({ b: "ok" });
       l5.b = "test";
+      l5.c = 42;
       saveC = await l5.save();
       saveD = await l5.save();
       l6 = await test1.load({ b: ["IN", ["a", "b", "test"]] }, "id");
@@ -54,12 +57,12 @@ describe("models", () => {
     it("save b", () => eq(saveB, 1));
     it("save c", () => eq(saveC, 1));
     it("save d", () => eq(saveD, false));
-    it("a", () => de(a, dbA));
+    it("a", () => de(a, dbAs));
     it("b", () => de(b, dbB));
-    it("load 1", () => de(l1, [dbA]));
+    it("load 1", () => de(l1, [dbAl]));
     it("load 2", () => de(l2, [dbB]));
-    it("load 3", () => de(l3, [dbA, dbB]));
-    it("load 4", () => de(l4, [dbB, dbA]));
+    it("load 3", () => de(l3, [dbAl, dbB]));
+    it("load 4", () => de(l4, [dbB, dbAl]));
     it("load 6", () => de(l6, [dbC, dbB]));
     it("remove 1", () => de(r1, 1));
     it("remove 2", () => de(r2, 0));

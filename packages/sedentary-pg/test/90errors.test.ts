@@ -1,4 +1,5 @@
 import { strictEqual as eq } from "assert";
+import { base, size } from "sedentary";
 
 import { SedentaryPG, Type } from "..";
 import { errorHelper } from "./helper";
@@ -80,7 +81,7 @@ describe("errors", () => {
       const [db] = pgdb();
 
       try {
-        db.model("test1", { a: new Type({ base: Number, size: 3, type: "test" }) });
+        db.model("test1", { a: new Type({ [base]: Number, [size]: 3, type: "test" }) });
         await db.connect();
       } catch(e) {
         if(e instanceof Error) err = e;
