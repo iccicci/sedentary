@@ -139,7 +139,12 @@ export class PGDB extends DB<TransactionPG> {
 
       try {
         const forUpdate = lock ? " FOR UPDATE" : "";
-        const orderBy = order && order.length ? ` ORDER BY ${(typeof order === "string" ? [order] : order).map(_ => (_.startsWith("-") ? `${_.substring(1)} DESC` : _)).join(",")}` : "";
+        const orderBy =
+          order && order.length
+            ? ` ORDER BY ${(typeof order === "string" ? [order] : order)
+              .map(_ => (_.startsWith("-") ? `${table.findAttribute(_.substring(1)).fieldName} DESC` : table.findAttribute(_).fieldName))
+              .join(",")}`
+            : "";
         const limitTo = typeof limit === "number" ? ` LIMIT ${limit}` : "";
         const query = `SELECT *, tableoid FROM ${tableName}${where ? ` WHERE ${where}` : ""}${orderBy}${limitTo}${forUpdate}`;
 

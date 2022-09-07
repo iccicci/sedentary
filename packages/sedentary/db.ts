@@ -122,6 +122,10 @@ export class Table extends autoImplement<ITable>() {
   autoIncrementOwn?: boolean;
   oid?: number;
 
+  findAttribute(name: string): Attribute<unknown, unknown> {
+    return this.attributes.filter(_ => _.attributeName === name)[0];
+  }
+
   findField(name: string): Attribute<unknown, unknown> {
     return this.attributes.filter(_ => _.fieldName === name)[0];
   }

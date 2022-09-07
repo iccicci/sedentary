@@ -571,6 +571,26 @@ export const models = {
   ]
 };
 
+export const fields = {
+  order: [
+    "CREATE SEQUENCE test1_id_seq",
+    "CREATE TABLE test1 ()",
+    "ALTER TABLE test1 ADD COLUMN id INTEGER",
+    "ALTER TABLE test1 ALTER COLUMN id SET DEFAULT nextval('test1_id_seq'::regclass)",
+    "UPDATE test1 SET id = nextval('test1_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test1 ADD COLUMN a_b INTEGER",
+    "ALTER TABLE test1 ADD COLUMN b VARCHAR",
+    "ALTER TABLE test1 ALTER COLUMN b SET DEFAULT 'test'",
+    "UPDATE test1 SET b = 'test' WHERE b IS NULL",
+    "ALTER TABLE test1 ALTER COLUMN b SET NOT NULL",
+    "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
+    "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)",
+    "SELECT *, tableoid FROM test1 ORDER BY a_b DESC",
+    "SELECT *, tableoid FROM test1 ORDER BY b DESC,a_b"
+  ]
+};
+
 export const transactions = {
   cancel: [
     "CREATE SEQUENCE test1_id_seq",

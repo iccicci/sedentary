@@ -9,7 +9,7 @@
     "@types/pg": "8.6.5",
     "pg": "8.8.0",
     "pg-format": "1.0.4",
-    "sedentary": "0.0.51"
+    "sedentary": "0.0.52"
   },
   "description": "The ORM which never needs to migrate - PostgreSQL",
   "engines": {
@@ -47,5 +47,5 @@
     "test": "jest --no-cache --runInBand"
   },
   "types": "./dist/types/index.d.ts",
-  "version": "0.0.51"
+  "version": "0.0.52"
 }

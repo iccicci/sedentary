@@ -25,19 +25,24 @@ describe("coverage", () => {
   it("EntryBase.save", async () => eq(await new EntryBase().save(), false));
   it("Type", () => eq(new Type({ [base]: null, type: "" }) instanceof Type, true));
 
-  describe("findTable", () => {
+  describe("finders", () => {
     const att = new Attribute({ attributeName: "id", [base]: Number, fieldName: "id", modelName: "test", notNull: true, [size]: 4, tableName: "test", type: "INT", unique: true });
     const db = new Sedentary(connection);
+    let attribute: unknown;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let table: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let test: any;
 
     beforeAll(async () => {
       test = db.model("test", {});
+      table = (db as unknown as { db: DB<Transaction> }).db.findTable("test");
+      attribute = table.findAttribute("id");
     });
 
-    it("ok", () =>
+    it("findTable", () =>
       de(
-        (db as unknown as { db: DB<Transaction> }).db.findTable("test"),
+        table,
         new Table({
           attributes:    [att],
           autoIncrement: true,
@@ -50,6 +55,8 @@ describe("coverage", () => {
           tableName:     "test"
         })
       ));
+
+    it("findAttribute", () => expect(attribute).toBe(table.attributes[0]));
   });
 
   describe("connect error type any", () => {
