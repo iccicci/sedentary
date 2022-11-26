@@ -2,14 +2,12 @@ import { DatabaseError, Pool } from "pg";
 
 if(! process.env.SPG) throw "Missing SPG!";
 
-const v10 = process.version.startsWith("v10");
-
 export const connection = JSON.parse(process.env.SPG);
 
 export const packageName = "sedentary-pg" as string;
 
 export const wrongConnection = { host: "none.no-domain.none" };
-export const wrongConnectionError = `getaddrinfo ENOTFOUND none.no-domain.none${v10 ? " none.no-domain.none:5432" : ""}`;
+export const wrongConnectionError = "getaddrinfo ENOTFOUND none.no-domain.none";
 
 export async function clean(): Promise<void> {
   const pool = new Pool(connection);

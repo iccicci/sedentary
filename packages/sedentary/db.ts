@@ -11,7 +11,7 @@ export interface Action {
 
 export class EntryBase {
   constructor(from?: Partial<EntryBase>) {
-    if(from === "load") this.preLoad();
+    if((from as unknown) === "load") this.preLoad();
     else {
       if(from) Object.assign(this, from);
       this.construct();
