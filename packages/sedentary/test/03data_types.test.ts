@@ -32,6 +32,30 @@ describe("data types", () => {
     });
   });
 
+  describe("Float", function() {
+    helper(expected.types_float, async db => {
+      db.model("test1", {
+        a: db.Float(4),
+        b: db.Float,
+        c: db.Int(),
+        d: db.Int8()
+      });
+      await db.connect();
+    });
+
+    describe("Float changes", function() {
+      helper(expected.types_float_change, true, async db => {
+        db.model("test1", {
+          a: db.Int,
+          b: db.Int8,
+          c: db.Float(4),
+          d: db.Float(8)
+        });
+        await db.connect();
+      });
+    });
+  });
+
   describe("DateTime", function() {
     helper(expected.types_date_time, async db => {
       db.model("test1", {

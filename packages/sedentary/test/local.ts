@@ -301,6 +301,23 @@ export const expected = {
     "'test1': Changing field type: 'd' 'INT8' '8'",
     "'test1': Changing field type: 'e' 'DATETIME' ''"
   ],
+  types_float: [
+    "Adding table: 'test1'",
+    "Setting auto increment: 'test1'",
+    "'test1': Adding field: 'id' 'INT' '4'",
+    "'test1': Setting not null for field: 'id'",
+    "'test1': Adding field: 'a' 'FLOAT' '4'",
+    "'test1': Adding field: 'b' 'FLOAT' '8'",
+    "'test1': Adding field: 'c' 'INT' '4'",
+    "'test1': Adding field: 'd' 'INT8' '8'",
+    "'test1': Adding unique constraint on field: 'id'"
+  ],
+  types_float_change: [
+    "'test1': Changing field type: 'a' 'INT' '4'",
+    "'test1': Changing field type: 'b' 'INT8' '8'",
+    "'test1': Changing field type: 'c' 'FLOAT' '4'",
+    "'test1': Changing field type: 'd' 'FLOAT' '8'"
+  ],
   types_int: [
     "Adding table: 'test1'",
     "Setting auto increment: 'test1'",

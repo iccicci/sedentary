@@ -5,10 +5,14 @@ import { Attribute, base, DB, deepCopy, deepDiff, EntryBase, ForeignKeyActions, 
 import { adsrc } from "./adsrc";
 
 const needDrop = [
+  ["DATETIME", "float4"],
+  ["DATETIME", "float8"],
   ["DATETIME", "int2"],
   ["DATETIME", "int4"],
   ["DATETIME", "int8"],
   ["DATETIME", "numeric"],
+  ["FLOAT", "json"],
+  ["FLOAT", "timestamptz"],
   ["INT", "json"],
   ["INT", "timestamptz"],
   ["INT8", "json"],
@@ -28,7 +32,7 @@ const needUsing = [
   ["JSON", "varchar"],
   ["NUMBER", "varchar"]
 ];
-const types = { bool: "BOOL", int2: "SMALLINT", int4: "INTEGER", int8: "BIGINT", json: "JSON", numeric: "NUMERIC", timestamptz: "DATETIME", varchar: "VARCHAR" };
+const types = { bool: "BOOL", float4: "FLOAT4", float8: "FLOAT8", int2: "SMALLINT", int4: "INTEGER", int8: "BIGINT", json: "JSON", numeric: "NUMERIC", timestamptz: "DATETIME", varchar: "VARCHAR" };
 
 const actions: { [k in ForeignKeyActions]: string } = { cascade: "c", "no action": "a", restrict: "r", "set default": "d", "set null": "n" };
 
@@ -396,6 +400,9 @@ export class PGDB extends DB<TransactionPG> {
       return ["BOOL", "BOOL"];
     case "DATETIME":
       return ["DATETIME", "TIMESTAMP (3) WITH TIME ZONE"];
+    case "FLOAT":
+      ret = _size === 4 ? "FLOAT4" : "FLOAT8";
+      return [ret, ret];
     case "INT":
       ret = _size === 2 ? "SMALLINT" : "INTEGER";
       return [ret, ret];

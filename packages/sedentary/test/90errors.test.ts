@@ -217,8 +217,9 @@ describe("class Sedentary - errors", () => {
       const test2 = db.model("test2", { a: db.FKey(test1) });
       db.model("test3", {}, { parent: test2 }, { aLoad: () => {} });
     })("Sedentary.model: 'test3' model: 'aLoad' method: conflicts with an inferred methods of 'test2' model"));
-  describe("Sedentary.INT(size) - type", () => errorHelper(db => db.model("test", { test: db.Int(2.5) }))("Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4"));
-  describe("Sedentary.INT(size) - value", () => errorHelper(db => db.model("test", { test: db.Int(5) }))("Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4"));
+  describe("Sedentary.Int(size) - type", () => errorHelper(db => db.model("test", { test: db.Int(2.5) }))("Sedentary.Int: 'size' argument: Wrong value, expected 2 or 4"));
+  describe("Sedentary.Int(size) - value", () => errorHelper(db => db.model("test", { test: db.Int(5) }))("Sedentary.Int: 'size' argument: Wrong value, expected 2 or 4"));
+  describe("Sedentary.Float(size) - value", () => errorHelper(db => db.model("test", { test: db.Float(5) }))("Sedentary.Float: 'size' argument: Wrong value, expected 4 or 8"));
   describe("Sedentary.FKey() - type", () =>
     errorHelper(db => {
       const test1 = db.model("test1", {});
