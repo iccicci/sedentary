@@ -22,8 +22,7 @@
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "tsd": "^0.31.0",
-    "typescript": "^5.4.3",
-    "yarn-upgrade-all": "^0.7.2"
+    "typescript": "^5.4.3"
   },
   "engines": {
     "node": ">=18.0"
@@ -61,7 +60,6 @@
     "build": "yarn workspaces run build",
     "coverage": "yarn workspaces run coverage",
     "deploy": "make deploy",
-    "package": "yarn-upgrade-all --ignore-workspace-root-check",
     "preinstall": "make",
     "test": "yarn workspaces run test"
   },

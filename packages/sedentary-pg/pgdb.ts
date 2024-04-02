@@ -2,8 +2,6 @@ import { DatabaseError, Pool, PoolClient, PoolConfig, QueryResult, types as PGty
 import format from "pg-format";
 import { Attribute, base, DB, deepCopy, deepDiff, EntryBase, ForeignKeyActions, Index, loaded, size, Table, Transaction, transaction } from "sedentary";
 
-import { adsrc } from "./adsrc";
-
 const needDrop = [
   ["DATETIME", "float4"],
   ["DATETIME", "float8"],
@@ -431,7 +429,7 @@ export class PGDB extends DB<TransactionPG> {
       const where = "attrelid = $1 AND attnum > 0 AND atttypid = pg_type.oid AND attislocal = 't' AND attname = $2";
 
       const res = await this._client.query(
-        `SELECT attnotnull, atttypmod, typname, ${adsrc(this.version)} FROM pg_type, pg_attribute LEFT JOIN pg_attrdef ON adrelid = attrelid AND adnum = attnum WHERE ${where}`,
+        `SELECT attnotnull, atttypmod, typname, pg_get_expr(pg_attrdef.adbin, pg_attrdef.adrelid) AS adsrc FROM pg_type, pg_attribute LEFT JOIN pg_attrdef ON adrelid = attrelid AND adnum = attnum WHERE ${where}`,
         [oid!, fieldName as unknown as number]
       );
 
