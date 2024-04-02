@@ -45,7 +45,7 @@ async function package_json() {
       }
     },
     "sedentary-pg": {
-      dependencies: { "@types/pg": "8.6.5", pg: "8.8.0", "pg-format": "1.0.4", sedentary: version },
+      dependencies: { "@types/pg": "^8.11.4", pg: "^8.11.4", "pg-format": "^1.0.4", sedentary: version },
       description:  description + " - PostgreSQL"
     }
   };

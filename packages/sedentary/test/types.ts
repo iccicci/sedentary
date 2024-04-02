@@ -67,18 +67,26 @@ type t4_1 = (a: number) => string;
 type t4_2 = (a: number) => number;
 const T4 = db.model(
   "T4",
-  { a: db.Int, b: db.VarChar(10), c: { notNull: true, type: db.Int }, d: { notNull: true, type: db.VarChar(10) }, e: db.VarChar<"foo" | "bar">() },
+  {
+    a: db.Int,
+    b: db.VarChar(10),
+    c: { notNull: true, type: db.Int },
+    d: { notNull: true, type: db.VarChar(10) },
+    e: db.VarChar<"foo" | "bar">(),
+    f: db.Float
+  },
   {},
   {
     m: function(a: number): string {
       expectType<t4_1>(this.m);
       expectType<t4_2>(this.n);
-      expectAssignable<Partial<typeof this>>({ a: 0, b: "", c: 0, d: "", e: "foo" });
+      expectAssignable<Partial<typeof this>>({ a: 0, b: "", c: 0, d: "", e: "foo", f: 0.5 });
       expectType<number | null>(this.a);
       expectType<string | null>(this.b);
       expectType<number>(this.c);
       expectType<string>(this.d);
       expectType<"foo" | "bar" | null>(this.e);
+      expectType<number | null>(this.f);
       this.m(this.n(a));
       return "test";
     },
@@ -100,13 +108,15 @@ expectType<string | null>(t4.b);
 expectType<number>(t4.c);
 expectType<string>(t4.d);
 expectType<"foo" | "bar" | null>(t4.e);
-expectType<EntryBase & { a: number | null; b: string | null; c: number; d: string; e: "foo" | "bar" | null; id: number } & { m: (a: number) => string; n: (a: number) => number }>(t4);
+expectType<EntryBase & { a: number | null; b: string | null; c: number; d: string; e: "foo" | "bar" | null; f: number | null; id: number } & { m: (a: number) => string; n: (a: number) => number }>(
+  t4
+);
 expectAssignable<Partial<T4>>({ m: (t1: number) => t1.toString() });
 expectNotAssignable<Partial<T4>>({ m: (t1: number, t2: number) => t1.toString() + t2.toString() });
 expectNotAssignable<Partial<T4>>({ o: () => "" });
 expectAssignable<Partial<T4>>({ a: 0, b: "", c: 0, d: "", e: "bar" });
 expectNotAssignable<Partial<T4>>({ a: "" });
-expectNotAssignable<Partial<T4>>({ f: 0 });
+expectNotAssignable<Partial<T4>>({ z: 0 });
 
 const T5 = db.model("T5", {}, { int8id: true });
 type T5 = Entry<typeof T5>;
@@ -198,7 +208,7 @@ expectType<number>(t12.c);
 expectType<string>(t12.d);
 expectType<Date | null>(t12.e);
 expectType<
-  EntryBase & { a: number | null; b: string | null; c: number; d: string; e: Date | null; id: number } & { m: (a: number) => string; n: (a: number) => number } & {
+  EntryBase & { a: number | null; b: string | null; c: number; d: string; e: Date | null; f: number | null; id: number } & { m: (a: number) => string; n: (a: number) => number } & {
     o: (a?: Date) => void;
   }
     >(t12);
@@ -208,9 +218,10 @@ expectAssignable<Partial<T12>>({ o: function() {} });
 expectNotAssignable<Partial<T12>>({ p: () => "" });
 expectAssignable<Partial<T12>>({ a: 0, b: "", c: 0, d: "", e: new Date() });
 expectNotAssignable<Partial<T12>>({ e: "" });
-expectNotAssignable<Partial<T12>>({ f: 0 });
+expectNotAssignable<Partial<T12>>({ f: "" });
+expectNotAssignable<Partial<T12>>({ z: 0 });
 type t12_2 = typeof T12 extends new (from: infer T) => EntryBase ? Exclude<T, undefined> : never;
-expectType<{ a?: number | null; b?: string | null; c?: number; d?: string; e?: Date | null; id?: number }>({} as t12_2);
+expectType<{ a?: number | null; b?: string | null; c?: number; d?: string; e?: Date | null; f?: number | null; id?: number }>({} as t12_2);
 expectAssignable<WT12>(["AND", ["NOT", { a: ["=", 0], b: [">", "test"] }], { c: ["IN", [2, 3, 4]] }, "plain condition"]);
 expectAssignable<WT12>(["OR", ["NOT", { a: 0, b: [">", "test"] }], { c: ["IN", [2, 3, 4]] }, "plain condition"]);
 expectAssignable<OT12>([]);

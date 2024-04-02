@@ -2,13 +2,15 @@ import { DatabaseError, Pool, PoolClient, PoolConfig, QueryResult, types as PGty
 import format from "pg-format";
 import { Attribute, base, DB, deepCopy, deepDiff, EntryBase, ForeignKeyActions, Index, loaded, size, Table, Transaction, transaction } from "sedentary";
 
-import { adsrc } from "./adsrc";
-
 const needDrop = [
+  ["DATETIME", "float4"],
+  ["DATETIME", "float8"],
   ["DATETIME", "int2"],
   ["DATETIME", "int4"],
   ["DATETIME", "int8"],
   ["DATETIME", "numeric"],
+  ["FLOAT", "json"],
+  ["FLOAT", "timestamptz"],
   ["INT", "json"],
   ["INT", "timestamptz"],
   ["INT8", "json"],
@@ -28,7 +30,7 @@ const needUsing = [
   ["JSON", "varchar"],
   ["NUMBER", "varchar"]
 ];
-const types = { bool: "BOOL", int2: "SMALLINT", int4: "INTEGER", int8: "BIGINT", json: "JSON", numeric: "NUMERIC", timestamptz: "DATETIME", varchar: "VARCHAR" };
+const types = { bool: "BOOL", float4: "FLOAT4", float8: "FLOAT8", int2: "SMALLINT", int4: "INTEGER", int8: "BIGINT", json: "JSON", numeric: "NUMERIC", timestamptz: "DATETIME", varchar: "VARCHAR" };
 
 const actions: { [k in ForeignKeyActions]: string } = { cascade: "c", "no action": "a", restrict: "r", "set default": "d", "set null": "n" };
 
@@ -94,7 +96,7 @@ export class PGDB extends DB<TransactionPG> {
         const query = `DELETE FROM ${tableName}${where ? ` WHERE ${where}` : ""}`;
 
         this.log(query);
-        ({ rowCount } = await client.query(query));
+        ({ rowCount } = (await client.query(query)) as { rowCount: number });
       } finally {
         if(! tx) client.release();
       }
@@ -194,7 +196,7 @@ export class PGDB extends DB<TransactionPG> {
         const query = `DELETE FROM ${tableName} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`;
 
         self.log(query);
-        removed = (await client.query(query)).rowCount;
+        removed = ((await client.query(query)) as { rowCount: number }).rowCount;
       } finally {
         if(! this[transaction]) client.release();
       }
@@ -265,7 +267,7 @@ export class PGDB extends DB<TransactionPG> {
 
   async dropConstraints(table: Table): Promise<number[]> {
     const indexes: number[] = [];
-    const res = await this._client.query("SELECT confdeltype, confupdtype, conindid, conname, contype FROM pg_constraint WHERE conrelid = $1 ORDER BY conname", [table.oid]);
+    const res = await this._client.query("SELECT confdeltype, confupdtype, conindid, conname, contype FROM pg_constraint WHERE conrelid = $1 ORDER BY conname", [table.oid!]);
 
     for(const row of res.rows) {
       const arr = table.constraints.filter(_ => _.constraintName === row.conname && _.type === row.contype);
@@ -298,7 +300,7 @@ export class PGDB extends DB<TransactionPG> {
   }
 
   async dropFields(table: Table): Promise<void> {
-    const res = await this._client.query("SELECT attname FROM pg_attribute WHERE attrelid = $1 AND attnum > 0 AND attisdropped = false AND attinhcount = 0", [table.oid]);
+    const res = await this._client.query("SELECT attname FROM pg_attribute WHERE attrelid = $1 AND attnum > 0 AND attisdropped = false AND attinhcount = 0", [table.oid!]);
 
     for(const i in res.rows) {
       const field = table.findField(res.rows[i].attname);
@@ -312,7 +314,7 @@ export class PGDB extends DB<TransactionPG> {
     const iObject: { [key: string]: Index } = {};
     const res = await this._client.query(
       "SELECT amname, attname, indexrelid, indisunique, relname FROM pg_class, pg_index, pg_attribute, pg_am WHERE indrelid = $1 AND indexrelid = pg_class.oid AND attrelid = pg_class.oid AND relam = pg_am.oid ORDER BY attnum",
-      [oid]
+      [oid!]
     );
 
     for(const row of res.rows) {
@@ -346,8 +348,8 @@ export class PGDB extends DB<TransactionPG> {
     for(const constraint of table.constraints) {
       const { attribute, constraintName, type } = constraint;
       const res = await this._client.query("SELECT attname FROM pg_attribute, pg_constraint WHERE attrelid = $1 AND conrelid = $1 AND attnum = conkey[1] AND attname = $2", [
-        table.oid,
-        attribute.fieldName
+        table.oid!,
+        attribute.fieldName as unknown as number
       ]);
 
       if(! res.rowCount) {
@@ -396,6 +398,9 @@ export class PGDB extends DB<TransactionPG> {
       return ["BOOL", "BOOL"];
     case "DATETIME":
       return ["DATETIME", "TIMESTAMP (3) WITH TIME ZONE"];
+    case "FLOAT":
+      ret = _size === 4 ? "FLOAT4" : "FLOAT8";
+      return [ret, ret];
     case "INT":
       ret = _size === 2 ? "SMALLINT" : "INTEGER";
       return [ret, ret];
@@ -424,8 +429,8 @@ export class PGDB extends DB<TransactionPG> {
       const where = "attrelid = $1 AND attnum > 0 AND atttypid = pg_type.oid AND attislocal = 't' AND attname = $2";
 
       const res = await this._client.query(
-        `SELECT attnotnull, atttypmod, typname, ${adsrc(this.version)} FROM pg_type, pg_attribute LEFT JOIN pg_attrdef ON adrelid = attrelid AND adnum = attnum WHERE ${where}`,
-        [oid, fieldName]
+        `SELECT attnotnull, atttypmod, typname, pg_get_expr(pg_attrdef.adbin, pg_attrdef.adrelid) AS adsrc FROM pg_type, pg_attribute LEFT JOIN pg_attrdef ON adrelid = attrelid AND adnum = attnum WHERE ${where}`,
+        [oid!, fieldName as unknown as number]
       );
 
       const addField = async () => {
@@ -553,7 +558,7 @@ export class PGDB extends DB<TransactionPG> {
       table.oid = resTable.rows[0].oid;
 
       let drop = false;
-      const resParent = await this._client.query("SELECT inhparent FROM pg_inherits WHERE inhrelid = $1", [table.oid]);
+      const resParent = await this._client.query("SELECT inhparent FROM pg_inherits WHERE inhrelid = $1", [table.oid!]);
 
       if(resParent.rowCount) {
         if(! table.parent) drop = true;

@@ -145,8 +145,18 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     return new Type({ [base]: _base, foreignKey: { attributeName, fieldName, options, tableName }, [size]: _size, type });
   }
 
+  public Float(_size?: number): Type<number, unknown> {
+    const message = "Sedentary.Float: 'size' argument: Wrong value, expected 4 or 8";
+
+    _size = _size ? this.checkSize(_size, message) : 8;
+
+    if(_size !== 4 && _size !== 8) throw new Error(message);
+
+    return new Type({ [base]: Number, [size]: _size, type: "FLOAT" });
+  }
+
   public Int(_size?: number): Type<number, unknown> {
-    const message = "Sedentary.INT: 'size' argument: Wrong value, expected 2 or 4";
+    const message = "Sedentary.Int: 'size' argument: Wrong value, expected 2 or 4";
 
     _size = _size ? this.checkSize(_size, message) : 4;
 
@@ -172,7 +182,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   }
 
   public VarChar<S extends string>(_size?: number): Type<S, unknown> {
-    const message = "Sedentary.VARCHAR: 'size' argument: Wrong value, expected positive integer";
+    const message = "Sedentary.VarChar: 'size' argument: Wrong value, expected positive integer";
 
     _size = _size ? this.checkSize(_size, message) : undefined;
 
@@ -394,7 +404,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
       const call = (defaultValue: unknown | undefined, fieldName: string, notNull: boolean, unique: boolean, func: () => Type<unknown, unknown>, message1: string, message2: string) => {
         if(func === this.FKey) throw new Error(`${message1} 'this.FKey' can't be used directly`);
-        if(! ([this.Boolean, this.DateTime, this.Int, this.JSON, this.Int8, this.None, this.Number, this.VarChar] as unknown[]).includes(func as unknown)) throw new Error(`${message1} ${message2}`);
+        if(! ([this.Boolean, this.DateTime, this.Float, this.Int, this.JSON, this.Int8, this.None, this.Number, this.VarChar] as unknown[]).includes(func as unknown)) throw new Error(`${message1} ${message2}`);
 
         return new Attribute({ attributeName, defaultValue, fieldName, modelName, notNull, tableName, unique, ...func() });
       };

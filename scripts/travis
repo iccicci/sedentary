@@ -1,7 +1,7 @@
 #!/bin/bash
 
 needs_coverage() {
-  [[ `node --version` =~ ^v18  && ( $PACKAGE == sedentary || $PG_VERSION == 14 ) ]]
+  [[ `node --version` =~ ^v20  && ( $PACKAGE == sedentary || $PG_VERSION == 16 ) ]]
 }
 
 reporter_id() {

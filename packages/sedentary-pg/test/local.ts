@@ -384,6 +384,26 @@ export const expected = {
     "ALTER TABLE test1 DROP COLUMN e",
     "ALTER TABLE test1 ADD COLUMN e TIMESTAMP (3) WITH TIME ZONE"
   ],
+  types_float: [
+    "CREATE SEQUENCE test1_id_seq",
+    "CREATE TABLE test1 ()",
+    "ALTER TABLE test1 ADD COLUMN id INTEGER",
+    "ALTER TABLE test1 ALTER COLUMN id SET DEFAULT nextval('test1_id_seq'::regclass)",
+    "UPDATE test1 SET id = nextval('test1_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test1 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test1 ADD COLUMN a FLOAT4",
+    "ALTER TABLE test1 ADD COLUMN b FLOAT8",
+    "ALTER TABLE test1 ADD COLUMN c INTEGER",
+    "ALTER TABLE test1 ADD COLUMN d BIGINT",
+    "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
+    "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)"
+  ],
+  types_float_change: [
+    "ALTER TABLE test1 ALTER COLUMN a TYPE INTEGER",
+    "ALTER TABLE test1 ALTER COLUMN b TYPE BIGINT",
+    "ALTER TABLE test1 ALTER COLUMN c TYPE FLOAT4",
+    "ALTER TABLE test1 ALTER COLUMN d TYPE FLOAT8"
+  ],
   types_int: [
     "CREATE SEQUENCE test1_id_seq",
     "CREATE TABLE test1 ()",
