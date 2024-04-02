@@ -7,7 +7,7 @@
   ],
   "description": "The ORM which never needs to migrate",
   "engines": {
-    "node": ">=14.0"
+    "node": ">=18.0"
   },
   "funding": {
     "url": "https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB"
@@ -27,7 +27,7 @@
   "module": "./dist/es/index.js",
   "name": "sedentary",
   "optionalDependencies": {
-    "fsevents": "2.3.2"
+    "fsevents": "^2.3.3"
   },
   "readmeFilename": "README.md",
   "repository": "https://github.com/iccicci/sedentary",
