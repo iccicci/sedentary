@@ -1,5 +1,6 @@
 import { DatabaseError, Pool } from "pg";
 
+// eslint-disable-next-line @typescript-eslint/only-throw-error
 if(! process.env.SPG) throw "Missing SPG!";
 
 export const connection = JSON.parse(process.env.SPG);

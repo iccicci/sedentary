@@ -1,8 +1,8 @@
 # sedentary-pg
 
 [![Build Status][travis-badge]][travis-url]
-[![Code Climate][code-badge]][code-url]
-[![Test Coverage][cover-badge]][code-url]
+[![Code Quality][qlty-badge]][qlty-url]
+[![Test Coverage][cover-badge]][qlty-url]
 
 [![NPM version][npm-badge]][npm-url]
 [![NPM downloads][npm-downloads-badge]][npm-url]
@@ -12,9 +12,9 @@
 [![Dependents][deps-badge]][npm-url]
 [![Donate][donate-badge]][donate-url]
 
-[code-badge]: https://codeclimate.com/github/iccicci/sedentary-pg/badges/gpa.svg
-[code-url]: https://codeclimate.com/github/iccicci/sedentary-pg
-[cover-badge]: https://codeclimate.com/github/iccicci/sedentary-pg/badges/coverage.svg
+[cover-badge]: https://qlty.sh/gh/iccicci/projects/sedentary/coverage.svg
+[qlty-badge]: https://qlty.sh/gh/iccicci/projects/sedentary/maintainability.svg
+[qlty-url]: https://qlty.sh/gh/iccicci/projects/sedentary
 [deps-badge]: https://badgen.net/npm/dependents/sedentary-pg?icon=npm&cache=300
 [donate-badge]: https://badgen.net/badge/donate/bitcoin?icon=bitcoin&cache=300
 [donate-url]: https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB
@@ -23,8 +23,8 @@
 [npm-badge]: https://badgen.net/npm/v/sedentary-pg?color=green&icon=npm&cache=300
 [npm-url]: https://www.npmjs.com/package/sedentary-pg
 [stars-badge]: https://badgen.net/github/stars/iccicci/sedentary-pg?icon=github&cache=300
-[travis-badge]: https://badgen.net/travis/iccicci/sedentary-pg?icon=travis&cache=300
-[travis-url]: https://app.travis-ci.com/github/iccicci/sedentary-pg
+[travis-badge]: https://badgen.net/travis/iccicci/sedentary?icon=travis&cache=300
+[travis-url]: https://app.travis-ci.com/github/iccicci/sedentary
 [types-badge]: https://badgen.net/npm/types/sedentary-pg?color=green&icon=typescript&cache=300
 
 # under development
@@ -41,8 +41,8 @@ import { SedentaryPG } from "sedentary-pg";
 const db = new SedentaryPG(/* PG connection */);
 
 class Items extends db.model("Item", {
-  num: db.INT,
-  str: db.VarChar(30)
+  num: db.Int(),
+  str: db.VarChar({ size: 30 })
 });
 
 (async function () {
@@ -80,7 +80,7 @@ Requires:
 - Node.js: **v14**
 - TypeScript: **v4.6** (or none if used in a JavaScript project).
 
-The package is tested under [all version combinations](https://app.travis-ci.com/github/iccicci/sedentary-pg)
+The package is tested under [all version combinations](https://app.travis-ci.com/github/iccicci/sedentary)
 of **Node.js** currently supported accordingly to [Node.js Release](https://github.com/nodejs/Release#readme) and of
 **PostgreSQL** currently supported accordingly to
 [PostgreSQL Versioning](https://www.postgresql.org/support/versioning/).
@@ -102,4 +102,7 @@ Do not hesitate to report any bug or inconsistency [@github](https://github.com/
 # Donating
 
 If you find useful this package, please consider the opportunity to donate some satoshis to this bitcoin address:
+
+<!-- cSpell: disable -->
+
 **1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB**

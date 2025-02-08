@@ -32,12 +32,12 @@ export class EntryBase {
   preRemove() {}
   preSave() {}
 
-  async remove(): Promise<boolean> {
-    return false;
+  remove() {
+    return Promise.resolve(false);
   }
 
-  async save(): Promise<boolean> {
-    return false;
+  save() {
+    return Promise.resolve(false);
   }
 }
 
@@ -48,10 +48,11 @@ export interface ForeignKeyOptions {
   onUpdate?: ForeignKeyActions;
 }
 
-export interface Type<T, E> {
+export interface Type<T, N extends boolean, E> {
   [base]: unknown;
   entry?: E;
   native?: T;
+  notNull?: N;
   [size]?: number;
   type: string;
   foreignKey?: {
@@ -62,24 +63,27 @@ export interface Type<T, E> {
   };
 }
 
-export class Type<T, E> {
-  constructor(from: Type<T, E>) {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class Type<T, N extends boolean, E> {
+  constructor(from: Type<T, N, E>) {
     Object.assign(this, from);
   }
 }
 
-export interface Attribute<T, E> extends Type<T, E> {
+export interface Attribute<T, N extends boolean, E> extends Type<T, N, E> {
   attributeName: string;
   defaultValue?: unknown;
   fieldName: string;
   modelName: string;
-  notNull: boolean;
+  notNull: N;
   tableName: string;
   unique?: boolean;
 }
 
-export class Attribute<T, E> extends Type<T, E> {
-  constructor(from: Attribute<T, E>) {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class Attribute<T, N extends boolean, E> extends Type<T, N, E> {
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+  constructor(from: Attribute<T, N, E>) {
     super(from);
   }
 }
@@ -93,7 +97,7 @@ function autoImplement<T>() {
 }
 
 export interface Constraint {
-  attribute: Attribute<unknown, unknown>;
+  attribute: Attribute<unknown, boolean, unknown>;
   constraintName: string;
   type: "f" | "u";
 }
@@ -106,14 +110,14 @@ export interface Index {
 }
 
 interface ITable {
-  attributes: Attribute<unknown, unknown>[];
+  attributes: Attribute<unknown, boolean, unknown>[];
   autoIncrement: boolean;
   constraints: Constraint[];
   indexes: Index[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  model: { load: (where: any, order?: string[], tx?: Transaction) => Promise<EntryBase[]> };
-  parent?: Attribute<unknown, unknown>;
-  pk: Attribute<unknown, unknown>;
+  model: { load: (where: any, order?: any, tx?: Transaction) => Promise<EntryBase[]> };
+  parent?: Attribute<unknown, boolean, unknown>;
+  pk: Attribute<unknown, boolean, unknown>;
   sync: boolean;
   tableName: string;
 }
@@ -122,12 +126,12 @@ export class Table extends autoImplement<ITable>() {
   autoIncrementOwn?: boolean;
   oid?: number;
 
-  findAttribute(name: string): Attribute<unknown, unknown> {
-    return this.attributes.filter(_ => _.attributeName === name)[0];
+  findAttribute(name: string) {
+    return this.attributes.find(_ => _.attributeName === name)!;
   }
 
-  findField(name: string): Attribute<unknown, unknown> {
-    return this.attributes.filter(_ => _.fieldName === name)[0];
+  findField(name: string) {
+    return this.attributes.find(_ => _.fieldName === name)!;
   }
 }
 
@@ -144,20 +148,20 @@ export abstract class DB<T extends Transaction> {
     this.log = log;
   }
 
-  findTable(name: string): Table {
-    return this.tables.filter(_ => _.tableName === name)[0];
+  findTable(name: string) {
+    return this.tables.find(_ => _.tableName === name)!;
   }
 
-  protected indexesEq(a: Index, b: Index): boolean {
+  protected indexesEq(a: Index, b: Index) {
     if(a.fields.length !== b.fields.length) return false;
-    for(const i in a.fields) if(a.fields[i] !== b.fields[i]) return false;
+    for(let i = 0; i < a.fields.length; ++i) if(a.fields[i] !== b.fields[i]) return false;
     if(a.type !== b.type) return false;
     if(a.unique !== b.unique) return false;
 
     return true;
   }
 
-  async syncDataBase(): Promise<void> {
+  async syncDataBase() {
     for(const table of this.tables) {
       this.sync = table.sync;
 
@@ -172,8 +176,8 @@ export abstract class DB<T extends Transaction> {
     }
   }
 
-  protected syncLog(message: string): void {
-    this.log(this.sync ? message : "NOT SYNCING: " + message);
+  protected syncLog(message: string) {
+    this.log(this.sync ? message : `NOT SYNCING: ${message}`);
   }
 
   abstract begin(): Promise<T>;
@@ -183,12 +187,12 @@ export abstract class DB<T extends Transaction> {
   abstract load(
     tableName: string,
     attributes: Record<string, string>,
-    pk: Attribute<unknown, unknown>,
+    pk: Attribute<unknown, boolean, unknown>,
     model: new () => EntryBase,
     table: Table
   ): (where: string, order?: string | string[], limit?: number, tx?: Transaction, lock?: boolean) => Promise<EntryBase[]>;
-  abstract remove(tableName: string, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number>;
-  abstract save(tableName: string, attr2field: Record<string, string>, pk: Attribute<unknown, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number | false>;
+  abstract remove(tableName: string, pk: Attribute<unknown, boolean, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number>;
+  abstract save(tableName: string, attr2field: Record<string, string>, pk: Attribute<unknown, boolean, unknown>): (this: EntryBase & Record<string, unknown>) => Promise<number | false>;
 
   abstract dropConstraints(table: Table): Promise<number[]>;
   abstract dropFields(table: Table): Promise<void>;
@@ -224,12 +228,14 @@ export class Transaction {
     this.entries = [];
   }
 
-  async commit() {
+  commit() {
     const { entries } = this;
 
     for(const entry of entries) if(entry[actions]) entry.postCommit(entry[actions]);
 
     this.clean();
+
+    return Promise.resolve();
   }
 
   protected preCommit() {
@@ -238,8 +244,10 @@ export class Transaction {
     for(const entry of entries) if(entry[actions]) entry.preCommit(entry[actions]);
   }
 
-  async rollback() {
+  rollback() {
     this.clean();
+
+    return Promise.resolve();
   }
 }
 

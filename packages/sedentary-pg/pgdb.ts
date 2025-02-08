@@ -127,7 +127,7 @@ export class PGDB extends DB<TransactionPG> {
   load(
     tableName: string,
     attributes: Record<string, string>,
-    pk: Attribute<unknown, unknown>,
+    pk: Attribute<unknown, boolean, unknown>,
     model: new (from: "load") => EntryBase,
     table: Table
   ): (where: string, order?: string | string[], limit?: number, tx?: Transaction) => Promise<EntryBase[]> {
@@ -141,12 +141,11 @@ export class PGDB extends DB<TransactionPG> {
 
       try {
         const forUpdate = lock ? " FOR UPDATE" : "";
-        const orderBy =
-          order && order.length
-            ? ` ORDER BY ${(typeof order === "string" ? [order] : order)
-              .map(_ => (_.startsWith("-") ? `${table.findAttribute(_.substring(1)).fieldName} DESC` : table.findAttribute(_).fieldName))
-              .join(",")}`
-            : "";
+        const orderBy = order?.length
+          ? ` ORDER BY ${(typeof order === "string" ? [order] : order)
+            .map(_ => (_.startsWith("-") ? `${table.findAttribute(_.substring(1)).fieldName} DESC` : table.findAttribute(_).fieldName))
+            .join(",")}`
+          : "";
         const limitTo = typeof limit === "number" ? ` LIMIT ${limit}` : "";
         const query = `SELECT *, tableoid FROM ${tableName}${where ? ` WHERE ${where}` : ""}${orderBy}${limitTo}${forUpdate}`;
 
@@ -182,7 +181,7 @@ export class PGDB extends DB<TransactionPG> {
     };
   }
 
-  remove(tableName: string, pk: Attribute<unknown, unknown>): (this: Record<string, unknown> & { [transaction]?: TransactionPG }) => Promise<number> {
+  remove(tableName: string, pk: Attribute<unknown, boolean, unknown>): (this: Record<string, unknown> & { [transaction]?: TransactionPG }) => Promise<number> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const pkAttrName = pk.attributeName;
@@ -208,7 +207,7 @@ export class PGDB extends DB<TransactionPG> {
   save(
     tableName: string,
     attr2field: Record<string, string>,
-    pk: Attribute<unknown, unknown>
+    pk: Attribute<unknown, boolean, unknown>
   ): (this: Record<string, unknown> & { [loaded]?: Record<string, unknown>; [transaction]?: TransactionPG }) => Promise<number | false> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -218,14 +217,14 @@ export class PGDB extends DB<TransactionPG> {
     return async function() {
       const client = this[transaction] ? (this[transaction] as unknown as { _client: PoolClient })._client : await self.pool.connect();
       let changed = false;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let result: QueryResult<any> | null = null;
+
+      let result: QueryResult | null = null;
 
       const save = async (query: string) => {
         self.log(query);
 
         changed = true;
-        result = await client.query(query + " RETURNING *");
+        result = await client.query(`${query} RETURNING *`);
         self.fill(attr2field, result.rows[0], this);
       };
 
@@ -302,10 +301,10 @@ export class PGDB extends DB<TransactionPG> {
   async dropFields(table: Table): Promise<void> {
     const res = await this._client.query("SELECT attname FROM pg_attribute WHERE attrelid = $1 AND attnum > 0 AND attisdropped = false AND attinhcount = 0", [table.oid!]);
 
-    for(const i in res.rows) {
-      const field = table.findField(res.rows[i].attname);
+    for(const row of res.rows) {
+      const field = table.findField(row.attname);
 
-      if(! field || ! field[base]) await this.dropField(table.tableName, res.rows[i].attname);
+      if(! field?.[base]) await this.dropField(table.tableName, row.attname);
     }
   }
 
@@ -381,15 +380,13 @@ export class PGDB extends DB<TransactionPG> {
       await super.syncDataBase();
 
       for(const table of this.tables) this.oidLoad[table.oid || 0] = (ids: unknown[]) => table.model.load({ [table.pk.attributeName]: ["IN", ids] });
-    } catch(e) {
-      throw e;
     } finally {
       this.released = true;
       this._client.release();
     }
   }
 
-  fieldType(attribute: Attribute<unknown, unknown>): string[] {
+  fieldType(attribute: Attribute<unknown, boolean, unknown>): string[] {
     const { [size]: _size, type } = attribute;
     let ret;
 
@@ -413,7 +410,7 @@ export class PGDB extends DB<TransactionPG> {
     case "NUMBER":
       return ["NUMERIC", "NUMERIC"];
     case "VARCHAR":
-      return ["VARCHAR", "VARCHAR" + (_size ? `(${_size})` : "")];
+      return ["VARCHAR", `VARCHAR${_size ? `(${_size})` : ""}`];
     }
 
     throw new Error(`Unknown type: '${type}', '${_size}'`);
@@ -429,6 +426,7 @@ export class PGDB extends DB<TransactionPG> {
       const where = "attrelid = $1 AND attnum > 0 AND atttypid = pg_type.oid AND attislocal = 't' AND attname = $2";
 
       const res = await this._client.query(
+        // eslint-disable-next-line max-len
         `SELECT attnotnull, atttypmod, typname, pg_get_expr(pg_attrdef.adbin, pg_attrdef.adrelid) AS adsrc FROM pg_type, pg_attribute LEFT JOIN pg_attrdef ON adrelid = attrelid AND adnum = attnum WHERE ${where}`,
         [oid!, fieldName as unknown as number]
       );
@@ -467,7 +465,7 @@ export class PGDB extends DB<TransactionPG> {
             statement = `UPDATE ${tableName} SET ${fieldName} = ${defaultValue} WHERE ${fieldName} IS NULL`;
 
             this.syncLog(statement);
-            if(this.sync) this._client.query(statement);
+            if(this.sync) await this._client.query(statement);
           }
         }
 
@@ -488,9 +486,9 @@ export class PGDB extends DB<TransactionPG> {
             await addField();
             await setDefault(false);
           } else {
-            if(adsrc) dropDefault();
+            if(adsrc) await dropDefault();
 
-            const using = needUsing.some(([type, name]) => attribute.type === type && typname === name) ? " USING " + fieldName + "::" + type : "";
+            const using = needUsing.some(([type, name]) => attribute.type === type && typname === name) ? ` USING ${fieldName}::${type}` : "";
             const statement = `ALTER TABLE ${tableName} ALTER COLUMN ${fieldName} TYPE ${type}${using}`;
 
             this.syncLog(statement);
@@ -498,7 +496,7 @@ export class PGDB extends DB<TransactionPG> {
             await setDefault(attnotnull);
           }
         } else if(defaultValue === undefined) {
-          if(adsrc) dropDefault();
+          if(adsrc) await dropDefault();
           await setNotNull(attnotnull);
         } else if(! adsrc || this.defaultNeq(adsrc, defaultValue)) await setDefault(attnotnull);
       }
@@ -599,8 +597,8 @@ export class TransactionPG extends Transaction {
     this._client = client;
   }
 
-  public async client() {
-    return this._client;
+  public client() {
+    return Promise.resolve(this._client);
   }
 
   private release() {
@@ -614,14 +612,14 @@ export class TransactionPG extends Transaction {
       this.log("COMMIT");
       await this._client.query("COMMIT");
       this.release();
-      super.commit();
+      await super.commit();
     }
   }
 
   public async rollback() {
     try {
       if(! this.released) {
-        super.rollback();
+        await super.rollback();
         this.log("ROLLBACK");
         await this._client.query("ROLLBACK");
       }

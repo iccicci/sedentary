@@ -21,10 +21,10 @@ Some ``make`` target have been added to support development of the packages toge
 - ``make push`` - performs ``git push`` in all the git repositories
 - ``make status`` - performs ``git status`` in all the git repositories
 - ``make test`` - performs ``npm test`` on all the packages
-- ``make version VERSION=""`` - changes the versions, commits, tags and publishes everithing
+- ``make version VERSION=""`` - changes the versions, commits, tags and publishes everything
 
 Both the ``test`` and the ``coverage`` targets require to access a *database*: depending on the packages in the
-development worspace a connection parameter may be required. The connection parameters are the string
+development workspace a connection parameter may be required. The connection parameters are the string
 representation of the JSON object that should passed to the ``connect`` method.
 
 - **sedentary-pg:** ``SPG``

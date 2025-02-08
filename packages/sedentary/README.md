@@ -1,8 +1,8 @@
 # sedentary
 
 [![Build Status][travis-badge]][travis-url]
-[![Code Climate][code-badge]][code-url]
-[![Test Coverage][cover-badge]][code-url]
+[![Code Quality][qlty-badge]][qlty-url]
+[![Test Coverage][cover-badge]][qlty-url]
 
 [![NPM version][npm-badge]][npm-url]
 [![NPM downloads][npm-downloads-badge]][npm-url]
@@ -13,9 +13,9 @@
 [![Dependents][deps-badge]][npm-url]
 [![Donate][donate-badge]][donate-url]
 
-[code-badge]: https://codeclimate.com/github/iccicci/sedentary/badges/gpa.svg
-[code-url]: https://codeclimate.com/github/iccicci/sedentary
-[cover-badge]: https://codeclimate.com/github/iccicci/sedentary/badges/coverage.svg
+[cover-badge]: https://qlty.sh/gh/iccicci/projects/sedentary/coverage.svg
+[qlty-badge]: https://qlty.sh/gh/iccicci/projects/sedentary/maintainability.svg
+[qlty-url]: https://qlty.sh/gh/iccicci/projects/sedentary
 [deps-badge]: https://badgen.net/npm/dependents/sedentary?icon=npm&cache=300
 [doc-badge]: https://readthedocs.org/projects/sedentary/badge/?version=latest
 [doc-url]: https://sedentary.readthedocs.io/
@@ -51,8 +51,8 @@ import { Sedentary } from "sedentary";
 const db = new Sedentary("file.db");
 
 class Items extends db.model("Item", {
-  num: db.INT,
-  str: db.VarChar(30)
+  num: db.Int(),
+  str: db.VarChar({ size: 30 })
 });
 
 (async function () {
@@ -120,4 +120,7 @@ Do not hesitate to report any bug or inconsistency [@github](https://github.com/
 # Donating
 
 If you find useful this package, please consider the opportunity to donate some satoshis to this bitcoin address:
+
+<!-- cSpell: disable -->
+
 **1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB**

@@ -19,7 +19,7 @@ describe("deep", () => {
     it("objects with different number of keys", () => expect(deepDiff({ test: 23 }, {})).toBe(true));
     it("objects with different key", () => expect(deepDiff({ test: 23 }, { check: 42 })).toBe(true));
     it("objects with different value", () => expect(deepDiff({ test: 23 }, { test: 42 })).toBe(true));
-    // eslint-disable-next-line sort-keys-fix/sort-keys-fix
+    // eslint-disable-next-line sort-keys/sort-keys-fix
     it("equal objects", () => expect(deepDiff({ check: 42, test: 23 }, { test: 23, check: 42 })).toBe(false));
   });
 });

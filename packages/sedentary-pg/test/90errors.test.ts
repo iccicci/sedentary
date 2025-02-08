@@ -21,7 +21,7 @@ describe("errors", () => {
   let err: Error;
 
   describe("SedentaryPG.constructor(connection)", () => {
-    beforeAll(async () => {
+    beforeAll(() => {
       try {
         new SedentaryPG("" as never);
       } catch(e) {
@@ -36,15 +36,15 @@ describe("errors", () => {
     beforeAll(async () => {
       const [db, ddb] = pgdb();
 
-      ddb.syncTable = async function(): Promise<void> {
-        throw new Error("test");
+      ddb.syncTable = function(): Promise<void> {
+        return Promise.reject(new Error("test"));
       };
 
       try {
         db.model("test1", {});
         await db.connect();
       } catch(e) {
-        db.end();
+        await db.end();
         if(e instanceof Error) err = e;
       }
     });
@@ -56,13 +56,13 @@ describe("errors", () => {
     beforeAll(async () => {
       const [db, ddb] = pgdb();
 
-      ddb.connect = async function(): Promise<void> {
+      ddb.connect = function(): Promise<void> {
         this._client = {
-          query: async (): Promise<void> => {
-            throw new Error("test");
-          },
+          query:   (): Promise<void> => Promise.reject(new Error("test")),
           release: () => {}
         };
+
+        return Promise.resolve();
       };
 
       try {
@@ -95,7 +95,7 @@ describe("errors", () => {
 
   describe("SedentaryPG.FKey", () =>
     errorHelper(db => {
-      class test1 extends db.model("test1", { a: db.Int }) {}
+      class test1 extends db.model("test1", { a: db.Int() }) {}
       db.model("test", { a: db.FKey(test1.a) });
     })("SedentaryPG.FKey: 'test1' model: 'a' attribute: is not unique: can't be used as FKey target"));
 

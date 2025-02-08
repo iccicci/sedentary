@@ -16,7 +16,7 @@ describe("transactions", () => {
     helper(transactions.commit, async db => {
       const test2 = db.model(
         "test2",
-        { a: db.Int, b: db.VarChar },
+        { a: db.Int(), b: db.VarChar() },
         {},
         {
           postCommit: function(actions: Action[]) {
@@ -64,7 +64,7 @@ describe("transactions", () => {
     let result: unknown;
 
     helper(transactions.rollback, async db => {
-      const test3 = db.model("test3", { a: db.Int, b: db.VarChar });
+      const test3 = db.model("test3", { a: db.Int(), b: db.VarChar() });
       await db.connect();
       const r1 = new test3({ a: 1, b: "1" });
       await r1.save();
@@ -90,7 +90,7 @@ describe("transactions", () => {
     const actual: unknown[] = [];
 
     helper(transactions.locks, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.JSON<{ a?: number[]; b: string }>() });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar(), c: db.JSON<{ a?: number[]; b: string }>() });
       await db.connect();
       const r1 = new test1({ a: 1, b: "1", c: { b: "test" } });
       const r2 = new test1({ a: 2, b: "2" });
@@ -165,7 +165,7 @@ describe("transactions", () => {
     let result: unknown[] = [];
 
     helper(transactions.cancel, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar() });
       await db.connect();
       const r1 = new test1({ a: 1, b: "1" });
       await r1.save();

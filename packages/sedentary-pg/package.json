@@ -6,8 +6,8 @@
     "yossarian <sergiybiluk@gmail.com> (https://github.com/captain-yossarian)"
   ],
   "dependencies": {
-    "@types/pg": "^8.11.4",
-    "pg": "^8.11.4",
+    "@types/pg": "^8.11.11",
+    "pg": "^8.13.1",
     "pg-format": "^1.0.4",
     "sedentary": "0.0.54"
   },

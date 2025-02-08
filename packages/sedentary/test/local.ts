@@ -9,9 +9,10 @@ export const packageName = "sedentary";
 export const wrongConnection = "test";
 export const wrongConnectionError = "EISDIR: illegal operation on a directory, read";
 
-export async function clean(): Promise<void> {
+export async function clean() {
   try {
     await unlink("test.json");
+    // eslint-disable-next-line no-empty
   } catch(e) {}
 }
 
@@ -395,14 +396,14 @@ export const models = {
     "'test1': Adding unique constraint on field: 'id'",
     'Save to test1 {"a":23,"b":"ok","c":42}',
     "Save to test1 {}",
-    `Load from test1 where: "b = 'ok'"`,
+    "Load from test1 where: \"b = 'ok'\"",
     'Load from test1 where: "a IS NULL"',
     'Load from test1 where: "id < 23" order by: id',
     'Load from test1 where: "" order by: -id',
-    `Load from test1 where: "b = 'ok'"`,
+    "Load from test1 where: \"b = 'ok'\"",
     'Save to test1 {"a":23,"b":"test","id":1,"c":42}',
     'Save to test1 {"a":23,"b":"test","id":1,"c":42}',
-    `Load from test1 where: "b IN ('a', 'b', 'test')" order by: id`,
+    "Load from test1 where: \"b IN ('a', 'b', 'test')\" order by: id",
     "Delete from test1 1",
     "Delete from test1 1"
   ],

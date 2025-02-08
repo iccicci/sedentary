@@ -1,0 +1,18 @@
+exclude_patterns = ["**/node_modules/**"]
+
+[checks]
+file_lines = { threshold = 500 }
+method_complexity = { threshold = 100 }
+method_lines = { threshold = 200 }
+similar_code = { threshold = 100 }
+
+[engines]
+duplication = { enabled = true }
+eslint = { enabled = true }
+fixme = { enabled = true }
+
+[engines.duplication.config]
+languages = ["javascript", "typescript"]
+
+[ratings]
+paths = ["packages/**/*.ts", "scripts/*.ts"]

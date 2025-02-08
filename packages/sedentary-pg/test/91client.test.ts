@@ -8,7 +8,7 @@ describe("client", () => {
     let a: unknown;
 
     helper(client.simple, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.DateTime, d: db.Int8, e: db.Number, f: db.Boolean });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar(), c: db.DateTime(), d: db.Int8(), e: db.Number(), f: db.Boolean() });
       await db.connect();
       const aa = new test1({ a: 23, b: "ok", c: new Date("1976-01-23"), d: 23n, e: 2.3, f: true });
       await aa.save();
@@ -25,7 +25,7 @@ describe("client", () => {
     let a: unknown;
 
     helper(client.transaction, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.DateTime, d: db.Int8, e: db.Number, f: db.Boolean });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar(), c: db.DateTime(), d: db.Int8(), e: db.Number(), f: db.Boolean() });
       await db.connect();
       const aa = new test1({ a: 23, b: "ok", c: new Date("1976-01-23"), d: 23n, e: 2.3, f: true });
       await aa.save();

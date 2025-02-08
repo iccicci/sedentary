@@ -1,32 +1,41 @@
 dist: focal
+language: node_js
+sudo: required
 
 env:
   global:
     - SPG='{"database":"sedentary","password":"postgres","user":"postgres"}'
   matrix:
-    - PACKAGE=sedentary
-    - PACKAGE=sedentary-pg PG_VERSION=16
-    - PACKAGE=sedentary-pg PG_VERSION=15
-    - PACKAGE=sedentary-pg PG_VERSION=14
-    - PACKAGE=sedentary-pg PG_VERSION=13
-    - PACKAGE=sedentary-pg PG_VERSION=12
-
-language: node_js
+    - PG_VERSION=18
+    - PG_VERSION=17
+    - PG_VERSION=16
+    - PG_VERSION=15
+    - PG_VERSION=14
 
 node_js:
+  - "24"
+  - "22"
   - "20"
-  - "18"
-
-sudo: required
 
 before_install:
-  - "scripts/travis before_install"
+  - sudo service postgresql stop
+  - sudo service postgresql restart $PG_VERSION
 
 before_script:
-  - "scripts/travis before_script"
+  - psql -c "CREATE DATABASE sedentary;" -U postgres
+  - psql -c "ALTER DATABASE sedentary SET timezone TO 'GMT';" -U postgres
 
 script:
-  - "scripts/travis script"
+  - |
+    if [[ `node --version` =~ ^v24 && $PG_VERSION == 18 ]] ; then
+      yarn coverage
+    else
+      yarn test
+    fi
 
-after_script:
-  - "scripts/travis after_script"
+after_success:
+  - |
+    if [[ `node --version` =~ ^v24 && $PG_VERSION == 18 ]] ; then
+      curl https://qlty.sh | sh
+      ~/.qlty/bin/qlty coverage publish packages/*/coverage/lcov.info --override-branch $TRAVIS_BRANCH
+    fi

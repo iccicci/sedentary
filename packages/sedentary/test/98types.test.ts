@@ -14,6 +14,6 @@ desc("types", () => {
   it("types", () => {
     if(! diagnostics.length) return;
 
-    throw new Error("types\n\n" + diagnostics.map(_ => `${_.fileName}:${_.line}:${_.column}:${_.severity}:${_.message}`).join("\n") + "\n");
+    throw new Error(`types\n\n${diagnostics.map(_ => `${_.fileName}:${_.line}:${_.column}:${_.severity}:${_.message}`).join("\n")}\n`);
   });
 });

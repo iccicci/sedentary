@@ -18,7 +18,7 @@ describe("coverage", () => {
 
   describe("Transaction.release", function() {
     helper(transactions.commit, async db => {
-      const test2 = db.model("test2", { a: db.Int, b: db.VarChar });
+      const test2 = db.model("test2", { a: db.Int(), b: db.VarChar() });
       await db.connect();
       const r1 = new test2({ a: 1, b: "1" });
       await r1.save();
