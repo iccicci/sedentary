@@ -13,7 +13,7 @@ threshold = 1000
 threshold = 50
 
 [smells.nested_control_flow]
-threshold = 5
+threshold = 6
 
 [smells.return_statements]
 threshold = 20
@@ -26,8 +26,8 @@ enabled = true
 
 [language.javascript.smells.similar_code]
 enabled = true
-threshold = 50
+threshold = 40
 
 [language.typescript.smells.similar_code]
 enabled = true
-threshold = 50
+threshold = 40
