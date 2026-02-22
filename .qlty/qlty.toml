@@ -6,9 +6,6 @@ test_patterns = ["packages/**/test/*.ts"]
 name = "default"
 default = true
 
-[[plugin]]
-name = "eslint"
-
 [smells.file_complexity]
 threshold = 1000
 
