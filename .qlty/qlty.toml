@@ -1,18 +1,33 @@
-exclude_patterns = ["**/node_modules/**"]
+config_version = "0"
 
-[checks]
-file_lines = { threshold = 500 }
-method_complexity = { threshold = 100 }
-method_lines = { threshold = 200 }
-similar_code = { threshold = 100 }
+test_patterns = ["packages/**/test/*.ts"]
 
-[engines]
-duplication = { enabled = true }
-eslint = { enabled = true }
-fixme = { enabled = true }
+[[source]]
+name = "default"
+default = true
 
-[engines.duplication.config]
-languages = ["javascript", "typescript"]
+[[plugin]]
+name = "eslint"
 
-[ratings]
-paths = ["packages/**/*.ts", "scripts/*.ts"]
+[smells.file_complexity]
+threshold = 1000
+
+[smells.function_complexity]
+threshold = 30
+
+[smells.return_statements]
+threshold = 20
+
+[smells.similar_code]
+enabled = true
+
+[smells.identical_code]
+enabled = true
+
+[language.javascript.smells.similar_code]
+enabled = true
+threshold = 60
+
+[language.typescript.smells.similar_code]
+enabled = true
+threshold = 60
