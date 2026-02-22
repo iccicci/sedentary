@@ -10,7 +10,10 @@ default = true
 threshold = 1000
 
 [smells.function_complexity]
-threshold = 30
+threshold = 50
+
+[smells.nested_control_flow]
+threshold = 5
 
 [smells.return_statements]
 threshold = 20
@@ -23,8 +26,8 @@ enabled = true
 
 [language.javascript.smells.similar_code]
 enabled = true
-threshold = 60
+threshold = 50
 
 [language.typescript.smells.similar_code]
 enabled = true
-threshold = 60
+threshold = 50
