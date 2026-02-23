@@ -27,7 +27,7 @@ Nowadays only the :ref:`PostgreSQL<package sedentary-pg>` specialization package
 sedentary
 ---------
 
-The base package. **It must not be used directly**: it des not support any DB engine.
+The base package. **It must not be used directly**: it does not support any DB engine.
 
 * NPM `sedentary package <https://www.npmjs.com/package/sedentary>`_
 * GitHub `sedentary repository <https://github.com/iccicci/sedentary#readme>`_
@@ -39,7 +39,7 @@ sedentary-mysql
 
 **NOT SCHEDULED YET**
 
-The `MySQL <https://www.mysql.com/>`_ implementation pacakge.
+The `MySQL <https://www.mysql.com/>`_ implementation package.
 
 * NPM `sedentary-mysql package <https://www.npmjs.com/package/sedentary-mysql>`_
 * GitHub `sedentary-mysql repository <https://github.com/iccicci/sedentary-mysql#readme>`_
@@ -49,7 +49,7 @@ The `MySQL <https://www.mysql.com/>`_ implementation pacakge.
 sedentary-pg
 ------------
 
-The `PostgreSQL <https://www.postgresql.org/>`_ implementation pacakge.
+The `PostgreSQL <https://www.postgresql.org/>`_ implementation package.
 
 * NPM `sedentary-pg package <https://www.npmjs.com/package/sedentary-pg>`_
 * GitHub `sedentary-pg repository <https://github.com/iccicci/sedentary-pg#readme>`_
@@ -61,7 +61,7 @@ sedentary-sqlite
 
 **NOT SCHEDULED YET**
 
-The `SQLite <https://www.sqlite.org/index.html>`_ implementation pacakge.
+The `SQLite <https://www.sqlite.org/index.html>`_ implementation package.
 
 * NPM `sedentary-sqlite package <https://www.npmjs.com/package/sedentary-sqlite>`_
 * GitHub `sedentary-sqlite repository <https://github.com/iccicci/sedentary-sqlite#readme>`_

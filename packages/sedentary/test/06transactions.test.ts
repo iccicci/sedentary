@@ -1,10 +1,10 @@
 import { deepStrictEqual as de } from "assert";
 
-import { Action, EntryBase } from "..";
+import { EntryBase, TxAction } from "..";
 import { helper } from "./helper";
 import { packageName, transactions } from "./local";
 
-const desc = packageName === "sedentary" ? xdescribe : describe;
+const desc = packageName === "sedentary" ? describe.skip : describe;
 
 describe("transactions", () => {
   describe("commit", function() {
@@ -16,14 +16,14 @@ describe("transactions", () => {
     helper(transactions.commit, async db => {
       const test2 = db.model(
         "test2",
-        { a: db.Int, b: db.VarChar },
+        { a: db.Int(), b: db.VarChar() },
         {},
         {
-          postCommit: function(actions: Action[]) {
+          postCommit: function(actions: TxAction[]) {
             log(`postCommit ${this.id} ${JSON.stringify(actions)}`);
             EntryBase.prototype.postCommit.call(this, actions);
           },
-          preCommit: function(actions: Action[]) {
+          preCommit: function(actions: TxAction[]) {
             log(`preCommit ${this.id} ${JSON.stringify(actions)}`);
             EntryBase.prototype.preCommit.call(this, actions);
           }
@@ -64,7 +64,7 @@ describe("transactions", () => {
     let result: unknown;
 
     helper(transactions.rollback, async db => {
-      const test3 = db.model("test3", { a: db.Int, b: db.VarChar });
+      const test3 = db.model("test3", { a: db.Int(), b: db.VarChar() });
       await db.connect();
       const r1 = new test3({ a: 1, b: "1" });
       await r1.save();
@@ -90,7 +90,7 @@ describe("transactions", () => {
     const actual: unknown[] = [];
 
     helper(transactions.locks, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.JSON<{ a?: number[]; b: string }>() });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar(), c: db.JSON<{ a?: number[]; b: string }>() });
       await db.connect();
       const r1 = new test1({ a: 1, b: "1", c: { b: "test" } });
       const r2 = new test1({ a: 2, b: "2" });
@@ -160,12 +160,37 @@ describe("transactions", () => {
       ]));
   });
 
+  describe("load", () => {
+    let l2: unknown;
+    let result: unknown;
+
+    helper(transactions.load, async db => {
+      const test3 = db.model("test3", { a: db.Int(), b: db.VarChar() });
+      await db.connect();
+      const r1 = new test3({ a: 1, b: "1" });
+      await r1.save();
+      const r2 = new test3({ a: 2, b: "2" });
+      await r2.save();
+      const tx = await db.begin();
+      const l1 = await test3.load({}, ["id"], tx);
+      l1[0].a = 11;
+      l1[0].b = "11";
+      await l1[0].save();
+      await l1[0].remove();
+      await tx.commit();
+      l2 = await test3.load({ id: [">", 0] }, ["id"]);
+      result = [new test3({ a: 2, b: "2", id: 2 })];
+    });
+
+    it("load", () => de(l2, result));
+  });
+
   describe("cancel", () => {
     const actual: unknown[] = [];
     let result: unknown[] = [];
 
     helper(transactions.cancel, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar() });
       await db.connect();
       const r1 = new test1({ a: 1, b: "1" });
       await r1.save();

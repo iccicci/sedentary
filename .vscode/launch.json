@@ -4,13 +4,13 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Mocha All",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/mocha",
-      "args": ["-r", "ts-node/register", "--timeout", "999999", "--colors", "${workspaceFolder}/test/*.ts"],
+      "name": "Vitest",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "--test-timeout=0"],
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "protocol": "inspector",
-      "skipFiles": ["node_modules/mocha/**", "<node_internals>/**"]
+      "skipFiles": ["node_modules/vitest/**", "<node_internals>/**"]
     }
   ]
 }

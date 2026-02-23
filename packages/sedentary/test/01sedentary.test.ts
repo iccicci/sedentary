@@ -1,6 +1,6 @@
-import { deepStrictEqual as de, ok,strictEqual as eq } from "assert";
+import { deepStrictEqual as de, ok, strictEqual as eq } from "assert";
 
-import { helper,Package, Sedentary } from "./helper";
+import { helper, Package, Sedentary } from "./helper";
 import { connection, wrongConnection, wrongConnectionError } from "./local";
 
 describe("class Sedentary", () => {
@@ -27,8 +27,8 @@ describe("class Sedentary", () => {
     beforeAll(async () => {
       try {
         await db.connect();
-      } catch(e) {
-        if(e instanceof Error) err = e;
+      } catch(error) {
+        if(error instanceof Error) err = error;
       }
     });
 

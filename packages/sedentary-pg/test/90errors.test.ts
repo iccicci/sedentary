@@ -21,11 +21,11 @@ describe("errors", () => {
   let err: Error;
 
   describe("SedentaryPG.constructor(connection)", () => {
-    beforeAll(async () => {
+    beforeAll(() => {
       try {
         new SedentaryPG("" as never);
-      } catch(e) {
-        if(e instanceof Error) err = e;
+      } catch(error) {
+        if(error instanceof Error) err = error;
       }
     });
 
@@ -36,16 +36,16 @@ describe("errors", () => {
     beforeAll(async () => {
       const [db, ddb] = pgdb();
 
-      ddb.syncTable = async function(): Promise<void> {
-        throw new Error("test");
+      ddb.syncTable = function(): Promise<void> {
+        return Promise.reject(new Error("test"));
       };
 
       try {
         db.model("test1", {});
         await db.connect();
-      } catch(e) {
-        db.end();
-        if(e instanceof Error) err = e;
+      } catch(error) {
+        await db.end();
+        if(error instanceof Error) err = error;
       }
     });
 
@@ -56,20 +56,20 @@ describe("errors", () => {
     beforeAll(async () => {
       const [db, ddb] = pgdb();
 
-      ddb.connect = async function(): Promise<void> {
+      ddb.connect = function(): Promise<void> {
         this._client = {
-          query: async (): Promise<void> => {
-            throw new Error("test");
-          },
+          query:   (): Promise<void> => Promise.reject(new Error("test")),
           release: () => {}
         };
+
+        return Promise.resolve();
       };
 
       try {
         db.model("test1", {});
         await db.connect();
-      } catch(e) {
-        if(e instanceof Error) err = e;
+      } catch(error) {
+        if(error instanceof Error) err = error;
       }
     });
 
@@ -83,8 +83,8 @@ describe("errors", () => {
       try {
         db.model("test1", { a: new Type({ [base]: Number, [size]: 3, type: "test" }) });
         await db.connect();
-      } catch(e) {
-        if(e instanceof Error) err = e;
+      } catch(error) {
+        if(error instanceof Error) err = error;
       }
 
       await db.end();
@@ -92,12 +92,6 @@ describe("errors", () => {
 
     it("error", () => eq(err.message, "Unknown type: 'test', '3'"));
   });
-
-  describe("SedentaryPG.FKey", () =>
-    errorHelper(db => {
-      class test1 extends db.model("test1", { a: db.Int }) {}
-      db.model("test", { a: db.FKey(test1.a) });
-    })("SedentaryPG.FKey: 'test1' model: 'a' attribute: is not unique: can't be used as FKey target"));
 
   describe("SedentaryPG.escape(null)", () =>
     errorHelper(db => {

@@ -1,10 +1,10 @@
 import { readFile, writeFile } from "fs/promises";
+import { inspect } from "util";
 
 const [, , file] = process.argv;
 const { PACKAGE } = process.env as { PACKAGE: "core" | "sedentary" | "sedentary-pg" };
-const sedentary = PACKAGE === "sedentary";
 
-function sort(obj: { [key: string]: unknown } | unknown): { [key: string]: unknown } | unknown {
+function sort(obj: unknown) {
   const ret: Record<string, unknown> = {};
 
   if(obj instanceof Array || ! (obj instanceof Object)) return obj;
@@ -45,8 +45,8 @@ async function package_json() {
       }
     },
     "sedentary-pg": {
-      dependencies: { "@types/pg": "^8.11.4", pg: "^8.11.4", "pg-format": "^1.0.4", sedentary: version },
-      description:  description + " - PostgreSQL"
+      dependencies: { "@types/pg": "^8.16.0", pg: "^8.18.0", "pg-format": "^1.0.4", sedentary: version },
+      description:  `${description} - PostgreSQL`
     }
   };
   const res: Record<string, unknown> = {
@@ -55,7 +55,7 @@ async function package_json() {
     contributors,
     engines,
     funding,
-    homepage: `https://github.com/iccicci/sedentary/packages/${PACKAGE}#readme`,
+    homepage: `https://github.com/iccicci/sedentary/tree/master/packages/${PACKAGE}#readme`,
     keywords,
     license,
     main:     "./dist/cjs/index.js",
@@ -65,45 +65,34 @@ async function package_json() {
     readmeFilename,
     repository,
     scripts:  {
-      build:       "make build",
-      coverage:    "jest --coverage --no-cache --runInBand",
-      deploy:      "make deploy",
-      precoverage: "make pretest",
-      preinstall:  "if [ -f Makefile ] ; then make ; fi",
-      pretest:     "make pretest",
-      test:        "jest --no-cache --runInBand"
+      build:      "make build",
+      deploy:     "make deploy",
+      preinstall: "if [ -f Makefile ] ; then make ; fi"
     },
     types: "./dist/types/index.d.ts",
     version,
     ...packages[PACKAGE]
   };
 
-  writeFile(file, JSON.stringify(sort(res), null, 2) + "\n");
+  await writeFile(file, `${JSON.stringify(sort(res), null, 2)}\n`);
 }
 
-const common = ["*.tgz", ".gitignore", ".npmignore", "coverage", "jest.config.js", "node_modules", ...(sedentary ? ["test.json"] : []), "tsconfig.*.json"];
-const ignored = {
-  ".gitignore": [...common, "dist", ...(sedentary ? [] : ["test/0*.test.ts", "test/helper.ts"])],
-  ".npmignore": [...common, ".*", "*.ts", "!*.d.ts", "*.tsbuildinfo", "Makefile", "test", "tsconfig.json"]
-};
+const npmIgnore = [".*", "*.tgz", "*.ts", "!*.d.ts", "*.tsbuildinfo", "Makefile", "coverage", "node_modules", "test", "tsconfig.json", "tsconfig.*.json"];
 
 function ignore() {
-  writeFile(file, [...ignored[file as keyof typeof ignored]].join("\n") + "\n");
-}
+  if(file === ".npmignore") {
+    if(PACKAGE === "core") throw new Error(".npmignore is generated only in the packages");
 
-const coverage = { core: [], sedentary: ["db.ts", "index.ts"], "sedentary-pg": ["index.ts", "pgdb.ts"] };
+    return writeFile(file, `${npmIgnore.join("\n")}\n`);
+  }
 
-function jest_config_js() {
-  const collect = coverage[PACKAGE].map(_ => `"${_}"`).join(", ");
-  const content = `module.exports = { collectCoverageFrom: [${collect}], preset: "ts-jest", testEnvironment: "jest-environment-node-single-context", testSequencer: "../../scripts/testSequencer.js" };\n`;
-
-  writeFile(file, content);
+  throw new Error(`Unknown ignore file: ${file}`);
 }
 
 async function version() {
   const { version } = await read_package_json("package.json");
 
-  process.stdout.write(version + "\n", "utf-8");
+  process.stdout.write(`${version}\n`, "utf-8");
 }
 
 const specificOptions = {
@@ -129,22 +118,19 @@ const compilerOptions = {
   target:                       "ESNext",
   ...specificOptions[file as keyof typeof specificOptions]
 };
-const include = file === "tsconfig.json" ? (PACKAGE === "core" ? ["packages/**/*.ts", "scripts/*.ts"] : ["*.ts", "test/*.ts"]) : ["*.ts"];
+const include = file === "tsconfig.json" ? (PACKAGE === "core" ? ["packages/**/*.ts", "utils.ts"] : ["*.ts", "test/*.ts", "../../vitest-env.d.ts"]) : ["*.ts"];
 const references = ["core", "sedentary"].includes(PACKAGE) || file !== "tsconfig.json" ? {} : { references: [{ path: "../sedentary" }] };
 
 function tsconfig_json() {
-  writeFile(file, JSON.stringify(sort({ compilerOptions, include, ...references }), null, 2) + "\n");
+  return writeFile(file, `${JSON.stringify(sort({ compilerOptions, include, ...references }), null, 2)}\n`);
 }
 
 (() => {
   switch(file) {
-  case ".gitignore":
   case ".npmignore":
     return ignore();
   case "deploy":
     return version();
-  case "jest.config.js":
-    return jest_config_js();
   case "package.json":
     return package_json();
   case "tsconfig.json":
@@ -154,5 +140,5 @@ function tsconfig_json() {
     return tsconfig_json();
   }
 
-  process.stderr.write(`Unknown file: ${file}\n`, "utf-8", () => process.exit(1));
-})();
+  return new Promise<void>(() => process.stderr.write(`Unknown file: ${file}\n`, "utf-8", () => process.exit(1)));
+})().catch(error => process.stderr.write(inspect(error, { depth: null })));

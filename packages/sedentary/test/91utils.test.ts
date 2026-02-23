@@ -1,6 +1,6 @@
-import { deepCopy, deepDiff } from "..";
+import { deepCopy, deepDiff, toSqlName } from "..";
 
-describe("deep", () => {
+describe("utils", () => {
   describe("deepCopy", () => {
     const obj = { a: [null, 23] };
     it("deepCopy", () => expect(deepCopy(obj)).toStrictEqual(obj));
@@ -19,7 +19,22 @@ describe("deep", () => {
     it("objects with different number of keys", () => expect(deepDiff({ test: 23 }, {})).toBe(true));
     it("objects with different key", () => expect(deepDiff({ test: 23 }, { check: 42 })).toBe(true));
     it("objects with different value", () => expect(deepDiff({ test: 23 }, { test: 42 })).toBe(true));
-    // eslint-disable-next-line sort-keys-fix/sort-keys-fix
+    // eslint-disable-next-line sort-keys/sort-keys-fix
     it("equal objects", () => expect(deepDiff({ check: 42, test: 23 }, { test: 23, check: 42 })).toBe(false));
+  });
+
+  describe("toSqlName", () => {
+    it("camelCase to snake_case", () => expect(toSqlName("firstName")).toBe("first_name"));
+    it("PascalCase to snake_case", () => expect(toSqlName("FirstName")).toBe("first_name"));
+    it("keeps lowercase unchanged", () => expect(toSqlName("id")).toBe("id"));
+    it("keeps snake_case unchanged", () => expect(toSqlName("first_name")).toBe("first_name"));
+    it("multiple uppercase segments", () => expect(toSqlName("myVariableName")).toBe("my_variable_name"));
+    it("single lowercase letter", () => expect(toSqlName("a")).toBe("a"));
+    it("single uppercase letter", () => expect(toSqlName("A")).toBe("a"));
+    it("all uppercase", () => expect(toSqlName("ABC")).toBe("a_b_c"));
+    it("first char uppercase only", () => expect(toSqlName("User")).toBe("user"));
+
+    it("throws on empty string", () => expect(() => toSqlName("")).toThrow("toSqlName: 'name' must be a non-empty string"));
+    it("throws on non-string", () => expect(() => toSqlName(23 as never)).toThrow("toSqlName: 'name' must be a non-empty string"));
   });
 });

@@ -8,13 +8,14 @@ import { Attribute, base, DB, loaded, size, Table, Transaction } from "../db";
 const { readFile, writeFile } = promises;
 
 function stringify(value: unknown) {
-  return JSON.stringify(value, (key: string, value: unknown) => (typeof value === "bigint" ? value + "n" : value));
+  return JSON.stringify(value, (key: string, value: unknown) => (typeof value === "bigint" ? `${value}n` : value));
 }
 
 class TestTransaction extends Transaction {
-  async commit() {
+  commit() {
     this.preCommit();
-    super.commit();
+
+    return super.commit();
   }
 }
 
@@ -28,45 +29,45 @@ export class TestDB extends DB<TestTransaction> {
     this.file = filename;
   }
 
-  async begin() {
-    return new TestTransaction(this.log);
+  begin() {
+    return Promise.resolve(new TestTransaction(this.log));
   }
 
   cancel(tableName: string) {
     const results: Record<string, Record<string, number>> = { test1: { "": 3, "b = '1'": 1 } };
 
-    return async (where: string) => {
+    return (where: string) => {
       this.log(`Cancel from ${tableName} where: "${where}"`);
 
-      return results[tableName][where];
+      return Promise.resolve(results[tableName][where]);
     };
   }
 
-  async connect(): Promise<void> {
+  async connect() {
     this.body = { next: {}, tables: {} };
 
     try {
       this.body = JSON.parse((await readFile(this.file)).toString());
-    } catch(e) {
-      const err = e as NodeJS.ErrnoException;
-      if(err.code !== "ENOENT") throw e;
+    } catch(error) {
+      const err = error as NodeJS.ErrnoException;
+      if(err.code !== "ENOENT") throw error;
     }
   }
 
-  async end(): Promise<void> {}
+  async end() {}
 
-  async write(): Promise<void> {
+  async write() {
     await writeFile(this.file, stringify(this.body));
   }
 
-  escape(value: unknown): string {
+  escape(value: unknown) {
     return typeof value === "number" ? value.toString() : `'${value}'`;
   }
 
   load(
     tableName: string,
     attributes: Record<string, string>,
-    pk: Attribute<unknown, unknown>,
+    pk: Attribute<unknown, boolean, unknown>,
     model: new (from: "load") => EntryBase
   ): (where: string, order?: string | string[]) => Promise<EntryBase[]> {
     const longWhere = "(fixed) AND NOT (a = 23 AND b IS NULL AND NOT c AND d > 23 AND e IN (23, 42)) OR (fixed)";
@@ -106,23 +107,26 @@ export class TestDB extends DB<TestTransaction> {
         "": [
           { a: 1, b: "1", id: 1 },
           { a: 2, b: "2", id: 2 }
-        ]
+        ],
+        "id > 0": [{ a: 2, b: "2", id: 2 }]
       }
     };
 
-    return async (where: string, order?: string | string[], limit?: number, tx?: Transaction) => {
+    return (where: string, order?: string | string[], limit?: number, tx?: Transaction) => {
       this.log(`Load from ${tableName} where: "${where}"${order ? ` order by: ${(typeof order === "string" ? [order] : order).join(", ")}` : ""}`);
 
-      return results[tableName][where].map(_ => {
-        const ret = new model("load");
+      return Promise.resolve(
+        results[tableName][where].map(_ => {
+          const ret = new model("load");
 
-        Object.assign(ret, _);
-        Object.defineProperty(ret, loaded, { configurable: true, value: true });
-        if(tx) tx.addEntry(ret);
-        ret.postLoad();
+          Object.assign(ret, _);
+          Object.defineProperty(ret, loaded, { configurable: true, value: true });
+          if(tx) tx.addEntry(ret);
+          ret.postLoad();
 
-        return ret;
-      });
+          return ret;
+        })
+      );
     };
   }
 
@@ -131,13 +135,13 @@ export class TestDB extends DB<TestTransaction> {
     const self = this;
     let value = 1;
 
-    return async function() {
+    return function() {
       const ret = value;
 
       self.log(`Delete from ${tableName} ${this.id}`);
       value = 0;
 
-      return ret;
+      return Promise.resolve(ret);
     };
   }
 
@@ -161,23 +165,23 @@ export class TestDB extends DB<TestTransaction> {
       try {
         //console.log(JSON.stringify(obj), saves2[JSON.stringify(obj)]);
         return saves2[JSON.stringify(obj)];
-      } catch(e) {
+      } catch(error) {
         return false;
       }
     };
 
-    return async function() {
+    return function() {
       self.log(`Save to ${tableName} ${stringify(this)}`);
 
       const [changed, obj] = getSaves2(this) || saves.shift() || [false, {}];
 
       Object.assign(this, obj);
 
-      return changed;
+      return Promise.resolve(changed);
     };
   }
 
-  async dropConstraints(table: Table): Promise<number[]> {
+  async dropConstraints(table: Table) {
     const { constraints } = this.body.tables[table.tableName] || { constraints: { f: {}, u: {} } };
 
     for(const constraint of Object.keys(constraints.f).sort()) {
@@ -203,13 +207,13 @@ export class TestDB extends DB<TestTransaction> {
     return [];
   }
 
-  async dropFields(table: Table): Promise<void> {
+  async dropFields(table: Table) {
     const { fields } = this.body.tables[table.tableName] || { fields: {} };
 
     for(const attribute of Object.keys(fields).sort()) {
       const field = table.findField(attribute);
 
-      if(! field || ! field[base]) {
+      if(! field?.[base]) {
         this.syncLog(`'${table.tableName}': Removing field: '${attribute}'`);
         if(this.sync) delete fields[attribute];
       }
@@ -218,7 +222,7 @@ export class TestDB extends DB<TestTransaction> {
     await this.write();
   }
 
-  async dropIndexes(table: Table): Promise<void> {
+  async dropIndexes(table: Table) {
     const { indexes } = this.body.tables[table.tableName] || { indexes: {} };
 
     for(const name of Object.keys(indexes).sort()) {
@@ -233,7 +237,7 @@ export class TestDB extends DB<TestTransaction> {
     await this.write();
   }
 
-  async syncConstraints(table: Table): Promise<void> {
+  async syncConstraints(table: Table) {
     const { constraints } = this.body.tables[table.tableName] || { constraints: { f: {}, u: {} } };
 
     for(const constraint of table.constraints) {
@@ -257,7 +261,7 @@ export class TestDB extends DB<TestTransaction> {
     await this.write();
   }
 
-  async syncIndexes(table: Table): Promise<void> {
+  async syncIndexes(table: Table) {
     const { indexes } = this.body.tables[table.tableName] || { indexes: {} };
 
     for(const index of table.indexes) {
@@ -272,7 +276,7 @@ export class TestDB extends DB<TestTransaction> {
     await this.write();
   }
 
-  async syncFields(table: Table): Promise<void> {
+  async syncFields(table: Table) {
     for(const attribute of table.attributes) {
       const { fields } = this.body.tables[table.tableName] || { fields: {} };
       const { defaultValue, fieldName, notNull, [size]: _size, type } = attribute;
@@ -318,9 +322,9 @@ export class TestDB extends DB<TestTransaction> {
     await this.write();
   }
 
-  async syncSequence(): Promise<void> {}
+  async syncSequence() {}
 
-  async syncTable(table: Table): Promise<void> {
+  async syncTable(table: Table) {
     if(this.body.tables[table.tableName]) {
       (() => {
         if(table.parent) {

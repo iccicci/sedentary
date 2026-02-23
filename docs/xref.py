@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Merely copyed from
+# Merely copied from
 # https://github.com/MarkHoeber/sublime_sphinx_guide/blob/master/source/ext/xref.py
 
 from docutils import nodes
@@ -28,11 +28,11 @@ def xref(typ, rawtext, text, lineno, inliner, options={}, content=[]):
     link = xref.links[target]
 
     if brace != -1:
-        pnode = nodes.reference(target, title, refuri=link)
+        pNode = nodes.reference(target, title, refuri=link)
     else:
-        pnode = nodes.reference(target, target, refuri=link)
+        pNode = nodes.reference(target, target, refuri=link)
 
-    return [pnode], []
+    return [pNode], []
 
 
 def get_refs(app):

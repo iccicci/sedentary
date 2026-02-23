@@ -1,0 +1,34 @@
+config_version = "0"
+
+exclude_patterns = ["docs/**"]
+test_patterns = ["packages/**/test/*.ts"]
+
+[[source]]
+name = "default"
+default = true
+
+[smells.file_complexity]
+threshold = 1000
+
+[smells.function_complexity]
+threshold = 80
+
+[smells.nested_control_flow]
+threshold = 6
+
+[smells.return_statements]
+threshold = 20
+
+[smells.similar_code]
+enabled = true
+
+[smells.identical_code]
+enabled = true
+
+[language.javascript.smells.similar_code]
+enabled = true
+threshold = 40
+
+[language.typescript.smells.similar_code]
+enabled = true
+threshold = 40

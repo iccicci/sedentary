@@ -1,5 +1,6 @@
 import { DatabaseError, Pool } from "pg";
 
+// eslint-disable-next-line @typescript-eslint/only-throw-error
 if(! process.env.SPG) throw "Missing SPG!";
 
 export const connection = JSON.parse(process.env.SPG);
@@ -9,15 +10,15 @@ export const packageName = "sedentary-pg" as string;
 export const wrongConnection = { host: "none.no-domain.none" };
 export const wrongConnectionError = "getaddrinfo ENOTFOUND none.no-domain.none";
 
-export async function clean(): Promise<void> {
+export async function clean() {
   const pool = new Pool(connection);
   const client = await pool.connect();
 
-  const drop = async (what: string): Promise<void> => {
+  const drop = async (what: string) => {
     try {
       await client.query(`DROP ${what} CASCADE`);
-    } catch(e) {
-      if(! (e instanceof DatabaseError) || e.code !== "42P01") throw e;
+    } catch(error) {
+      if(! (error instanceof DatabaseError) || error.code !== "42P01") throw error;
     }
   };
 
@@ -564,9 +565,9 @@ export const models = {
     "ALTER TABLE test1 ADD COLUMN b JSON",
     "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
     "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)",
-    'INSERT INTO test1 (a, b) VALUES (23, \'{"a":[1],"v":"test"}\'::jsonb)',
+    `INSERT INTO test1 (a, b) VALUES (23, '{"a":[1],"v":"test"}'::jsonb)`,
     "SELECT *, tableoid FROM test1 WHERE a >= 23",
-    'UPDATE test1 SET b = \'{"a":[1,2],"v":"test"}\'::jsonb WHERE id = 1'
+    `UPDATE test1 SET b = '{"a":[1,2],"v":"test"}'::jsonb WHERE id = 1`
   ],
   types: [
     "CREATE SEQUENCE test1_id_seq",
@@ -584,7 +585,7 @@ export const models = {
     "ALTER TABLE test1 ADD COLUMN g JSON",
     "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
     "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)",
-    "INSERT INTO test1 (a, b, c, d, e, f, g) VALUES (23, 'ok', '1976-01-23 00:00:00+00', '23', 2.3, true, '{\"a\":\"b\"}'::jsonb)",
+    `INSERT INTO test1 (a, b, c, d, e, f, g) VALUES (23, 'ok', '1976-01-23 00:00:00+00', '23', 2.3, true, '{"a":"b"}'::jsonb)`,
     "SELECT *, tableoid FROM test1 WHERE d = '23'"
   ]
 };
@@ -651,6 +652,26 @@ export const transactions = {
     "COMMIT",
     "SELECT *, tableoid FROM test2 WHERE id > 0 ORDER BY id"
   ],
+  load: [
+    "CREATE SEQUENCE test3_id_seq",
+    "CREATE TABLE test3 ()",
+    "ALTER TABLE test3 ADD COLUMN id INTEGER",
+    "ALTER TABLE test3 ALTER COLUMN id SET DEFAULT nextval('test3_id_seq'::regclass)",
+    "UPDATE test3 SET id = nextval('test3_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test3 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test3 ADD COLUMN a INTEGER",
+    "ALTER TABLE test3 ADD COLUMN b VARCHAR",
+    "ALTER SEQUENCE test3_id_seq OWNED BY test3.id",
+    "ALTER TABLE test3 ADD CONSTRAINT test3_id_unique UNIQUE(id)",
+    "INSERT INTO test3 (a, b) VALUES (1, '1')",
+    "INSERT INTO test3 (a, b) VALUES (2, '2')",
+    "BEGIN",
+    "SELECT *, tableoid FROM test3 ORDER BY id",
+    "UPDATE test3 SET a = 11, b = '11' WHERE id = 1",
+    "DELETE FROM test3 WHERE id = 1",
+    "COMMIT",
+    "SELECT *, tableoid FROM test3 WHERE id > 0 ORDER BY id"
+  ],
   locks: [
     "CREATE SEQUENCE test1_id_seq",
     "CREATE TABLE test1 ()",
@@ -663,7 +684,7 @@ export const transactions = {
     "ALTER TABLE test1 ADD COLUMN c JSON",
     "ALTER SEQUENCE test1_id_seq OWNED BY test1.id",
     "ALTER TABLE test1 ADD CONSTRAINT test1_id_unique UNIQUE(id)",
-    "INSERT INTO test1 (a, b, c) VALUES (1, '1', '{\"b\":\"test\"}'::jsonb)",
+    `INSERT INTO test1 (a, b, c) VALUES (1, '1', '{"b":"test"}'::jsonb)`,
     "INSERT INTO test1 (a, b) VALUES (2, '2')",
     "BEGIN",
     "BEGIN",

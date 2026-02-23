@@ -1,3 +1,11 @@
+.. _primary key:
+
+primary key
+===========
+
+The *primary key* uniquely identifies each row. By default, Sedentary adds an implicit ``id`` attribute (INT, auto-increment).
+Use :ref:`ModelOptions.primaryKey` to specify a custom primary key, or :ref:`ModelOptions.parent` to inherit it.
+
 .. _ModelOptions:
 
 ModelOptions
@@ -83,7 +91,6 @@ If ``false``, :ref:`Sedentary` does not sync the *table* associated to the :ref:
 ModelOptions.tableName
 ----------------------
 
-- default: ``undefined``
+- default: same as the model ``name``
 
-If not provided, the name of the *table* is tha name of the :ref:`Model` (i.e. the ``name`` argument of the
-:ref:`sedentary.model()<sedentary.model>` call), otherwise it overrides the default *table* name.
+Overrides the name of the *table* at *database* level. By default, the table name equals the model name.

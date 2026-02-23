@@ -5,12 +5,12 @@ Method
 
 .. code-block:: TypeScript
 
-    type Method = () => unknown;
+    type Method = (this: Entry, ...args: any[]) => unknown;
 
-Is a :xref:`Function` which is mounted as **JavaScript** *method* of the :ref:`class Model<Model>`.
+A :xref:`Function` mounted as a **JavaScript** *method* on the :ref:`Model` class. Receives the entry instance as ``this``.
 
 .. warning::
-    Do not use :xref:`Arrow Functions` to not override the **this** argument provided by the scope.
+    Do not use :xref:`Arrow Functions` so that ``this`` correctly refers to the entry instance.
 
 .. _Methods:
 
@@ -21,23 +21,20 @@ Methods
 
     type Methods = { [key: string]: Method };
 
-Specifies the **JavaScript** *methods* of the :ref:`class Model<Model>`. It is an :xref:`Object` where each *key* is
-the name of the *method* and the relative *value* is a :xref:`Function` which is the *body* of the *method*.
+Specifies the **JavaScript** *methods* of the :ref:`class Model<Model>`. It is an :xref:`Object` where each *key* is the
+name of the *method* and the *value* is the *method* implementation.
 
-.. note::
-    Some *methods*, when provided, are called by **Sedentary** at specific events. Please check :ref:`Special methods`
-    for more details.
+.. _special methods:
 
+special methods
+===============
 
+These *methods*, when defined, are called by Sedentary at specific lifecycle events:
 
-.. _ModelOptions.init:
+- **construct()** — called after the entry is created (not for loaded entries). See :ref:`Entries initialization`.
+- **preLoad()** / **postLoad()** — before/after loading from the database
+- **preSave()** / **postSave(savedRecords)** — before/after saving
+- **preRemove()** / **postRemove(deletedRecords)** — before/after removing
+- **preCommit(actions)** / **postCommit(actions)** — before/after a transaction commits
 
-ModelOptions.init
------------------
-
-- default: ``undefined``
-
-If provided, it works as the *constructor* :xref:`Function` does. It will be called when a ``new Model()`` is created.
-
-.. note::
-    **TODO** It is not called for loaded Entries.
+All are optional and have empty default implementations in the base entry class.

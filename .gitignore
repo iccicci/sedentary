@@ -1,4 +1,11 @@
 *.log
+*.tgz
+.npmignore
+coverage
+dist
 docs/build
-docs/__pycache__
 node_modules
+packages/sedentary-pg/test/0*
+packages/sedentary-pg/test/helper.ts
+test.json
+tsconfig.*.json

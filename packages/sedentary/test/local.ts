@@ -6,13 +6,14 @@ export const connection = "test.json";
 
 export const packageName = "sedentary";
 
-export const wrongConnection = "test";
+export const wrongConnection = ".";
 export const wrongConnectionError = "EISDIR: illegal operation on a directory, read";
 
-export async function clean(): Promise<void> {
+export async function clean() {
   try {
     await unlink("test.json");
-  } catch(e) {}
+    // eslint-disable-next-line no-empty
+  } catch(error) {}
 }
 
 export const coverage = {
@@ -433,7 +434,7 @@ export const models = {
     "'test1': Adding field: 'g' 'JSON' ''",
     "'test1': Adding unique constraint on field: 'id'",
     'Save to test1 {"a":23,"b":"ok","c":"1976-01-23T00:00:00.000Z","d":"23n","e":2.3,"f":true,"g":{"a":"b"}}',
-    "Load from test1 where: \"d = '23'\""
+    `Load from test1 where: "d = '23'"`
   ]
 };
 
@@ -484,7 +485,7 @@ export const transactions = {
     'Save to test1 {"a":2,"b":"2"}',
     'Save to test1 {"a":3,"b":"3"}',
     'Cancel from test1 where: ""',
-    "Cancel from test1 where: \"b = '1'\"",
+    `Cancel from test1 where: "b = '1'"`,
     'Load from test1 where: "a <= 10"'
   ],
   commit: [
@@ -502,6 +503,21 @@ export const transactions = {
     "Delete from test2 2",
     'Save to test2 {"a":3,"b":"3"}',
     'Load from test2 where: "id > 0" order by: id'
+  ],
+  load: [
+    "Adding table: 'test3'",
+    "Setting auto increment: 'test3'",
+    "'test3': Adding field: 'id' 'INT' '4'",
+    "'test3': Setting not null for field: 'id'",
+    "'test3': Adding field: 'a' 'INT' '4'",
+    "'test3': Adding field: 'b' 'VARCHAR' ''",
+    "'test3': Adding unique constraint on field: 'id'",
+    'Save to test3 {"a":1,"b":"1"}',
+    'Save to test3 {"a":2,"b":"2"}',
+    'Load from test3 where: "" order by: id',
+    'Save to test3 {"a":11,"b":"11","id":1}',
+    "Delete from test3 1",
+    'Load from test3 where: "id > 0" order by: id'
   ],
   locks:    [],
   rollback: [

@@ -12,6 +12,7 @@ class SedentaryTest extends Sedentary {
 
     this.db = {
       connect: () => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw { code: "test", message: "test" };
       }
     } as unknown as TestDB;
@@ -34,7 +35,7 @@ describe("coverage", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let test: any;
 
-    beforeAll(async () => {
+    beforeAll(() => {
       test = db.model("test", {});
       table = (db as unknown as { db: DB<Transaction> }).db.findTable("test");
       attribute = table.findAttribute("id");
@@ -66,7 +67,8 @@ describe("coverage", () => {
       try {
         db = new SedentaryTest();
         await db.connect();
-      } catch(e) {}
+        // eslint-disable-next-line no-empty
+      } catch(error) {}
     });
 
     it("logs", () => de(db.logs, ["Connecting...", 'Connecting: {"code":"test","message":"test"}']));
@@ -75,7 +77,7 @@ describe("coverage", () => {
   describe("parent's foreign keys", function() {
     helper(coverage.first, async db => {
       const test1 = db.model("test1", {});
-      db.model("test3", { b: db.Int }, { parent: db.model("test2", { a: db.FKey(test1) }) }, { c: () => {} });
+      db.model("test3", { b: db.Int() }, { parent: db.model("test2", { a: db.FKey(test1) }) }, { c: () => {} });
       await db.connect();
     });
   });
@@ -92,13 +94,13 @@ describe("coverage", () => {
       async syncSequence() {}
       async syncTable() {}
 
-      async begin() {
+      begin() {
         // eslint-disable-next-line no-console
-        return new Transaction(console.log);
+        return Promise.resolve(new Transaction(console.log));
       }
 
       cancel() {
-        return async () => 0;
+        return () => Promise.resolve(0);
       }
 
       escape() {
@@ -106,19 +108,19 @@ describe("coverage", () => {
       }
 
       load() {
-        return async () => [];
+        return () => Promise.resolve([]);
       }
 
       remove() {
-        return async () => 0;
+        return () => Promise.resolve(0);
       }
 
       save() {
-        return async () => false as const;
+        return () => Promise.resolve(false as const);
       }
 
-      async dropConstraints() {
-        return [];
+      dropConstraints() {
+        return Promise.resolve([]);
       }
     }
 

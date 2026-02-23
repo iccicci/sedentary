@@ -17,7 +17,7 @@ describe("sync", () => {
 
     describe("CREATE TABLE with primaryKey", function() {
       helper(expected.sync_create_table_pk, true, async db => {
-        db.model("test2", { a: db.Int, b: { type: db.Int, unique: true } }, { primaryKey: "a" });
+        db.model("test2", { a: db.Int(), b: db.Int({ unique: true }) }, { primaryKey: "a" });
         await db.connect();
       });
     });
@@ -39,7 +39,7 @@ describe("sync", () => {
 
       describe("CREATE TABLE change parent", function() {
         helper(expected.sync_create_table_parent_change, true, async db => {
-          const test2 = db.model("test2", { a: db.Int, b: { type: db.Int, unique: true } }, { primaryKey: "a" });
+          const test2 = db.model("test2", { a: db.Int(), b: db.Int({ unique: true }) }, { primaryKey: "a" });
           db.model("test3", {}, { parent: test2 });
           await db.connect();
         });
@@ -63,7 +63,7 @@ describe("sync", () => {
 
     describe("DROP COLUMN", function() {
       helper(expected.sync_drop_column, true, async db => {
-        db.model("test2", { a: db.Int }, { primaryKey: "a" });
+        db.model("test2", { a: db.Int() }, { primaryKey: "a" });
         await db.connect();
       });
     });
@@ -71,7 +71,7 @@ describe("sync", () => {
 
   describe("CREATE TABLE int8id", function() {
     helper(expected.sync_create_table_int8id, async db => {
-      db.model("test1", { a: db.Int, b: db.Int8 }, { int8id: true });
+      db.model("test1", { a: db.Int(), b: db.Int8() }, { int8id: true });
       await db.connect();
     });
   });
@@ -79,12 +79,12 @@ describe("sync", () => {
   describe("field options", function() {
     helper(expected.sync_field_options, async db => {
       db.model("test1", {
-        a: { type: db.Int, unique: true },
-        b: { notNull: true, type: db.Int },
-        c: { defaultValue: 23, type: db.Int(2) },
-        d: { defaultValue: "23", notNull: true, type: db.VarChar },
-        e: { fieldName: "f", type: db.Int },
-        g: { fieldName: "h", type: db.Int() },
+        a: db.Int({ unique: true }),
+        b: db.Int({ notNull: true }),
+        c: db.Int({ defaultValue: 23, size: 2 }),
+        d: db.VarChar({ defaultValue: "23", notNull: true }),
+        e: db.Int({ fieldName: "f" }),
+        g: db.Int({ fieldName: "h" }),
         i: db.Int()
       });
       await db.connect();
@@ -93,12 +93,12 @@ describe("sync", () => {
     describe("change field options", function() {
       helper(expected.sync_field_options_change, true, async db => {
         db.model("test1", {
-          a: { defaultValue: 23, type: db.Int },
-          b: { type: db.Int, unique: true },
-          c: { notNull: true, type: db.Int(2) },
-          d: { defaultValue: 42n, type: db.Int8 },
-          f: { notNull: true, type: db.Int8 },
-          i: { defaultValue: 23, notNull: true, type: db.Int }
+          a: db.Int({ defaultValue: 23 }),
+          b: db.Int({ unique: true }),
+          c: db.Int({ notNull: true, size: 2 }),
+          d: db.Int8({ defaultValue: 42n }),
+          f: db.Int8({ notNull: true }),
+          i: db.Int({ defaultValue: 23, notNull: true })
         });
         await db.connect();
       });
@@ -107,25 +107,25 @@ describe("sync", () => {
 
   describe("indexes 1", function() {
     helper(expected.sync_index_1, async db => {
-      db.model("test1", { a: db.Int, b: db.Int8 }, { indexes: { ia: "a" } });
+      db.model("test1", { a: db.Int(), b: db.Int8() }, { indexes: { ia: "a" } });
       await db.connect();
     });
 
     describe("indexes 2", function() {
       helper(expected.sync_index_2, true, async db => {
-        db.model("test1", { a: db.Int, b: db.Int8 }, { indexes: { ia: ["a"], ib: ["a", "b"] } });
+        db.model("test1", { a: db.Int(), b: db.Int8() }, { indexes: { ia: ["a"], ib: ["a", "b"] } });
         await db.connect();
       });
 
       describe("indexes 3", function() {
         helper(expected.sync_index_3, true, async db => {
-          db.model("test1", { a: db.Int, b: db.Int8 }, { indexes: { ia: { attributes: "a", type: "hash" }, ib: { attributes: ["a", "b"], unique: true } } });
+          db.model("test1", { a: db.Int(), b: db.Int8() }, { indexes: { ia: { attributes: "a", type: "hash" }, ib: { attributes: ["a", "b"], unique: true } } });
           await db.connect();
         });
 
         describe("indexes 4", function() {
           helper(expected.sync_index_4, true, async db => {
-            db.model("test1", { a: db.Int, b: db.Int8 }, { indexes: { ia: { attributes: ["a", "b"] }, ib: { attributes: ["b", "a"], unique: true } } });
+            db.model("test1", { a: db.Int(), b: db.Int8() }, { indexes: { ia: { attributes: ["a", "b"] }, ib: { attributes: ["b", "a"], unique: true } } });
             await db.connect();
           });
         });
@@ -135,15 +135,15 @@ describe("sync", () => {
 
   describe("foreign keys 1", function() {
     helper(expected.sync_foreign_keys_1, async db => {
-      class test1 extends db.model("test1", { a: { type: db.Int, unique: true }, b: { type: db.Int8, unique: true }, c: { fieldName: "d", type: db.VarChar, unique: true } }) {}
+      class test1 extends db.model("test1", { a: db.Int({ unique: true }), b: db.Int8({ unique: true }), c: db.VarChar({ fieldName: "d", unique: true }) }) {}
       db.model("test2", { a: db.FKey(test1), b: db.FKey(test1.a), c: db.FKey(test1.b), d: db.FKey(test1.c) });
       await db.connect();
     });
 
     describe("foreign keys 2", function() {
       helper(expected.sync_foreign_keys_2, true, async db => {
-        class test1 extends db.model("test1", { a: { type: db.Int, unique: true }, b: db.Int8, c: { fieldName: "d", type: db.VarChar } }) {}
-        class test3 extends db.model("test3", { b: { type: db.Int8, unique: true } }) {}
+        class test1 extends db.model("test1", { a: db.Int({ unique: true }), b: db.Int8(), c: db.VarChar({ fieldName: "d" }) }) {}
+        class test3 extends db.model("test3", { b: db.Int8({ unique: true }) }) {}
         db.model("test2", { a: db.FKey(test1.a), b: db.FKey(test1.a), c: db.FKey(test3.b) });
         await db.connect();
       });

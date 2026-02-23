@@ -6,35 +6,30 @@
     "yossarian <sergiybiluk@gmail.com> (https://github.com/captain-yossarian)"
   ],
   "dependencies": {
-    "@types/pg": "^8.11.4",
-    "pg": "^8.11.4",
+    "@types/pg": "^8.16.0",
+    "pg": "^8.18.0",
     "pg-format": "^1.0.4",
-    "sedentary": "0.0.54"
+    "sedentary": "0.1.0"
   },
   "description": "The ORM which never needs to migrate - PostgreSQL",
   "engines": {
-    "node": ">=18.0"
+    "node": ">=20.19"
   },
   "funding": {
     "url": "https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB"
   },
-  "homepage": "https://github.com/iccicci/sedentary/packages/sedentary-pg#readme",
+  "homepage": "https://github.com/iccicci/sedentary/tree/master/packages/sedentary-pg#readme",
   "keywords": [
     "DB",
     "ORM",
     "database",
     "migration",
-    "mysql",
-    "postgresql",
-    "sqlite"
+    "postgresql"
   ],
   "license": "MIT",
   "main": "./dist/cjs/index.js",
   "module": "./dist/es/index.js",
   "name": "sedentary-pg",
-  "optionalDependencies": {
-    "fsevents": "^2.3.3"
-  },
   "readmeFilename": "README.md",
   "repository": {
     "type": "git",
@@ -42,13 +37,9 @@
   },
   "scripts": {
     "build": "make build",
-    "coverage": "jest --coverage --no-cache --runInBand",
     "deploy": "make deploy",
-    "precoverage": "make pretest",
-    "preinstall": "if [ -f Makefile ] ; then make ; fi",
-    "pretest": "make pretest",
-    "test": "jest --no-cache --runInBand"
+    "preinstall": "if [ -f Makefile ] ; then make ; fi"
   },
   "types": "./dist/types/index.d.ts",
-  "version": "0.0.54"
+  "version": "0.1.0"
 }

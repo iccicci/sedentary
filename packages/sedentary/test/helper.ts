@@ -22,7 +22,7 @@ type Test = (db: Sedentary) => Promise<void>;
 export function helper(expected: string[], test: Test): void;
 export function helper(expected: string[], notClean: Test | boolean, test?: Test): void;
 export function helper(expected: string[], notClean: Test | boolean, options?: Test | SedentaryOptions, test?: Test): void;
-export function helper(expected: string[], notClean: Test | boolean, options?: Test | SedentaryOptions, test?: Test): void {
+export function helper(expected: string[], notClean: Test | boolean, options?: Test | SedentaryOptions, test?: Test) {
   let db: Sedentary;
   let j = 0;
   let err: unknown;
@@ -50,36 +50,41 @@ export function helper(expected: string[], notClean: Test | boolean, options?: T
   beforeAll(async function() {
     try {
       if(! notClean) await clean();
-      await (test as Test)((db = new Sedentary(connection, options as SedentaryOptions)));
-    } catch(e) {
-      err = e;
+      await test!((db = new Sedentary(connection, options)));
+    } catch(error) {
+      err = error;
     } finally {
       await db.end();
     }
   });
 
   it("No exceptions", () => {
-    if(err) throw err;
+    if(err) throw err as Error;
   });
 
   if(expected[0]) {
-    for(const i in expected) it(expected[i], () => eq(log(), expected[i]));
+    for(const line of expected) it(line, () => eq(log(), line));
     it("End", () => de(db.logs, [...(j === 3 ? ["Synced"] : []), "Closing connection...", "Connection closed"]));
-  } else it("End", () => de(db.logs, (options as SedentaryOptions).log === null ? [] : logs));
+  } else it("End", () => de(db.logs, options!.log === null ? [] : logs));
 }
 
-export function errorHelper(test: (db: Sedentary) => void): (message: string) => void {
+export function errorHelper(test: (db: Sedentary) => unknown) {
   let err: Error;
 
   beforeAll(async function() {
     try {
-      await test(new Sedentary(connection));
-    } catch(e) {
-      if(e instanceof Error) err = e;
+      const ret = test(new Sedentary(connection));
+
+      if(ret instanceof Promise) await ret;
+    } catch(error) {
+      err = error as Error;
     }
   });
 
   return function(message: string) {
-    it("error", () => eq(err.message, message));
+    it("error", () => {
+      if(! err) throw new Error("No errors thrown");
+      eq(err.message, message);
+    });
   };
 }

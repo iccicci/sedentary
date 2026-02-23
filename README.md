@@ -1,8 +1,8 @@
 # sedentary
 
 [![Build Status][travis-badge]][travis-url]
-[![Code Climate][code-badge]][code-url]
-[![Test Coverage][cover-badge]][code-url]
+[![Code Quality][qlty-badge]][qlty-url]
+[![Test Coverage][cover-badge]][qlty-url]
 
 [![NPM version][npm-badge]][npm-url]
 [![NPM downloads][npm-downloads-badge]][npm-url]
@@ -13,24 +13,24 @@
 [![Dependents][deps-badge]][npm-url]
 [![Donate][donate-badge]][donate-url]
 
-[code-badge]: https://codeclimate.com/github/iccicci/sedentary/badges/gpa.svg
-[code-url]: https://codeclimate.com/github/iccicci/sedentary
-[cover-badge]: https://codeclimate.com/github/iccicci/sedentary/badges/coverage.svg
-[deps-badge]: https://badgen.net/npm/dependents/sedentary?icon=npm&cache=300
+[cover-badge]: https://qlty.sh/gh/iccicci/projects/sedentary/coverage.svg
+[qlty-badge]: https://qlty.sh/gh/iccicci/projects/sedentary/maintainability.svg
+[qlty-url]: https://qlty.sh/gh/iccicci/projects/sedentary
+[deps-badge]: https://img.shields.io/librariesio/dependents/npm/sedentary?logo=npm
 [doc-badge]: https://readthedocs.org/projects/sedentary/badge/?version=latest
 [doc-url]: https://sedentary.readthedocs.io/
-[donate-badge]: https://badgen.net/badge/donate/bitcoin?icon=bitcoin&cache=300
+[donate-badge]: https://img.shields.io/static/v1?label=donate&message=bitcoin&color=blue&logo=bitcoin
 [donate-url]: https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB
 [github-url]: https://github.com/iccicci/sedentary
-[npm-downloads-badge]: https://badgen.net/npm/dw/sedentary?icon=npm&cache=300
-[npm-badge]: https://badgen.net/npm/v/sedentary?color=green&icon=npm&cache=300
+[npm-downloads-badge]: https://img.shields.io/npm/dw/sedentary?logo=npm
+[npm-badge]: https://img.shields.io/npm/v/sedentary?color=green&logo=npm
 [npm-url]: https://www.npmjs.com/package/sedentary
-[stars-badge]: https://badgen.net/github/stars/iccicci/sedentary?icon=github&cache=300
-[travis-badge]: https://badgen.net/travis/iccicci/sedentary?icon=travis&cache=300
+[stars-badge]: https://img.shields.io/github/stars/iccicci/sedentary?logo=github&style=flat&color=green
+[travis-badge]: https://img.shields.io/travis/com/iccicci/sedentary?logo=travis
 [travis-url]: https://app.travis-ci.com/github/iccicci/sedentary
-[types-badge]: https://badgen.net/npm/types/sedentary?color=green&icon=typescript&cache=300
+[types-badge]: https://img.shields.io/static/v1?label=types&message=included&color=green&logo=typescript
 
-# under development
+Monorepo for the Sedentary ORM and its DB engine packages.
 
 # Description
 
@@ -46,19 +46,19 @@ changes to the models (or the database schema). This package tries to solve thes
 # Usage
 
 ```javascript
-import { Sedentary } from "sedentary";
+import { SedentaryPG } from "sedentary-pg";
 
-const db = new Sedentary("file.db");
+const db = new SedentaryPG({ database: "db", user: "user", password: "pass" });
 
-class Items extends db.model("Item", {
-  num: db.INT,
-  str: db.VarChar(30)
+const Items = db.model("Item", {
+  num: db.Int(),
+  str: db.VarChar({ size: 30 })
 });
 
 (async function () {
   await db.connect();
 
-  const item = Items.create();
+  const item = new Items();
 
   item.num = 0;
   item.str = "0";
@@ -71,12 +71,20 @@ class Items extends db.model("Item", {
 })();
 ```
 
-# Installation
+With TypeScript the instance can be typed using `Entry<typeof Model>`:
 
-With [npm](https://www.npmjs.com/package/sedentary):
+```typescript
+import { Entry, SedentaryPG } from "sedentary-pg";
 
-```sh
-$ npm install --save sedentary
+const db = new SedentaryPG({ database: "db", user: "user", password: "pass" });
+
+const Items = db.model("Item", { num: db.Int(), str: db.VarChar({ size: 30 }) });
+type Item = Entry<typeof Items>;
+
+const item: Item = new Items();
+
+item.num = 0;
+item.str = "0";
 ```
 
 # Disclaimer
@@ -85,9 +93,9 @@ $ npm install --save sedentary
 
 A _DB engine dedicated extension_ must be used:
 
-- MySQL: planned
-- PostgreSQL: [sedentary-pg](https://github.com/iccicci/sedentary-pg#readme)
-- SQLite: planned
+- MySQL: in todo, not yet planned
+- PostgreSQL: [sedentary-pg](https://www.npmjs.com/package/sedentary-pg)
+- SQLite: in todo, not yet planned
 
 # Documentation
 
@@ -97,13 +105,13 @@ The full documentation is on [sedentary.readthedocs.io](https://sedentary.readth
 
 Requires:
 
-- Node.js: **v14**
-- TypeScript: **v4.6** (or none if used in a JavaScript project).
+- Node.js: **v20**
+- TypeScript: **v5.7** (or none if used in a JavaScript project).
 
 The package is tested under [all Node.js versions](https://app.travis-ci.com/github/iccicci/sedentary)
 currently supported accordingly to [Node.js Release](https://github.com/nodejs/Release#readme).
 
-To work with the package under Windows, be sure to configure `bash.exe` as your _script-shell_.
+To work with the package under Windows, `bash.exe` can be configured as the _script-shell_.
 
 ```
 > npm config set script-shell bash.exe
@@ -115,9 +123,12 @@ To work with the package under Windows, be sure to configure `bash.exe` as your 
 
 # Bugs
 
-Do not hesitate to report any bug or inconsistency [@github](https://github.com/iccicci/sedentary/issues).
+Bugs and inconsistencies can be reported [@github](https://github.com/iccicci/sedentary/issues).
 
 # Donating
 
-If you find useful this package, please consider the opportunity to donate some satoshis to this bitcoin address:
+Satoshis can be donated to this bitcoin address if the package is found useful:
+
+<!-- cSpell: disable -->
+
 **1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB**

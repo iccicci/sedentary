@@ -17,6 +17,7 @@
   },
   "include": [
     "*.ts",
-    "test/*.ts"
+    "test/*.ts",
+    "../../vitest-env.d.ts"
   ]
 }

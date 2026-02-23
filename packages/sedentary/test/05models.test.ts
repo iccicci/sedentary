@@ -5,7 +5,7 @@ import { EntryBase } from "..";
 import { helper } from "./helper";
 import { models, packageName } from "./local";
 
-const desc = packageName === "sedentary" ? xdescribe : describe;
+const desc = packageName === "sedentary" ? describe.skip : describe;
 
 describe("models", () => {
   describe("base models", function() {
@@ -29,7 +29,7 @@ describe("models", () => {
     let saveD = true;
 
     helper(models.base, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: { defaultValue: "test", type: db.VarChar }, c: db.None<number>() });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar({ defaultValue: "test" }), c: db.None<number>() });
       dbAl = new test1({ a: 23, b: "ok", id: 1 });
       dbAs = new test1({ a: 23, b: "ok", c: 42, id: 1 });
       dbB = new test1({ a: null, b: "test", id: 2 });
@@ -70,7 +70,7 @@ describe("models", () => {
 
   describe("with JSON field", function() {
     helper(models.json, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.JSON<{ a: number[]; v: string }>() });
+      const test1 = db.model("test1", { a: db.Int(), b: db.JSON<{ a: number[]; v: string }>() });
       await db.connect();
       const a = new test1({ a: 23, b: { a: [1], v: "test" } });
       await a.save();
@@ -90,7 +90,7 @@ describe("models", () => {
     helper(models.inheritance, async db => {
       const test1 = db.model(
         "test1",
-        { a: db.Int, b: { defaultValue: "test", type: db.VarChar } },
+        { a: db.Int(), b: db.VarChar({ defaultValue: "test" }) },
         {},
         {
           construct: function() {
@@ -113,7 +113,7 @@ describe("models", () => {
             log(`test1.preRemove ${this.id}`);
           },
           preSave: function() {
-            log(`test1.preSave${this.id ? " " + this.id : ""}`);
+            log(`test1.preSave${this.id ? ` ${this.id}` : ""}`);
           },
           reset: function() {
             log(`test1.reset ${this.id}`);
@@ -124,7 +124,7 @@ describe("models", () => {
 
       const test2 = db.model(
         "test2",
-        { c: { defaultValue: 23, type: db.Int }, d: db.DateTime },
+        { c: db.Int({ defaultValue: 23 }), d: db.DateTime() },
         { parent: test1 },
         {
           construct: function() {
@@ -155,7 +155,7 @@ describe("models", () => {
 
       const test3 = db.model(
         "test3",
-        { e: db.Int, f: db.VarChar },
+        { e: db.Int(), f: db.VarChar() },
         { parent: test2 },
         {
           construct: function() {
@@ -183,7 +183,7 @@ describe("models", () => {
           },
           preSave: function() {
             test1.prototype.preSave.call(this);
-            log(`test3.preSave${this.id ? " " + this.id : ""}`);
+            log(`test3.preSave${this.id ? ` ${this.id}` : ""}`);
           },
           reset: function() {
             test1.prototype.reset.call(this);
@@ -313,7 +313,7 @@ describe("models", () => {
     let b: EntryBase;
 
     helper(models.types, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.DateTime, d: db.Int8, e: db.Number, f: db.Boolean, g: db.JSON });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar(), c: db.DateTime(), d: db.Int8(), e: db.Number(), f: db.Boolean(), g: db.JSON() });
       await db.connect();
       a = new test1({ a: 23, b: "ok", c: new Date("1976-01-23"), d: 23n, e: 2.3, f: true, g: { a: "b" } });
       await a.save();

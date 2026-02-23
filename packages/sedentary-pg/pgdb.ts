@@ -1,3 +1,6 @@
+// cSpell:ignore adbin adnum adrelid adsrc amname attinhcount attisdropped attislocal attname attnotnull attnum attrdef attrelid atttypid atttypmod confdeltype confdeltype
+// cSpell:ignore confupdtype conindid conkey conname conrelid contype currval indexrelid indisunique indrelid inhparent inhrelid relam relname timestamptz typname
+
 import { DatabaseError, Pool, PoolClient, PoolConfig, QueryResult, types as PGtypes } from "pg";
 import format from "pg-format";
 import { Attribute, base, DB, deepCopy, deepDiff, EntryBase, ForeignKeyActions, Index, loaded, size, Table, Transaction, transaction } from "sedentary";
@@ -59,7 +62,7 @@ export class PGDB extends DB<TransactionPG> {
     this.pool = new Pool(connection);
   }
 
-  async connect(): Promise<void> {
+  async connect() {
     this._client = await this.pool.connect();
 
     const res = await this._client.query("SELECT version()");
@@ -67,12 +70,12 @@ export class PGDB extends DB<TransactionPG> {
     this.version = parseInt(res.rows[0].version.split(" ")[1].split(".")[0], 10);
   }
 
-  async end(): Promise<void> {
+  async end() {
     if(! this.released) this._client.release();
     await this.pool.end();
   }
 
-  defaultNeq(src: string, value: unknown): boolean {
+  defaultNeq(src: string, value: unknown) {
     if(src === value) return false;
 
     return src.split("::")[0] !== value;
@@ -109,7 +112,7 @@ export class PGDB extends DB<TransactionPG> {
     return await this.pool.connect();
   }
 
-  escape(value: unknown): string {
+  escape(value: unknown) {
     if(value === null || value === undefined) throw new Error("SedentaryPG: Can't escape null nor undefined values; use the 'IS NULL' operator instead");
 
     if(typeof value === "boolean" || typeof value === "number") return value.toString();
@@ -127,7 +130,7 @@ export class PGDB extends DB<TransactionPG> {
   load(
     tableName: string,
     attributes: Record<string, string>,
-    pk: Attribute<unknown, unknown>,
+    pk: Attribute<unknown, boolean, unknown>,
     model: new (from: "load") => EntryBase,
     table: Table
   ): (where: string, order?: string | string[], limit?: number, tx?: Transaction) => Promise<EntryBase[]> {
@@ -141,12 +144,11 @@ export class PGDB extends DB<TransactionPG> {
 
       try {
         const forUpdate = lock ? " FOR UPDATE" : "";
-        const orderBy =
-          order && order.length
-            ? ` ORDER BY ${(typeof order === "string" ? [order] : order)
-              .map(_ => (_.startsWith("-") ? `${table.findAttribute(_.substring(1)).fieldName} DESC` : table.findAttribute(_).fieldName))
-              .join(",")}`
-            : "";
+        const orderBy = order?.length
+          ? ` ORDER BY ${(typeof order === "string" ? [order] : order)
+            .map(_ => (_.startsWith("-") ? `${table.findAttribute(_.substring(1)).fieldName} DESC` : table.findAttribute(_).fieldName))
+            .join(",")}`
+          : "";
         const limitTo = typeof limit === "number" ? ` LIMIT ${limit}` : "";
         const query = `SELECT *, tableoid FROM ${tableName}${where ? ` WHERE ${where}` : ""}${orderBy}${limitTo}${forUpdate}`;
 
@@ -182,7 +184,7 @@ export class PGDB extends DB<TransactionPG> {
     };
   }
 
-  remove(tableName: string, pk: Attribute<unknown, unknown>): (this: Record<string, unknown> & { [transaction]?: TransactionPG }) => Promise<number> {
+  remove(tableName: string, pk: Attribute<unknown, boolean, unknown>): (this: Record<string, unknown> & { [transaction]?: TransactionPG }) => Promise<number> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const pkAttrName = pk.attributeName;
@@ -208,7 +210,7 @@ export class PGDB extends DB<TransactionPG> {
   save(
     tableName: string,
     attr2field: Record<string, string>,
-    pk: Attribute<unknown, unknown>
+    pk: Attribute<unknown, boolean, unknown>
   ): (this: Record<string, unknown> & { [loaded]?: Record<string, unknown>; [transaction]?: TransactionPG }) => Promise<number | false> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -218,14 +220,14 @@ export class PGDB extends DB<TransactionPG> {
     return async function() {
       const client = this[transaction] ? (this[transaction] as unknown as { _client: PoolClient })._client : await self.pool.connect();
       let changed = false;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let result: QueryResult<any> | null = null;
+
+      let result: QueryResult | null = null;
 
       const save = async (query: string) => {
         self.log(query);
 
         changed = true;
-        result = await client.query(query + " RETURNING *");
+        result = await client.query(`${query} RETURNING *`);
         self.fill(attr2field, result.rows[0], this);
       };
 
@@ -265,7 +267,7 @@ export class PGDB extends DB<TransactionPG> {
     };
   }
 
-  async dropConstraints(table: Table): Promise<number[]> {
+  async dropConstraints(table: Table) {
     const indexes: number[] = [];
     const res = await this._client.query("SELECT confdeltype, confupdtype, conindid, conname, contype FROM pg_constraint WHERE conrelid = $1 ORDER BY conname", [table.oid!]);
 
@@ -292,24 +294,24 @@ export class PGDB extends DB<TransactionPG> {
     return indexes;
   }
 
-  async dropField(tableName: string, fieldName: string): Promise<void> {
+  async dropField(tableName: string, fieldName: string) {
     const statement = `ALTER TABLE ${tableName} DROP COLUMN ${fieldName}`;
 
     this.syncLog(statement);
     if(this.sync) await this._client.query(statement);
   }
 
-  async dropFields(table: Table): Promise<void> {
+  async dropFields(table: Table) {
     const res = await this._client.query("SELECT attname FROM pg_attribute WHERE attrelid = $1 AND attnum > 0 AND attisdropped = false AND attinhcount = 0", [table.oid!]);
 
-    for(const i in res.rows) {
-      const field = table.findField(res.rows[i].attname);
+    for(const row of res.rows) {
+      const field = table.findField(row.attname);
 
-      if(! field || ! field[base]) await this.dropField(table.tableName, res.rows[i].attname);
+      if(! field?.[base]) await this.dropField(table.tableName, row.attname);
     }
   }
 
-  async dropIndexes(table: Table, constraintIndexes: number[]): Promise<void> {
+  async dropIndexes(table: Table, constraintIndexes: number[]) {
     const { indexes, oid } = table;
     const iObject: { [key: string]: Index } = {};
     const res = await this._client.query(
@@ -344,7 +346,7 @@ export class PGDB extends DB<TransactionPG> {
     }
   }
 
-  async syncConstraints(table: Table): Promise<void> {
+  async syncConstraints(table: Table) {
     for(const constraint of table.constraints) {
       const { attribute, constraintName, type } = constraint;
       const res = await this._client.query("SELECT attname FROM pg_attribute, pg_constraint WHERE attrelid = $1 AND conrelid = $1 AND attnum = conkey[1] AND attname = $2", [
@@ -376,20 +378,18 @@ export class PGDB extends DB<TransactionPG> {
     }
   }
 
-  async syncDataBase(): Promise<void> {
+  async syncDataBase() {
     try {
       await super.syncDataBase();
 
       for(const table of this.tables) this.oidLoad[table.oid || 0] = (ids: unknown[]) => table.model.load({ [table.pk.attributeName]: ["IN", ids] });
-    } catch(e) {
-      throw e;
     } finally {
       this.released = true;
       this._client.release();
     }
   }
 
-  fieldType(attribute: Attribute<unknown, unknown>): string[] {
+  fieldType(attribute: Attribute<unknown, boolean, unknown>) {
     const { [size]: _size, type } = attribute;
     let ret;
 
@@ -413,13 +413,13 @@ export class PGDB extends DB<TransactionPG> {
     case "NUMBER":
       return ["NUMERIC", "NUMERIC"];
     case "VARCHAR":
-      return ["VARCHAR", "VARCHAR" + (_size ? `(${_size})` : "")];
+      return ["VARCHAR", `VARCHAR${_size ? `(${_size})` : ""}`];
     }
 
     throw new Error(`Unknown type: '${type}', '${_size}'`);
   }
 
-  async syncFields(table: Table): Promise<void> {
+  async syncFields(table: Table) {
     const { attributes, autoIncrement, oid, tableName } = table;
 
     for(const attribute of attributes) {
@@ -429,6 +429,7 @@ export class PGDB extends DB<TransactionPG> {
       const where = "attrelid = $1 AND attnum > 0 AND atttypid = pg_type.oid AND attislocal = 't' AND attname = $2";
 
       const res = await this._client.query(
+        // eslint-disable-next-line max-len
         `SELECT attnotnull, atttypmod, typname, pg_get_expr(pg_attrdef.adbin, pg_attrdef.adrelid) AS adsrc FROM pg_type, pg_attribute LEFT JOIN pg_attrdef ON adrelid = attrelid AND adnum = attnum WHERE ${where}`,
         [oid!, fieldName as unknown as number]
       );
@@ -467,7 +468,7 @@ export class PGDB extends DB<TransactionPG> {
             statement = `UPDATE ${tableName} SET ${fieldName} = ${defaultValue} WHERE ${fieldName} IS NULL`;
 
             this.syncLog(statement);
-            if(this.sync) this._client.query(statement);
+            if(this.sync) await this._client.query(statement);
           }
         }
 
@@ -488,9 +489,9 @@ export class PGDB extends DB<TransactionPG> {
             await addField();
             await setDefault(false);
           } else {
-            if(adsrc) dropDefault();
+            if(adsrc) await dropDefault();
 
-            const using = needUsing.some(([type, name]) => attribute.type === type && typname === name) ? " USING " + fieldName + "::" + type : "";
+            const using = needUsing.some(([type, name]) => attribute.type === type && typname === name) ? ` USING ${fieldName}::${type}` : "";
             const statement = `ALTER TABLE ${tableName} ALTER COLUMN ${fieldName} TYPE ${type}${using}`;
 
             this.syncLog(statement);
@@ -498,14 +499,14 @@ export class PGDB extends DB<TransactionPG> {
             await setDefault(attnotnull);
           }
         } else if(defaultValue === undefined) {
-          if(adsrc) dropDefault();
+          if(adsrc) await dropDefault();
           await setNotNull(attnotnull);
         } else if(! adsrc || this.defaultNeq(adsrc, defaultValue)) await setDefault(attnotnull);
       }
     }
   }
 
-  async syncIndexes(table: Table): Promise<void> {
+  async syncIndexes(table: Table) {
     const { indexes, tableName } = table;
 
     for(const index of indexes) {
@@ -520,7 +521,7 @@ export class PGDB extends DB<TransactionPG> {
     }
   }
 
-  async syncSequence(table: Table): Promise<void> {
+  async syncSequence(table: Table) {
     if(! table.autoIncrementOwn) return;
 
     const statement = `ALTER SEQUENCE ${table.tableName}_id_seq OWNED BY ${table.tableName}.id`;
@@ -529,14 +530,14 @@ export class PGDB extends DB<TransactionPG> {
     if(this.sync) await this._client.query(statement);
   }
 
-  async syncTable(table: Table): Promise<void> {
+  async syncTable(table: Table) {
     if(table.autoIncrement) {
       await (async () => {
         try {
           await this._client.query(`SELECT currval('${table.tableName}_id_seq')`);
-        } catch(e) {
-          if(e instanceof DatabaseError && e.code === "55000") return;
-          if(e instanceof DatabaseError && e.code === "42P01") {
+        } catch(error) {
+          if(error instanceof DatabaseError && error.code === "55000") return;
+          if(error instanceof DatabaseError && error.code === "42P01") {
             const statement = `CREATE SEQUENCE ${table.tableName}_id_seq`;
 
             this.syncLog(statement);
@@ -546,7 +547,7 @@ export class PGDB extends DB<TransactionPG> {
             return;
           }
 
-          throw e;
+          throw error;
         }
       })();
     }
@@ -599,8 +600,8 @@ export class TransactionPG extends Transaction {
     this._client = client;
   }
 
-  public async client() {
-    return this._client;
+  public client() {
+    return Promise.resolve(this._client);
   }
 
   private release() {
@@ -614,14 +615,14 @@ export class TransactionPG extends Transaction {
       this.log("COMMIT");
       await this._client.query("COMMIT");
       this.release();
-      super.commit();
+      await super.commit();
     }
   }
 
   public async rollback() {
     try {
       if(! this.released) {
-        super.rollback();
+        await super.rollback();
         this.log("ROLLBACK");
         await this._client.query("ROLLBACK");
       }

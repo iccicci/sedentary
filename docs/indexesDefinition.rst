@@ -38,7 +38,7 @@ IndexOptions
 
 Specifies the *options* of an *index*.
 
-.. IndexOptions.attributes:
+.. _IndexOptions.attributes:
 
 IndexOptions.attributes
 -----------------------
@@ -47,7 +47,7 @@ IndexOptions.attributes
 
 Defines the *attribures* of the *index*. See :ref:`IndexAttributes` for details.
 
-.. IndexOptions.type:
+.. _IndexOptions.type:
 
 IndexOptions.type
 -----------------
@@ -55,6 +55,8 @@ IndexOptions.type
 - default: ``"btree"``
 
 Defines the *type* of the *index*. Accepted values are: ``"btree"`` and ``"hash"``.
+
+.. _IndexOptions.unique:
 
 IndexOptions.unique
 -------------------
@@ -72,5 +74,5 @@ IndexesDefinition
 
     type IndexesDefinition = { [key: string]: IndexDefinition };
 
-Specifies the *indexes* on the *table* ralitve to the :ref:`Model`. It is an :xref:`Object` where each *key* is the
+Specifies the *indexes* on the *table* relative to the :ref:`Model`. It is an :xref:`Object` where each *key* is the
 name of the *index* and the relative :ref:`IndexDefinition` *value* is the definition of the *index*.

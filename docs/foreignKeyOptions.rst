@@ -1,3 +1,11 @@
+.. _foreign keys:
+
+Foreign keys
+============
+
+A *foreign key* links an attribute to another model's attribute (usually the :ref:`primary key`). Use
+:ref:`sedentary.FKey<sedentary.FKey>` and pass the target attribute (which must be :ref:`unique<AttributeOptions.unique>`).
+
 .. _ForeignKeyActions:
 
 ForeignKeyActions

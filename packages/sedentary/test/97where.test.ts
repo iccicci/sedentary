@@ -12,7 +12,7 @@ describe("where", () => {
 
   describe("where conditions", function() {
     helper(wheres.where, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar, c: db.Int, d: db.Int, e: db.Int });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar(), c: db.Int(), d: db.Int(), e: db.Int() });
       await db.connect();
       await test1.load(["OR", ["AND", "fixed", ["OR", ["NOT", { a: 23, b: ["IS NULL"], c: ["NOT"], d: [">", 23], e: ["IN", [23, 42]] }]]], "fixed"]);
     });
@@ -20,7 +20,7 @@ describe("where", () => {
 
   describe("order by", function() {
     helper(wheres.order, async db => {
-      const test1 = db.model("test1", { a: db.Int, b: db.VarChar });
+      const test1 = db.model("test1", { a: db.Int(), b: db.VarChar() });
       await db.connect();
       await test1.load({}, ["a", "-b"]);
     });

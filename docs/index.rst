@@ -9,5 +9,7 @@ The ORM which **never** needs to migrate.
    :caption: Documentation
 
    introduction
-   api
+   quickstart
+   documentation
+   apiReference
    development
