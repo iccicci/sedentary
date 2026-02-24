@@ -192,6 +192,8 @@ const T12 = db.model(
       expectType<t4_1>(this.m);
       expectType<t4_2>(this.n);
       expectType<t12_1>(this.o);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore TS2526
       expectAssignable<Partial<typeof this>>({ a: 0, b: "", c: 0, d: "", z: new Date() });
       expectType<number | null>(this.a);
       expectType<string | null>(this.b);

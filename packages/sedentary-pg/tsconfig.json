@@ -4,6 +4,7 @@
     "composite": true,
     "declaration": true,
     "esModuleInterop": true,
+    "module": "ESNext",
     "moduleResolution": "Node",
     "noImplicitAny": true,
     "noImplicitReturns": true,

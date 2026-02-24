@@ -9,12 +9,15 @@
     "@types/pg": "^8.16.0",
     "pg": "^8.18.0",
     "pg-format": "^1.0.4",
-    "sedentary": "0.1.0"
+    "sedentary": "0.1.1"
   },
   "description": "The ORM which never needs to migrate - PostgreSQL",
   "engines": {
     "node": ">=20.19"
   },
+  "files": [
+    "dist"
+  ],
   "funding": {
     "url": "https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB"
   },
@@ -41,5 +44,5 @@
     "preinstall": "if [ -f Makefile ] ; then make ; fi"
   },
   "types": "./dist/types/index.d.ts",
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

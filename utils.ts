@@ -22,31 +22,17 @@ async function read_package_json(path: string) {
 
 async function package_json() {
   const { author, bugs, contributors, description, engines, funding, keywords, license, optionalDependencies, readmeFilename, repository, version } = await read_package_json("../../package.json");
+  const files = ["dist"];
   const packages = {
     core:      {},
     sedentary: {
       description,
-      tsd: {
-        compilerOptions: {
-          alwaysStrict:                 true,
-          composite:                    false,
-          esModuleInterop:              true,
-          moduleResolution:             "Node",
-          noImplicitAny:                true,
-          noImplicitReturns:            true,
-          noImplicitThis:               true,
-          strict:                       true,
-          strictBindCallApply:          true,
-          strictFunctionTypes:          true,
-          strictNullChecks:             true,
-          strictPropertyInitialization: true,
-          target:                       "ESNext"
-        }
-      }
+      files
     },
     "sedentary-pg": {
       dependencies: { "@types/pg": "^8.16.0", pg: "^8.18.0", "pg-format": "^1.0.4", sedentary: version },
-      description:  `${description} - PostgreSQL`
+      description:  `${description} - PostgreSQL`,
+      files
     }
   };
   const res: Record<string, unknown> = {
@@ -77,18 +63,6 @@ async function package_json() {
   await writeFile(file, `${JSON.stringify(sort(res), null, 2)}\n`);
 }
 
-const npmIgnore = [".*", "*.tgz", "*.ts", "!*.d.ts", "*.tsbuildinfo", "Makefile", "coverage", "node_modules", "test", "tsconfig.json", "tsconfig.*.json"];
-
-function ignore() {
-  if(file === ".npmignore") {
-    if(PACKAGE === "core") throw new Error(".npmignore is generated only in the packages");
-
-    return writeFile(file, `${npmIgnore.join("\n")}\n`);
-  }
-
-  throw new Error(`Unknown ignore file: ${file}`);
-}
-
 async function version() {
   const { version } = await read_package_json("package.json");
 
@@ -97,7 +71,7 @@ async function version() {
 
 const specificOptions = {
   "tsconfig.cjs.json":   { composite: false, declaration: false, module: "CommonJS", outDir: "dist/cjs", target: "ES2020" },
-  "tsconfig.es.json":    { composite: false, declaration: false, module: "ESNext", outDir: "dist/es" },
+  "tsconfig.es.json":    { composite: false, declaration: false, outDir: "dist/es" },
   "tsconfig.json":       {},
   "tsconfig.types.json": { emitDeclarationOnly: true, outDir: "dist/types" }
 };
@@ -106,6 +80,7 @@ const compilerOptions = {
   composite:                    true,
   declaration:                  true,
   esModuleInterop:              true,
+  module:                       "ESNext",
   moduleResolution:             "Node",
   noImplicitAny:                true,
   noImplicitReturns:            true,
@@ -127,8 +102,6 @@ function tsconfig_json() {
 
 (() => {
   switch(file) {
-  case ".npmignore":
-    return ignore();
   case "deploy":
     return version();
   case "package.json":

@@ -1,0 +1,24 @@
+{
+  "name": "sedentary-types-test",
+  "files": [
+    "../index.ts",
+    "../db.ts"
+  ],
+  "tsd": {
+    "compilerOptions": {
+      "alwaysStrict": true,
+      "composite": false,
+      "esModuleInterop": true,
+      "moduleResolution": "Node",
+      "noImplicitAny": true,
+      "noImplicitReturns": true,
+      "noImplicitThis": true,
+      "strict": true,
+      "strictBindCallApply": true,
+      "strictFunctionTypes": true,
+      "strictNullChecks": true,
+      "strictPropertyInitialization": true,
+      "target": "ESNext"
+    }
+  }
+}

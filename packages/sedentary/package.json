@@ -9,6 +9,9 @@
   "engines": {
     "node": ">=20.19"
   },
+  "files": [
+    "dist"
+  ],
   "funding": {
     "url": "https://blockchain.info/address/1Md9WFAHrXTb3yPBwQWmUfv2RmzrtbHioB"
   },
@@ -34,23 +37,6 @@
     "deploy": "make deploy",
     "preinstall": "if [ -f Makefile ] ; then make ; fi"
   },
-  "tsd": {
-    "compilerOptions": {
-      "alwaysStrict": true,
-      "composite": false,
-      "esModuleInterop": true,
-      "moduleResolution": "Node",
-      "noImplicitAny": true,
-      "noImplicitReturns": true,
-      "noImplicitThis": true,
-      "strict": true,
-      "strictBindCallApply": true,
-      "strictFunctionTypes": true,
-      "strictNullChecks": true,
-      "strictPropertyInitialization": true,
-      "target": "ESNext"
-    }
-  },
   "types": "./dist/types/index.d.ts",
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

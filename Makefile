@@ -1,19 +1,23 @@
-SHELL   := PACKAGE=core $(shell which bash)
+SHELL := PACKAGE=core $(shell which bash)
 
 PACKAGES := $(shell ls packages)
 UTILS    := utils.ts
+TESTS    := helper.ts $(notdir $(wildcard packages/sedentary/test/0*.test.ts))
 
-.PHONY: all
-all: $(patsubst %,packages/%/package.json, $(PACKAGES)) tsconfig.json
-	@:
+DB_PACKAGES := $(filter-out sedentary,$(PACKAGES))
+
+.PHONY: all doc pretest
+
+all: $(patsubst %,packages/%/Makefile, $(DB_PACKAGES)) $(patsubst %,packages/%/package.json, $(PACKAGES)) tsconfig.json
 
 packages/sedentary-pg/Makefile: packages/sedentary/Makefile
 	cp $< $@
 
-packages/sedentary-pg/package.json: packages/sedentary-pg/Makefile
-
-%/package.json: $(UTILS) packages/sedentary/Makefile package.json
+%/package.json: $(UTILS) %/Makefile package.json
 	make -C $*
+
+build: $(UTILS) all Makefile
+	yarn workspaces run build
 
 deploy: $(UTILS) all Makefile
 	yarn workspaces run deploy
@@ -23,15 +27,11 @@ deploy: $(UTILS) all Makefile
 doc:
 	$(MAKE) -C docs build
 
-SEDENTARY_TEST_FILES := helper.ts $(notdir $(wildcard packages/sedentary/test/0*.test.ts))
-
-.PHONY: pretest
-pretest: $(addprefix packages/sedentary-pg/test/,$(SEDENTARY_TEST_FILES))
-	@:
+pretest: $(addprefix packages/sedentary-pg/test/,$(TESTS))
 	rm -rf packages/*/dist
 
 packages/sedentary-pg/test/%.ts: packages/sedentary/test/%.ts
 	cp $< $@
 
 tsconfig.json: utils.ts Makefile
-	-npx tsx $< $@
+	npx tsx $< $@

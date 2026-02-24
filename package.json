@@ -64,7 +64,7 @@
     "test": "vitest run"
   },
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "workspaces": [
     "packages/sedentary",
     "packages/sedentary-pg"

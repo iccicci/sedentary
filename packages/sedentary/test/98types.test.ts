@@ -13,7 +13,7 @@ desc("types", () => {
   beforeAll(async function() {
     const dir = path.dirname(fileURLToPath(import.meta.url));
 
-    diagnostics = await tsd({ cwd: path.join(dir, ".."), testFiles: ["test/types.ts"], typingsFile: "index.ts" });
+    diagnostics = await tsd({ cwd: dir, testFiles: ["types.ts"], typingsFile: "../index.ts" });
   }, 60000);
 
   it("types", () => {

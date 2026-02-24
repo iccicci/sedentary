@@ -1,11 +1,11 @@
 *.log
 *.tgz
-.npmignore
 coverage
 dist
 docs/build
 node_modules
-packages/sedentary-pg/test/0*
-packages/sedentary-pg/test/helper.ts
+packages/sedentary-*/Makefile
+packages/sedentary-*/test/0*
+packages/sedentary-*/test/helper.ts
 test.json
 tsconfig.*.json
