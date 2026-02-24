@@ -14,7 +14,7 @@ build: all $(TSCONFIGS)
 	tsc -p tsconfig.types.json
 
 deploy: build
-	npm_config_registry=registry.npmjs.org npm publish --no-browser
+	npm_config_registry=https://registry.npmjs.org npm publish --no-browser
 
 .npmignore: $(UTILS) Makefile
 	-npx tsx $< $@
