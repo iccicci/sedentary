@@ -38,5 +38,5 @@
     "preinstall": "if [ -f Makefile ] ; then make ; fi"
   },
   "types": "./dist/types/index.d.ts",
-  "version": "0.1.1"
+  "version": "0.1.2"
 }

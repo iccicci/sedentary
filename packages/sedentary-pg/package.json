@@ -9,7 +9,7 @@
     "@types/pg": "^8.16.0",
     "pg": "^8.18.0",
     "pg-format": "^1.0.4",
-    "sedentary": "0.1.1"
+    "sedentary": "0.1.2"
   },
   "description": "The ORM which never needs to migrate - PostgreSQL",
   "engines": {
@@ -44,5 +44,5 @@
     "preinstall": "if [ -f Makefile ] ; then make ; fi"
   },
   "types": "./dist/types/index.d.ts",
-  "version": "0.1.1"
+  "version": "0.1.2"
 }

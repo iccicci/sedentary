@@ -13,7 +13,7 @@ build: all $(TSCONFIGS) Makefile
 	tsc -p tsconfig.cjs.json
 	tsc -p tsconfig.es.json
 	tsc -p tsconfig.types.json
-	echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json
+	echo '{"type":"commonjs"}' > dist/cjs/package.json
 	rm dist/types/tsconfig.types.tsbuildinfo
 
 deploy: build
