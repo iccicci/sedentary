@@ -94,14 +94,16 @@ export class PGDB extends DB<TransactionPG> {
     return async (where: string, tx?: Transaction) => {
       const client = tx ? (tx as unknown as { _client: PoolClient })._client : await this.pool.connect();
       let rowCount = 0;
+      let withError = true;
 
       try {
         const query = `DELETE FROM ${tableName}${where ? ` WHERE ${where}` : ""}`;
 
         this.log(query);
         ({ rowCount } = (await client.query(query)) as { rowCount: number });
+        withError = false;
       } finally {
-        if(! tx) client.release();
+        if(! tx) client.release(withError);
       }
 
       return rowCount;
@@ -141,6 +143,7 @@ export class PGDB extends DB<TransactionPG> {
       const ret: EntryBase[] = [];
       const client = tx ? (tx as unknown as { _client: PoolClient })._client : await this.pool.connect();
       const oidPK: Record<number, [number, unknown][]> = {};
+      let withError = true;
 
       try {
         const forUpdate = lock ? " FOR UPDATE" : "";
@@ -164,6 +167,7 @@ export class PGDB extends DB<TransactionPG> {
             if(tx) tx.addEntry(entry);
             ret.push(entry);
             entry.postLoad();
+            withError = false;
           } else {
             if(! oidPK[row.tableoid]) oidPK[row.tableoid] = [];
             oidPK[row.tableoid].push([ret.length, row[pkFldName]]);
@@ -177,7 +181,7 @@ export class PGDB extends DB<TransactionPG> {
           for(const entry of res) for(const [id, pk] of oidPK[oid]) if(pk === (entry as unknown as Record<string, unknown>)[pkFldName]) ret[id] = entry;
         }
       } finally {
-        if(! tx) client.release();
+        if(! tx) client.release(withError);
       }
 
       return ret;
@@ -193,14 +197,16 @@ export class PGDB extends DB<TransactionPG> {
     return async function() {
       const client = this[transaction] ? (this[transaction] as unknown as { _client: PoolClient })._client : await self.pool.connect();
       let removed: number;
+      let withError = true;
 
       try {
         const query = `DELETE FROM ${tableName} WHERE ${pkFldName} = ${self.escape(this[pkAttrName])}`;
 
         self.log(query);
         removed = ((await client.query(query)) as { rowCount: number }).rowCount;
+        withError = false;
       } finally {
-        if(! this[transaction]) client.release();
+        if(! this[transaction]) client.release(withError);
       }
 
       return removed;
@@ -220,8 +226,8 @@ export class PGDB extends DB<TransactionPG> {
     return async function() {
       const client = this[transaction] ? (this[transaction] as unknown as { _client: PoolClient })._client : await self.pool.connect();
       let changed = false;
-
       let result: QueryResult | null = null;
+      let withError = true;
 
       const save = async (query: string) => {
         self.log(query);
@@ -259,8 +265,9 @@ export class PGDB extends DB<TransactionPG> {
 
           await save(fields.length ? `INSERT INTO ${tableName} (${fields.join(", ")}) VALUES (${values.join(", ")})` : `INSERT INTO ${tableName} DEFAULT VALUES`);
         }
+        withError = false;
       } finally {
-        if(! this[transaction]) client.release();
+        if(! this[transaction]) client.release(withError);
       }
 
       return changed && result!.rowCount;
@@ -379,13 +386,16 @@ export class PGDB extends DB<TransactionPG> {
   }
 
   async syncDataBase() {
+    let withError = true;
+
     try {
       await super.syncDataBase();
 
       for(const table of this.tables) this.oidLoad[table.oid || 0] = (ids: unknown[]) => table.model.load({ [table.pk.attributeName]: ["IN", ids] });
+      withError = false;
     } finally {
       this.released = true;
-      this._client.release();
+      this._client.release(withError);
     }
   }
 
@@ -604,30 +614,35 @@ export class TransactionPG extends Transaction {
     return Promise.resolve(this._client);
   }
 
-  private release() {
-    this.released = true;
-    this._client.release();
+  private release(error = false) {
+    if(! this.released) {
+      this.released = true;
+      this._client.release(error);
+    }
   }
 
   public async commit() {
-    if(! this.released) {
+    try {
       this.preCommit();
       this.log("COMMIT");
       await this._client.query("COMMIT");
       this.release();
       await super.commit();
+    } catch(error) {
+      this.release(true);
+      throw error;
     }
   }
 
   public async rollback() {
     try {
-      if(! this.released) {
-        await super.rollback();
-        this.log("ROLLBACK");
-        await this._client.query("ROLLBACK");
-      }
-    } finally {
-      if(! this.released) this.release();
+      await super.rollback();
+      this.log("ROLLBACK");
+      await this._client.query("ROLLBACK");
+      this.release();
+    } catch(error) {
+      this.release(true);
+      throw error;
     }
   }
 }

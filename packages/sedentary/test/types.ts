@@ -262,15 +262,15 @@ expectType<EntryBase & { a: Date | null; id: number } & { aLoad: () => Promise<T
 type t13_1 = typeof T13 extends new (from: infer T) => EntryBase ? Exclude<T, undefined> : never;
 expectType<{ a?: Date | null; id?: number }>({} as t13_1);
 
-const T14 = db.model("T14", { a: db.FKey(T6.a) });
+const T14 = db.model("T14", { a: db.FKey(T6.a), b: db.FKey(T12, { defaultValue: 23, notNull: true }) });
 type T14 = Entry<typeof T14>;
 const t14 = new T14();
 expectAssignable<Type<number, true, EntryBase>>(T14);
 expectNotAssignable<Type<string, true, EntryBase>>(T14);
 expectType<T14>(t14);
-expectType<EntryBase & { a: Date | null; id: number } & { aLoad: () => Promise<T6> }>(t14);
+expectType<EntryBase & { a: Date | null; b: number; id: number } & { aLoad: () => Promise<T6>; bLoad: () => Promise<T12> }>(t14);
 type t14_1 = typeof T14 extends new (from: infer T) => EntryBase ? Exclude<T, undefined> : never;
-expectType<{ a?: Date | null; id?: number }>({} as t14_1);
+expectType<{ a?: Date | null; b?: number; id?: number }>({} as t14_1);
 
 type t15_1 = { a: number; b?: string[] };
 const T15 = db.model("T15", { a: db.JSON(), b: db.JSON<t15_1>(), c: db.None<t15_1>(), d: db.JSON<t15_1>({ notNull: true }) });

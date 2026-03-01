@@ -201,8 +201,11 @@ export abstract class DB<T extends Transaction> {
   abstract syncTable(table: Table): Promise<void>;
 }
 
+const cleanProperties = { configurable: true, value: undefined };
+
 export class Transaction {
   private entries: (EntryBase & { [actions]?: TxAction[]; tx?: Transaction })[] = [];
+  private closed = false;
   protected log: (message: string) => void;
 
   constructor(log: (message: string) => void) {
@@ -218,8 +221,8 @@ export class Transaction {
     const { entries } = this;
 
     for(const entry of entries) {
-      Object.defineProperty(entry, actions, { configurable: true, value: undefined });
-      Object.defineProperty(entry, transaction, { configurable: true, value: undefined });
+      Object.defineProperty(entry, actions, cleanProperties);
+      Object.defineProperty(entry, transaction, cleanProperties);
     }
 
     this.entries = [];
@@ -236,12 +239,20 @@ export class Transaction {
   }
 
   protected preCommit() {
+    if(this.closed) throw new Error("Transaction already closed");
+
+    this.closed = true;
+
     const { entries } = this;
 
     for(const entry of entries) if(entry[actions]) entry.preCommit(entry[actions]);
   }
 
   rollback() {
+    if(this.closed) throw new Error("Transaction already closed");
+
+    this.closed = true;
+
     this.clean();
 
     return Promise.resolve();

@@ -9,6 +9,8 @@ export interface AttributeOptions<T, N extends boolean> {
   unique?: boolean;
 }
 
+export type AttributeOptionsFKey<T, N extends boolean> = ForeignKeyOptions & AttributeOptions<T, N>;
+
 export interface AttributeOptionsSize<T, N extends boolean> extends AttributeOptions<T, N> {
   size?: number;
 }
@@ -104,7 +106,10 @@ export interface SedentaryOptions {
   sync?: boolean;
 }
 
-const allowedOption = ["indexes", "int8id", "parent", "primaryKey", "sync", "tableName"];
+const allowedAttributeOptions = ["defaultValue", "fieldName", "notNull", "unique"];
+const allowedAttributeOptionsSize = ["size", ...allowedAttributeOptions];
+const allowedForeignKeyOptions = ["onDelete", "onUpdate", ...allowedAttributeOptions];
+const allowedModelOptions = ["indexes", "int8id", "parent", "primaryKey", "sync", "tableName"];
 const reservedNames = [
   "attr2field",
   "attributeName",
@@ -134,6 +139,7 @@ const reservedNames = [
   "type",
   "unique"
 ];
+const attributesWithSize = new Set(["VarChar", "Int", "Float"]);
 
 /** Model and attribute names: ASCII letters, digits, underscore; cannot start with digit. */
 const reModelAttributeName = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
@@ -187,22 +193,33 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   }
 
   public Boolean<O extends AttributeOptions<boolean, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("Boolean", options);
+
     return new Type({ ...options, [base]: Boolean, type: "BOOLEAN" } as Type<boolean, NotNull<O>, unknown>);
   }
 
   public DateTime<O extends AttributeOptions<Date, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("DateTime", options);
+
     return new Type({ ...options, [base]: Date, type: "DATETIME" } as Type<Date, NotNull<O>, unknown>);
   }
 
-  public FKey<T, E extends EntryBase>(attribute: Attribute<T, boolean, E>, options?: ForeignKeyOptions) {
+  public FKey<T, E extends EntryBase>(attribute: Attribute<T, boolean, E>): Type<T, false, E>;
+  public FKey<T, E extends EntryBase>(attribute: Attribute<T, boolean, E>, options: { notNull: true } & AttributeOptionsFKey<T, boolean>): Type<T, true, E>;
+  public FKey<T, E extends EntryBase>(attribute: Attribute<T, boolean, E>, options: AttributeOptionsFKey<T, boolean>): Type<T, boolean, E>;
+  public FKey<T, E extends EntryBase, O extends AttributeOptionsFKey<T, boolean> | undefined = undefined>(attribute: Attribute<T, boolean, E>, options?: O): Type<T, NotNull<O>, E> {
+    this.checkOptions("FKey", options);
+
     const { attributeName, fieldName, modelName, tableName, type, unique, [base]: _base, [size]: _size } = attribute;
 
     if(! unique) throw new Error(`Sedentary.FKey: '${modelName}' model: '${attributeName}' attribute: is not unique: can't be used as FKey target`);
 
-    return new Type<T, boolean, E>({ [base]: _base, foreignKey: { attributeName, fieldName, options, tableName }, [size]: _size, type });
+    return new Type({ ...options, [base]: _base, foreignKey: { attributeName, fieldName, options, tableName }, [size]: _size, type } as Type<T, NotNull<O>, E>);
   }
 
   public Float<O extends AttributeOptionsSize<number, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("Float", options);
+
     const sizeFloat = "Sedentary.Float: 'size' argument: Wrong value, expected 4 or 8";
     let storageSize: number | undefined;
     let rest: AttributeOptions<number, boolean>;
@@ -215,6 +232,8 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   }
 
   public Int<O extends AttributeOptionsSize<number, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("Int", options);
+
     const sizeInt = "Sedentary.Int: 'size' argument: Wrong value, expected 2 or 4";
     let storageSize: number | undefined;
     let rest: AttributeOptions<number, boolean>;
@@ -227,6 +246,8 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   }
 
   public Int8<O extends AttributeOptions<bigint, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("Int8", options);
+
     return new Type({ ...options, [base]: BigInt, [size]: 8, type: "INT8" } as Type<bigint, NotNull<O>, unknown>);
   }
 
@@ -234,10 +255,14 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   public JSON<T = unknown>(options: { notNull: true } & AttributeOptions<T, boolean>): Type<T, true, unknown>;
   public JSON<T = unknown>(options: AttributeOptions<T, boolean>): Type<T, boolean, unknown>;
   public JSON<T, O extends AttributeOptions<T, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("JSON", options);
+
     return new Type({ ...options, [base]: Object, type: "JSON" } as Type<T, NotNull<O>, unknown>);
   }
 
   public Number<O extends AttributeOptions<number, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("Number", options);
+
     return new Type({ ...options, [base]: Number, type: "NUMBER" } as Type<number, NotNull<O>, unknown>);
   }
 
@@ -245,6 +270,8 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   public None<T = unknown>(options: { notNull: true } & AttributeOptions<unknown, boolean>): Type<T, true, unknown>;
   public None<T = unknown>(options: AttributeOptions<unknown, boolean>): Type<T, boolean, unknown>;
   public None<T = unknown, O extends AttributeOptions<unknown, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("None", options);
+
     return new Type({ ...options, [base]: undefined, type: "NONE" } as Type<T, NotNull<O>, unknown>);
   }
 
@@ -252,6 +279,8 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
   public VarChar<S extends string = string>(options: { notNull: true } & AttributeOptionsSize<S, boolean>): Type<S, true, unknown>;
   public VarChar<S extends string = string>(options: AttributeOptionsSize<S, boolean>): Type<S, boolean, unknown>;
   public VarChar<S extends string = string, O extends AttributeOptionsSize<S, boolean> | undefined = undefined>(options?: O) {
+    this.checkOptions("VarChar", options);
+
     const message = "Sedentary.VarChar: 'size' argument: Wrong value, expected positive integer";
     const [maxSize, rest] = this.checkSize(message, options);
 
@@ -260,6 +289,15 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
   private checkDB() {
     if(! this.db) throw new Error("Package sedentary can't be used directly. Please check: https://www.npmjs.com/package/sedentary#disclaimer");
+  }
+
+  private checkOptions(name: string, options: unknown) {
+    if(options === undefined) return;
+    if(typeof options !== "object" || options === null) throw new Error(`Sedentary.'${name}': Wrong options type, expected 'Object`);
+
+    const allowedOptions = name === "FKey" ? allowedForeignKeyOptions : attributesWithSize.has(name) ? allowedAttributeOptionsSize : allowedAttributeOptions;
+
+    for(const key in options) if(! allowedOptions.includes(key)) throw new Error(`Sedentary.'${name}': Unknown option '${key}'`);
   }
 
   private checkOrderBy(order: unknown, attributes: Record<string, string>, modelName: string): order is string[] {
@@ -442,7 +480,7 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
     if(! options) options = {};
     if(! (options instanceof Object)) throw new Error(`Sedentary.model: '${modelName}' model: 'options' argument: Wrong type, expected 'Object'`);
 
-    for(const k in options) if(! allowedOption.includes(k)) throw new Error(`Sedentary.model: '${modelName}' model: 'options' argument: Unknown '${k}' option`);
+    for(const k in options) if(! allowedModelOptions.includes(k)) throw new Error(`Sedentary.model: '${modelName}' model: 'options' argument: Unknown '${k}' option`);
     if(options.int8id && options.parent) throw new Error(`Sedentary.model: '${modelName}' model: 'int8id' and 'parent' options conflict each other`);
     if(options.int8id && options.primaryKey) throw new Error(`Sedentary.model: '${modelName}' model: 'int8id' and 'primaryKey' options conflict each other`);
     if(options.parent && options.primaryKey) throw new Error(`Sedentary.model: '${modelName}' model: 'parent' and 'primaryKey' options conflict each other`);
@@ -526,10 +564,6 @@ export class Sedentary<D extends DB<T>, T extends Transaction> {
 
       if(foreignKey) {
         const options = foreignKey.options || ({} as ForeignKeyOptions);
-
-        if(foreignKey.options !== undefined && ! (foreignKey.options instanceof Object))
-          throw new Error(`Sedentary.FKey: '${modelName}' model: '${attributeName}' attribute: Wrong options type, expected 'Object'`);
-        for(const k in options) if(! ["onDelete", "onUpdate"].includes(k)) throw new Error(`Sedentary.FKey: '${modelName}' model: '${attributeName}' attribute: Unknown option '${k}'`);
 
         for(const onChange of ["onDelete", "onUpdate"] as const) {
           const actions = ["cascade", "no action", "restrict", "set default", "set null"];

@@ -277,8 +277,13 @@ export const expected = {
     "ALTER TABLE test3 ADD CONSTRAINT test3_b_unique UNIQUE(b)",
     "ALTER TABLE test2 DROP CONSTRAINT fkey_a_test1_id CASCADE",
     "ALTER TABLE test2 DROP COLUMN d",
+    "ALTER TABLE test2 ADD COLUMN e INTEGER",
+    "ALTER TABLE test2 ALTER COLUMN e SET DEFAULT 23",
+    "UPDATE test2 SET e = 23 WHERE e IS NULL",
+    "ALTER TABLE test2 ALTER COLUMN e SET NOT NULL",
     "ALTER TABLE test2 ADD CONSTRAINT fkey_a_test1_a FOREIGN KEY (a) REFERENCES test1(a)",
-    "ALTER TABLE test2 ADD CONSTRAINT fkey_c_test3_b FOREIGN KEY (c) REFERENCES test3(b)"
+    "ALTER TABLE test2 ADD CONSTRAINT fkey_c_test3_b FOREIGN KEY (c) REFERENCES test3(b)",
+    "ALTER TABLE test2 ADD CONSTRAINT fkey_e_test1_id FOREIGN KEY (e) REFERENCES test1(id)"
   ],
   sync_foreign_keys_3: [
     "CREATE SEQUENCE test1_id_seq",
@@ -651,6 +656,21 @@ export const transactions = {
     "INSERT INTO test2 (a, b) VALUES (3, '3')",
     "COMMIT",
     "SELECT *, tableoid FROM test2 WHERE id > 0 ORDER BY id"
+  ],
+  errorOnClosed: [
+    "CREATE SEQUENCE test3_id_seq",
+    "CREATE TABLE test3 ()",
+    "ALTER TABLE test3 ADD COLUMN id INTEGER",
+    "ALTER TABLE test3 ALTER COLUMN id SET DEFAULT nextval('test3_id_seq'::regclass)",
+    "UPDATE test3 SET id = nextval('test3_id_seq'::regclass) WHERE id IS NULL",
+    "ALTER TABLE test3 ALTER COLUMN id SET NOT NULL",
+    "ALTER TABLE test3 ADD COLUMN a INTEGER",
+    "ALTER TABLE test3 ADD COLUMN b VARCHAR",
+    "ALTER SEQUENCE test3_id_seq OWNED BY test3.id",
+    "ALTER TABLE test3 ADD CONSTRAINT test3_id_unique UNIQUE(id)",
+    "BEGIN",
+    "SELECT *, tableoid FROM test3 ORDER BY id",
+    "ROLLBACK"
   ],
   load: [
     "CREATE SEQUENCE test3_id_seq",

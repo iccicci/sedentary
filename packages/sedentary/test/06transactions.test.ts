@@ -1,4 +1,4 @@
-import { deepStrictEqual as de } from "assert";
+import { deepStrictEqual as de, equal as eq } from "assert";
 
 import { EntryBase, TxAction } from "..";
 import { helper } from "./helper";
@@ -84,6 +84,52 @@ describe("transactions", () => {
     });
 
     it("rollback", () => de(l2, result));
+  });
+
+  describe("commit on closed transaction", function() {
+    let err: unknown;
+
+    helper(transactions.errorOnClosed, async db => {
+      const test3 = db.model("test3", { a: db.Int(), b: db.VarChar() });
+      await db.connect();
+      const tx = await db.begin();
+      await test3.load({}, ["id"]);
+      await tx.rollback();
+
+      try {
+        await tx.commit();
+      } catch(error) {
+        err = error;
+      }
+    });
+
+    it("error", () => {
+      if(! (err instanceof Error)) throw new Error("No error thrown");
+      eq(err.message, "Transaction already closed");
+    });
+  });
+
+  describe("rollback on closed transaction", function() {
+    let err: unknown;
+
+    helper(transactions.errorOnClosed, async db => {
+      const test3 = db.model("test3", { a: db.Int(), b: db.VarChar() });
+      await db.connect();
+      const tx = await db.begin();
+      await test3.load({}, ["id"]);
+      await tx.rollback();
+
+      try {
+        await tx.rollback();
+      } catch(error) {
+        err = error;
+      }
+    });
+
+    it("error", () => {
+      if(! (err instanceof Error)) throw new Error("No error thrown");
+      eq(err.message, "Transaction already closed");
+    });
   });
 
   desc("locks", function() {

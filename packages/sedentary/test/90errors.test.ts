@@ -84,11 +84,17 @@ describe("class Sedentary - errors", () => {
   describe("Sedentary.model(name) - invalid (invalid chars)", () =>
     errorHelper(db => db.model("test-name", {}))("Sedentary.model: 'test-name' model: Invalid model name, expected ASCII letters, digits or underscore, cannot start with digit"));
   describe("Sedentary.model(name) - invalid (uppercase in tableName)", () =>
-    errorHelper(db => db.model("test", {}, { tableName: "Test" }))("Sedentary.model: 'test' model: Invalid tableName 'Test', expected lowercase ASCII letters, digits or underscore, cannot start with digit"));
+    errorHelper(db => db.model("test", {}, { tableName: "Test" }))(
+      "Sedentary.model: 'test' model: Invalid tableName 'Test', expected lowercase ASCII letters, digits or underscore, cannot start with digit"
+    ));
   describe("Sedentary.model(name) - invalid (tableName starts with digit)", () =>
-    errorHelper(db => db.model("test", {}, { tableName: "1test" }))("Sedentary.model: 'test' model: Invalid tableName '1test', expected lowercase ASCII letters, digits or underscore, cannot start with digit"));
+    errorHelper(db => db.model("test", {}, { tableName: "1test" }))(
+      "Sedentary.model: 'test' model: Invalid tableName '1test', expected lowercase ASCII letters, digits or underscore, cannot start with digit"
+    ));
   describe("Sedentary.model(, { [key] }) - invalid attribute name", () =>
-    errorHelper(db => db.model("test", { "1a": db.Int() }))("Sedentary.model: 'test' model: '1a' attribute: Invalid attribute name, expected ASCII letters, digits or underscore, cannot start with digit"));
+    errorHelper(db => db.model("test", { "1a": db.Int() }))(
+      "Sedentary.model: 'test' model: '1a' attribute: Invalid attribute name, expected ASCII letters, digits or underscore, cannot start with digit"
+    ));
   describe("Sedentary.model(, { [key]: fieldName }) - invalid", () =>
     errorHelper(db => db.model("test", { a: db.Int({ fieldName: "A" }) }))(
       "Sedentary.model: 'test' model: 'a' attribute: Invalid fieldName 'A', expected lowercase ASCII letters, digits or underscore, cannot start with digit"
@@ -232,12 +238,12 @@ describe("class Sedentary - errors", () => {
     errorHelper(db => {
       const test1 = db.model("test1", {});
       db.model("test2", { a: db.FKey(test1, 1 as never), aLoad: db.Int() });
-    })("Sedentary.FKey: 'test2' model: 'a' attribute: Wrong options type, expected 'Object'"));
+    })("Sedentary.'FKey': Wrong options type, expected 'Object"));
   describe("Sedentary.FKey() - option", () =>
     errorHelper(db => {
       const test1 = db.model("test1", {});
       db.model("test2", { a: db.FKey(test1, { test: 1 } as never), aLoad: db.Int() });
-    })("Sedentary.FKey: 'test2' model: 'a' attribute: Unknown option 'test'"));
+    })("Sedentary.'FKey': Unknown option 'test'"));
   describe("Sedentary.FKey(, { onDelete }) - value", () =>
     errorHelper(db => {
       const test1 = db.model("test1", {});

@@ -23,10 +23,10 @@ describe("models", () => {
     let l6: any;
     let r1: any;
     let r2: any;
-    let saveA = false;
-    let saveB = false;
-    let saveC = false;
-    let saveD = true;
+    let saveA: number | false = false;
+    let saveB: number | false = false;
+    let saveC: number | false = false;
+    let saveD: number | false = 1;
 
     helper(models.base, async db => {
       const test1 = db.model("test1", { a: db.Int(), b: db.VarChar({ defaultValue: "test" }), c: db.None<number>() });
@@ -118,6 +118,8 @@ describe("models", () => {
           reset: function() {
             log(`test1.reset ${this.id}`);
             this.a = 0;
+
+            return Promise.resolve();
           }
         }
       );
@@ -149,6 +151,8 @@ describe("models", () => {
             log(`test2.reset ${this.id}`);
             this.b = "no";
             this.c = 0;
+
+            return Promise.resolve();
           }
         }
       );
@@ -185,9 +189,9 @@ describe("models", () => {
             test1.prototype.preSave.call(this);
             log(`test3.preSave${this.id ? ` ${this.id}` : ""}`);
           },
-          reset: function() {
-            test1.prototype.reset.call(this);
-            test2.prototype.reset.call(this);
+          reset: async function() {
+            await test1.prototype.reset.call(this);
+            await test2.prototype.reset.call(this);
             log(`test3.reset ${this.id}`);
             this.e = 0;
             this.f = "no";
@@ -222,7 +226,7 @@ describe("models", () => {
       const t32 = await test1.load({}, ["id"]);
 
       for(const t of t32) {
-        t.reset();
+        await t.reset();
         await t.save();
       }
 

@@ -144,7 +144,7 @@ describe("sync", () => {
       helper(expected.sync_foreign_keys_2, true, async db => {
         class test1 extends db.model("test1", { a: db.Int({ unique: true }), b: db.Int8(), c: db.VarChar({ fieldName: "d" }) }) {}
         class test3 extends db.model("test3", { b: db.Int8({ unique: true }) }) {}
-        db.model("test2", { a: db.FKey(test1.a), b: db.FKey(test1.a), c: db.FKey(test3.b) });
+        db.model("test2", { a: db.FKey(test1.a), b: db.FKey(test1.a), c: db.FKey(test3.b), d: db.FKey(test1, { defaultValue: 23, fieldName: "e", notNull: true, unique: true }) });
         await db.connect();
       });
     });

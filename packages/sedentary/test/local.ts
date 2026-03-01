@@ -207,8 +207,13 @@ export const expected = {
     "'test2': Removing foreign key: 'fkey_c_test1_b'",
     "'test2': Removing foreign key: 'fkey_d_test1_d'",
     "'test2': Removing field: 'd'",
+    "'test2': Adding field: 'e' 'INT' '4'",
+    "'test2': Setting default value '23' for field: 'e'",
+    "'test2': Setting not null for field: 'e'",
     "'test2': Adding foreign key 'fkey_a_test1_a' on field: 'a' references 'test1(a)'",
-    "'test2': Adding foreign key 'fkey_c_test3_b' on field: 'c' references 'test3(b)'"
+    "'test2': Adding foreign key 'fkey_c_test3_b' on field: 'c' references 'test3(b)'",
+    "'test2': Adding foreign key 'fkey_e_test1_id' on field: 'e' references 'test1(id)'",
+    "'test2': Adding unique constraint on field: 'e'"
   ],
   sync_foreign_keys_3: [
     "Adding table: 'test1'",
@@ -503,6 +508,16 @@ export const transactions = {
     "Delete from test2 2",
     'Save to test2 {"a":3,"b":"3"}',
     'Load from test2 where: "id > 0" order by: id'
+  ],
+  errorOnClosed: [
+    "Adding table: 'test3'",
+    "Setting auto increment: 'test3'",
+    "'test3': Adding field: 'id' 'INT' '4'",
+    "'test3': Setting not null for field: 'id'",
+    "'test3': Adding field: 'a' 'INT' '4'",
+    "'test3': Adding field: 'b' 'VARCHAR' ''",
+    "'test3': Adding unique constraint on field: 'id'",
+    'Load from test3 where: "" order by: id'
   ],
   load: [
     "Adding table: 'test3'",
